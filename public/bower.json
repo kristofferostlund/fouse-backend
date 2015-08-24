@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "lodash": "~3.10.1",
-    "bluebird": "~2.9.34"
+    "bluebird": "~2.9.34",
+    "moment": "~2.10.6"
   }
 }

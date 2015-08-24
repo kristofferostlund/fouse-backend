@@ -13,7 +13,7 @@ body {
 h1, h2, h3 {
   font-size: 300%;
   font-weight: bold;
-  padding: 2rem 0;
+  padding: 15px 0;
   text-align: left;
   line-height: 100%;
 }
@@ -27,20 +27,20 @@ h2 {
 }
 
 p {
-  padding: 0.5rem 0;
+  padding: 5px 0;
 }
 
 ul, ol {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
-  padding-left: 2rem;
+  padding-left: 15px;
 }
 ol {
   list-style: lower-alpha;
 }
 li {
-  padding: 0.5rem 0;
+  padding: 5px 0;
 }
 
 em {
