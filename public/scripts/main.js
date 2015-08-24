@@ -7,4 +7,3 @@ _http.get('/api/recent')
 ['catch'](function (err) {
   console.log(err);
 });
-p

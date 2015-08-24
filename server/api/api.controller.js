@@ -32,25 +32,30 @@ Processes the response
 */
 function processRecent(text) {
   return new Promise(function (resolve, reject) {
-    // console.time('Processing time');
 
     text = text.replace(/\r?\n|\r|\t/g, '');
     var html = $.load(text);
 
     var homes = _.chain(html('div[itemtype="http://schema.org/Offer"]'))
       .map(function (e) { return e; })
-      .map(function (e) {
+      .map(function (e, i) {
+        
+        var anchor = $(e).find('a')[0];
+        var image = _.attempt(function () { return anchor.attribs.style.match(/\(.*?\)/g).toString().replace(/[()]/g, ''); });
+        if (_.isError(image)) { image = undefined; }
+        
         return {
           title: $(e).find('.media-heading').text(),
           rooms: $(e).find('.rooms').text(),
           rent: $(e).find('.monthly_rent').text(),
           location: $(e).find('.address').text(),
-          date: new Date($(e).find('.jlist_date_image')[0].attribs['datetime'])
+          date: new Date($(e).find('.jlist_date_image')[0].attribs['datetime']),
+          link: anchor.attribs.href, 
+          image: image
         };
       })
       .value();
 
-    // console.timeEnd();
     resolve(homes);
   });
 }
