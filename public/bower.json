@@ -1,0 +1,25 @@
+{
+  "name": "home_please",
+  "version": "0.0.0",
+  "homepage": "https://github.com/kristofferostlund/home_please",
+  "authors": [
+    "Kristoffer Ostlund <kristoffer.ostlund@gmail.com>"
+  ],
+  "description": "A web app to help me find a new home",
+  "main": "app.js",
+  "moduleType": [
+    "node"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "lodash": "~3.10.1",
+    "bluebird": "~2.9.34"
+  }
+}
