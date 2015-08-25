@@ -1,6 +1,8 @@
 /* global moment */
 'use strict'
 
+var homeContainer = document.getElementById('home-container');
+
 _http.get('/api/recent')
   .then(function (homes) {
     
@@ -19,7 +21,7 @@ _http.get('/api/recent')
     
     console.log(homes);
     
-    document.body.innerHTML = elements.join('');
+    homeContainer.innerHTML = elements.join('');
   })
 ['catch'](function (err) {
   console.log(err);
