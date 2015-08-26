@@ -1,13 +1,14 @@
 /* global moment */
 'use strict'
 
+var _homes;
 var homeContainer = document.getElementById('home-container');
 
-_http.get('/api/recent')
-  .then(function (homes) {
-    
-    var elements = _.map(homes, function (home) {
-      return _render.createElement('article', 
+
+function renderHomes(homes) {
+  return new Promise(function (resolve, reject) {
+    var homeElements = _.map(homes, function (home) {
+      return _render.createElement('article',
         _render.createElement('header', home.title).outerHTML +
         _render.createElement('section',
           _render.createElement('div', 'Pris: ' + home.rent).outerHTML +
@@ -19,10 +20,28 @@ _http.get('/api/recent')
         , { 'className': 'home-card' }).outerHTML;
     });
     
-    console.log(homes);
+    homeContainer.innerHTML = homeElements.join('');
+  });
+}
+
+function getHomes() { return _http.get('/api/recent') };
+
+function analyze(homes) {
+  return new Promise(function (resolve, reject) {
+    _homes = homes;
     
-    homeContainer.innerHTML = elements.join('');
-  })
+    var roomOnly = _.filter(homes, function (home) {
+      return /rum|room/i.test(home.title);
+    });
+    
+    var possibleFlats = _.filter(homes, function(home) {
+      return _.indexOf(roomOnly, home) < 0;
+    });
+    resolve(possibleFlats);
+  });
+}
+
+getHomes().then(analyze).then(renderHomes)
 ['catch'](function (err) {
   console.log(err);
 });
