@@ -5,10 +5,10 @@ var _homes;
 var homeContainer = document.getElementById('home-container');
 var homeCollection = [];
 
-var flatsCheck = document.getElementById('flats-check');
+var homesCheck = document.getElementById('homes-check');
 var roomsCheck = document.getElementById('rooms-check');
 
-flatsCheck.addEventListener('change', function (e) { filterHomes(homeCollection) });
+homesCheck.addEventListener('change', function (e) { filterHomes(homeCollection) });
 roomsCheck.addEventListener('change', function (e) { filterHomes(homeCollection) });
 
 
@@ -19,15 +19,15 @@ function openHome(event, home) {
 
 function filterHomes(collection) {
   _.map(collection, function (item) {
-    item.element.hidden = hideHome(item);
+    item.element.hidden = !showItem(item);
   });
 }
 
-function hideHome(homeItem) {
-  if (!roomsCheck.checked && !flatsCheck.checked) { return false; }
+function showItem(homeItem) {
+  if (!roomsCheck.checked && !homesCheck.checked) { return true; }
 
   if (homeItem.home.isRoom) { return roomsCheck.checked; }
-  if (!homeItem.home.isRoom) { return flatsCheck.checked; }
+  if (!homeItem.home.isRoom) { return homesCheck.checked; }
 
   return true;
 }
