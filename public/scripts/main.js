@@ -3,36 +3,51 @@
 
 var _homes;
 var homeContainer = document.getElementById('home-container');
+var homeCollection = [];
+
+
 
 function openHome(event, home) {
   console.log(event);
   console.log(home);
 }
 
+function showHome(homeItem) {
+  return true;
+}
+
 function renderHomes(homes) {
   return new Promise(function (resolve, reject) {
-    var homeElements = _.map(homes, function (home, index) {
+    var homeCollection = _.map(homes, function (home, index) {
       home.clickIdentifier = ['clickId', index].join(' ');
-      
-      return _render.createElement('article',
-        _render.createElement('header', home.title).outerHTML +
-        _render.createElement('section',
-          _render.createElement('div', 'Pris: ' + home.rent).outerHTML +
-          _render.createElement('div', 'Antal rum: ' + home.rooms).outerHTML +
-          _render.createElement('div', 'Område: ' + home.location).outerHTML +
-          _render.createElement('div', 'Datum utlagd: ' + moment(home.date).format('YYYY-MM-DD, HH:mm')).outerHTML
+
+      return {
+        home: home,
+        element: _render.createElement('article',
+          _render.createElement('header', home.title).outerHTML +
+          _render.createElement('section',
+            _render.createElement('div', 'Pris: ' + home.rent).outerHTML +
+            _render.createElement('div', 'Antal rum: ' + home.rooms).outerHTML +
+            _render.createElement('div', 'Område: ' + home.location).outerHTML +
+            _render.createElement('div', 'Datum utlagd: ' + moment(home.date).format('YYYY-MM-DD, HH:mm')).outerHTML
           // _render.createElement('a', 'Öppna på blocket', { 'href': home.link }).outerHTML
-          ).outerHTML
-        , { 'className': 'home-item', 'clickIdentifier': home.clickIdentifier }).outerHTML;
+            ).outerHTML
+          , { 'className': 'home-item', 'clickIdentifier': home.clickIdentifier })
+      };
     });
-    
-    homeContainer.innerHTML = homeElements.join('');
-    
+
+    homeContainer.innerHTML = _.chain(homeCollection)
+    .filter(showHome)
+    .map(function (homeItem) {
+      console.log(homeItem);
+      return homeItem.element.outerHTML;
+    }).value().join('');
+
     _.map(document.getElementsByClassName('clickId'), function (node) {
       var clickId = node.className.match(/clickId [0-9]+/ig).toString();
       var index = Number(clickId.match(/[0-9]+/g));
-      
-      node.addEventListener('click', function(event) { openHome(event, homes[index]); }, false);
+
+      node.addEventListener('click', function (event) { openHome(event, homes[index]); }, false);
     });
   });
 }
@@ -43,14 +58,12 @@ function analyze(homes) {
   return new Promise(function (resolve, reject) {
     _homes = homes;
     
-    var roomOnly = _.filter(homes, function (home) {
-      return /rum|room/i.test(home.title);
+    var homes = _.map(homes, function (home) {
+      home.isRoom = /rum|room/i.test(home.title);
+      return home;
     });
     
-    var possibleFlats = _.filter(homes, function(home) {
-      return _.indexOf(roomOnly, home) < 0;
-    });
-    resolve(possibleFlats);
+    resolve(homes);
   });
 }
 

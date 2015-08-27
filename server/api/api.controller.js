@@ -19,7 +19,7 @@ exports.recent = function (req, res) {
     console.log(err);
     // res.status(500).send();
     // Only for dev. For instance if offline.
-    processRecent(textFile).then(function(homes) {
+    processRecent(textFile).then(function(homes) {      
       res.status(200).json(homes);
     });
   });
