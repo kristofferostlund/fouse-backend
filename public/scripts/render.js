@@ -20,8 +20,8 @@ var _render = {
       node.href = attribs.href;
       node.target = '_blank';
       }
-    if (!!attribs.clickIdentifier) {
-      node.className = [node.className, attribs.clickIdentifier].join(' ');
+    if (!!attribs.identifier) {
+      node.className = [node.className, attribs.identifier].join(' ');
     }
     return node;
   },

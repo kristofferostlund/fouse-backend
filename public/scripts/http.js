@@ -20,7 +20,7 @@ var _http = {
               callback(res);
             }
           } else {
-            resolve(new Error(req.statusText));
+            reject(new Error(req.statusText));
             if (_.isFunction(callback)) {
               callback(req.statusText);
             }
