@@ -9,8 +9,6 @@
 </head>
 <body>
   
- 
- 
 <article class="home-menu">
   <header>Filtrera</header>
   <ul>
@@ -21,7 +19,21 @@
   
   <div id="home-container"></div>
   
-  <!--<div id="preview-container"></div>-->
+  <div id="preview-container">
+    <article class="preview-wrapper">
+      <header class="preview-header" id="preview-title"></header>
+      <section class="preview-brief">
+        <div id="preview-rent"></div>
+        <div id="preview-rooms"></div>
+        <div id="preview-location"></div>
+        <div id="preview-date"></div>
+      </section>
+      <section class="preview-content">
+        <div id="preview-owner"></div>
+        <pre id="preview-text"></pre>
+      </section>
+    </article>
+  </div>
   
   <script src="bower_components/bluebird/js/browser/bluebird.js"></script>
   <script src="bower_components/lodash/lodash.js" charset="utf-8"></script>

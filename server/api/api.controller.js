@@ -8,6 +8,7 @@ var fs = require('fs');
 var reqUrl = 'http://www.blocket.se/bostad/uthyres/stockholm?sort=&ss=&se=&ros=&roe=&bs=&be=&mre=14&q=&q=&q=&is=1&save_search=1&l=0&md=th&f=p&f=c&f=b&as=131_1&as=131_3&as=131_4&as=131_6&as=131_7&as=131_8&as=131_9&as=131_10&as=131_11';
 var reqUrl2 = 'http://www.blocket.se/bostad/uthyres/stockholm?mre=14&is=1&save_search=1&l=0&md=th&f=p&f=c&f=b&as=131_1&as=131_3&as=131_4&as=131_6&as=131_7&as=131_8&as=131_9&as=131_10&as=131_11';
 var textFile = fs.readFileSync('./example.html').toString();
+var textFile2 = fs.readFileSync('./e.html').toString();
 
 exports.recent = function (req, res) {
   getRecent()
@@ -15,12 +16,29 @@ exports.recent = function (req, res) {
   .then(function (homes) {
     res.status(200).json(homes);
   })
-  .catch(function(err) {
+  .catch(function (err) {
     console.log(err);
     // res.status(500).send();
     // Only for dev. For instance if offline.
-    processRecent(textFile).then(function(homes) {      
+    processRecent(textFile).then(function(homes) {
       res.status(200).json(homes);
+    });
+  });
+}
+
+exports.preview = function (req, res) {
+  fetchPreview(req.body.url)
+  .then(processPreview)
+  .then(function (preview) {
+    // preview = encodeURI(preview);
+    res.status(200).json(preview);
+  })
+  .catch(function (err) {
+    // res.status(500).send();
+    console.log(err);
+    processPreview(textFile2).then(function (preview) {
+      // preview = encodeURI(preview);
+      res.status(200).json(preview);
     });
   });
 }
@@ -50,13 +68,38 @@ function processRecent(text) {
           rent: $(e).find('.monthly_rent').text(),
           location: $(e).find('.address').text(),
           date: new Date($(e).find('.jlist_date_image')[0].attribs['datetime']),
-          link: anchor.attribs.href, 
-          image: image
+          url: anchor.attribs.href, 
+          imageUrl: image
         };
       })
       .value();
 
     resolve(homes);
+  });
+}
+
+function processPreview(text) {
+  return new Promise(function (resolve, reject) {
+    text = text.replace(/\r?\n|\r|\t/g, '');
+    
+    var html = $.load(text);
+    
+    var owner = html('h2.h4');
+    
+    var content = html('.object-text');
+    
+    content = html(content).text()
+      .replace(/\s+/g, ' ')
+      .replace(/((?![a-z])[^\w|^\s](?=[A-Z]))/g, "$1\n\n");
+      
+    owner = html(owner).text().replace(/uthyres av: /ig, '').replace(/^\s|\s$/, '');
+    
+    var preview = {
+      text: content,
+      owner: owner
+    };
+    resolve(preview);
+    
   });
 }
 
@@ -76,4 +119,17 @@ function getRecent() {
       else { resolve(body.toString('utf8')); }
     });
   });
+}
+
+function fetchPreview(url) {
+  return new Promise(function (resolve, reject) {
+    request.get({
+      uri: url, 
+      encoding: null
+    },
+    function (err, res, body) {
+      if (err) { reject(err); }
+      else { resolve(body.toString('utf8')); }
+    })
+  })
 }

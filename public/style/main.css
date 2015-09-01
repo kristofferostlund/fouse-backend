@@ -5,7 +5,15 @@ body {
   position: fixed;
   left: 150px;
   width: 375px;
-  max-width: 100%;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+}
+#preview-container {
+  position: fixed;
+  left: 525px;
+  background-color: #fafafa;
+  right: 0;
   top: 0;
   bottom: 0;
   overflow-y: auto;
@@ -42,6 +50,15 @@ body {
 }
 
 .home-item > header {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.preview-wrapper {
+  padding: 15px;
+}
+
+.preview-header {
   font-size: 18px;
   font-weight: 600;
 }

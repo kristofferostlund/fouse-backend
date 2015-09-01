@@ -5,21 +5,56 @@ var _homes;
 var homeContainer = document.getElementById('home-container');
 var homeCollection = [];
 
+var preview = {
+  dom: {
+    title: document.getElementById('preview-title'), 
+    text: document.getElementById('preview-text'),
+    owner: document.getElementById('preview-owner'),
+    rent:  document.getElementById('preview-rent'),
+    rooms:  document.getElementById('preview-rooms'),
+    location:  document.getElementById('preview-location'),
+    date: document.getElementById('preview-date')
+  },
+  data: {
+    title: '', 
+    text: '',
+    owner: '',
+    rent:  '',
+    rooms:  '',
+    location:  '',
+    date: ''
+  }
+};
+
 var homesCheck = document.getElementById('homes-check');
 var roomsCheck = document.getElementById('rooms-check');
 
 homesCheck.addEventListener('change', function (e) { filterHomes(homeCollection) });
 roomsCheck.addEventListener('change', function (e) { filterHomes(homeCollection) });
 
-
 function openHome(event, home) {
   console.log(event);
   console.log(home);
+  getPreview(home)
+  .then(function (value) {
+    updatePreview(value, home);
+  });
 }
 
 function filterHomes(collection) {
   _.map(collection, function (item) {
     item.element.hidden = !showItem(item);
+  });
+}
+
+function updatePreview(item, home) {
+  _.assign(preview.data, home, item);
+  
+  console.log(preview.data);
+  
+  _.map(preview.dom, function (element, key) {
+    console.log(key);
+    element.innerHTML = preview.data[key];
   });
 }
 
@@ -33,18 +68,21 @@ function showItem(homeItem) {
 }
 
 function addToDOM(collection) {
+  return new Promise(function (resolve, reject) {
+    homeContainer.innerHTML = _.map(collection, function (item) {
+      return item.tempElement.outerHTML;
+    }).join('');
 
-  homeContainer.innerHTML = _.map(collection, function (item) {
-    return item.tempElement.outerHTML;
-  }).join('');
-  
-  _.map(document.getElementsByClassName('home-item'), function (node, i) {    
-    homeCollection[i].element = node;
-    
-    var homeIdentifier = node.className.match(/home\-[0-9]+/ig).toString();
-    var index = Number(homeIdentifier.match(/[0-9]+/g));
-    
-    node.addEventListener('click', function (event) { openHome(event, collection[index].home); }, false);
+    _.map(document.getElementsByClassName('home-item'), function (node, i) {
+      
+      collection[i].element = node;
+
+      var homeIdentifier = node.className.match(/home\-[0-9]+/ig).toString();
+      var index = Number(homeIdentifier.match(/[0-9]+/g));
+
+      node.addEventListener('click', function (event) { openHome(event, collection[index].home); }, false);
+    });
+    resolve(collection);
   });
 }
 
@@ -82,6 +120,10 @@ function analyze(homes) {
 
     resolve(homes);
   });
+}
+
+function getPreview(homeItem) {
+  return _http.put('/api/preview', { url: homeItem.url });
 }
 
 getHomes()
