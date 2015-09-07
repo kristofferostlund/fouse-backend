@@ -33,11 +33,21 @@ homesCheck.addEventListener('change', function (e) { filterHomes(homeCollection)
 roomsCheck.addEventListener('change', function (e) { filterHomes(homeCollection) });
 
 function openHome(event, home) {
-  console.log(event);
-  console.log(home);
   getPreview(home)
   .then(function (value) {
+    selectHome(home);
     updatePreview(value, home);
+  });
+}
+
+function selectHome(_home) {
+  _.map(homeCollection, function (home) {
+    if (home.home.url == _home.url) {
+      home.element.className = home.element.className + ' selected'; 
+    } else {
+      // Possibly speed this up?
+      home.element.className = home.element.className.replace(/selected/g, '');
+    }
   });
 }
 
