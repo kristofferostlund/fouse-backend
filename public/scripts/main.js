@@ -53,7 +53,6 @@ function updatePreview(item, home) {
   console.log(preview.data);
   
   _.map(preview.dom, function (element, key) {
-    console.log(key);
     element.innerHTML = preview.data[key];
   });
 }

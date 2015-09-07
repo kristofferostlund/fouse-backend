@@ -3,7 +3,8 @@ body {
 }
 #home-container {
   position: fixed;
-  left: 150px;
+  left: 0;
+  margin-top: 125px;
   width: 375px;
   top: 0;
   bottom: 0;
@@ -11,7 +12,7 @@ body {
 }
 #preview-container {
   position: fixed;
-  left: 525px;
+  left: 375px;
   background-color: #fafafa;
   right: 0;
   top: 0;
@@ -24,8 +25,8 @@ body {
   background-color: #22CCEA;
   top: 0;
   left: 0;
-  bottom: 0;
-  width: 150px;
+  height: 125px;
+  width: 375px;
   padding: 15px;
 }
 
@@ -61,4 +62,9 @@ body {
 .preview-header {
   font-size: 18px;
   font-weight: 600;
+}
+
+.preview-text {
+  font-family: inherit;
+  white-space: normal;
 }
