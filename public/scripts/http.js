@@ -1,6 +1,13 @@
 'use strict'
 
 var _http = {
+  /*
+  GET request to *url* which returns a Promise of the data.
+  Optionally, can use a callback instead.
+  @param {String} url
+  @param {Function} callback - optional
+  @return {Promise}
+  */
   get: function (url, callback) {
     return new Promise(function (resolve, reject) {
       var req = new XMLHttpRequest();
@@ -48,12 +55,17 @@ var _http = {
     return this.get(url, callback);
   },
   
+  /*
+  PUT request to *url* which returns a promise of the response data.
+  Optionally, can be used with callback instead.
+  @param {String} url
+  @param {Object} body
+  @param {Function} callback - optional
+  @return {Promise}
+  */
   put: function (url, body, callback) {
     return new Promise(function (resolve, reject) {
       var req = new XMLHttpRequest;
-      
-      console.log(JSON.stringify(body));
-      
       
       req.onreadystatechange = function () {
         if (req.readyState === 4) {
@@ -86,9 +98,7 @@ var _http = {
           return [key, value].join('=');
         }).join('&')
       );
-      
-      console.log(data);
-      
+            
       req.send(data);
     });
   }

@@ -7,24 +7,34 @@ var homeCollection = [];
 
 var preview = {
   dom: {
-    title: document.getElementById('preview-title'), 
+    title: document.getElementById('preview-title'),
     text: document.getElementById('preview-text'),
     owner: document.getElementById('preview-owner'),
-    rent:  document.getElementById('preview-rent'),
-    rooms:  document.getElementById('preview-rooms'),
-    location:  document.getElementById('preview-location'),
-    date: document.getElementById('preview-date')
+    rent: document.getElementById('preview-rent'),
+    rooms: document.getElementById('preview-rooms'),
+    location: document.getElementById('preview-location'),
+    date: document.getElementById('preview-date'),
+    imageUrl: document.getElementById('preview-image'),
+    url: document.getElementById('preview-url')
   },
   data: {
-    title: '', 
+    title: '',
     text: '',
     owner: '',
-    rent:  '',
-    rooms:  '',
-    location:  '',
-    date: ''
+    rent: '',
+    rooms: '',
+    location: '',
+    date: '',
+    imageUrl: '',
+    url: ''
   }
 };
+
+function resetPreview() {
+  _.map(preview.data, function (value, key) {
+    preview.data[key] = '';
+  })
+}
 
 var roomsCheck = document.getElementById('rooms-check');
 var homesCheck = document.getElementById('homes-check');
@@ -43,10 +53,10 @@ after which it selects the home and updates the preview.
 */
 function openHome(event, home) {
   getPreview(home)
-  .then(function (value) {
-    selectHome(home);
-    updatePreview(value, home);
-  });
+    .then(function (value) {
+      selectHome(home);
+      updatePreview(value, home);
+    });
 }
 
 /*
@@ -55,8 +65,8 @@ Sets the element which matches _home.url to selected and deselects every other e
 */
 function selectHome(_home) {
   _.map(homeCollection, function (home) {
-    if (home.home.url == _home.url) {
-      home.element.className = home.element.className + ' selected'; 
+    if (home.home.url == _home.url && !/selected/g.test(home.element.className)) {
+      home.element.className = home.element.className + ' selected';
     } else {
       // Possibly speed this up?
       home.element.className = home.element.className.replace(/selected/g, '');
@@ -69,16 +79,29 @@ Iterates over the home collection to either show or hide the element.
 @param {Array} collection
 */
 function filterHomes(collection) {
-  console.log(collection);
   _.map(collection, function (item) {
     item.element.hidden = !shouldShow(item);
   });
 }
 
 function updatePreview(item, home) {
-  _.assign(preview.data, home, item);
+  if (preview.data.url == home.url) {
+    resetPreview();
+  } else {
+    _.assign(preview.data, home, item);
+    if (!home.imageUrl || home.imageUrl == '') {
+      preview.data.imageUrl = '';
+    }
+  }
   _.map(preview.dom, function (element, key) {
-    element.innerHTML = preview.data[key];
+    if (key === 'url') {
+      element.href = preview.data[key];
+      element.innerHTML = preview.data[key] ? 'Öppna länk i ny flik.' : '';
+    } else if (key === 'imageUrl') {
+      element.src = preview.data[key];
+    } else {
+      element.innerHTML = preview.data[key];
+    }
   });
 }
 
@@ -110,7 +133,7 @@ function addToDOM(collection) {
     }).join('');
 
     _.map(document.getElementsByClassName('home-item'), function (node, i) {
-      
+
       collection[i].element = node;
 
       var homeIdentifier = node.className.match(/home\-[0-9]+/ig).toString();
