@@ -84,6 +84,9 @@ function processPreview(text) {
     
     var html = $.load(text);
     
+    
+    var images = html('meta[property="og:image"]');
+    
     var owner = html('h2.h4');
     
     var content = html('.object-text');
@@ -96,8 +99,12 @@ function processPreview(text) {
     
     var preview = {
       text: content,
-      owner: owner
+      owner: owner,
+      images: _.map(images, function (element) {
+        return element.attribs.content;
+      })
     };
+    
     resolve(preview);
     
   });
