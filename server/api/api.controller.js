@@ -1,3 +1,5 @@
+'use strict'
+
 var _ = require('lodash');
 var request = require('request');
 var $ = require('cheerio');
@@ -88,8 +90,10 @@ function processPreview(text) {
     var images = html('meta[property="og:image"]');
     
     var owner = html('h2.h4');
-    
+
     var content = html('.object-text');
+    
+    var contentHtml = content.html().toString().replace(/<br>/gi, '\n');
     
     content = html(content).text()
       .replace(/\s+/g, ' ')
@@ -112,8 +116,6 @@ function processPreview(text) {
 
 /*
 Gets the recent entries from blocket.se
-@param {Function} errHandler - Error handling function, should take an error as parameter.
-@param {Function} callback - Handles the request, should take the request response as a string as paramater
 */
 function getRecent() {
   return new Promise(function (resolve, reject) {

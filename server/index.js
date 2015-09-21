@@ -3,6 +3,8 @@ var app = express();
 var path = require('path');
 var bodyParser = require('body-parser');
 
+var crawler = require('./crawler');
+
 var root = path.resolve();
 
 app.use(bodyParser.json());
