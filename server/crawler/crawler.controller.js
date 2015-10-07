@@ -131,7 +131,7 @@ promiseLoop(function (lastItem) {
 })
 .catch(function (err) {
   console.log(err);
-})
+});
 
 // getOne(urlNum(1))
 // .then(procesAdsList)
