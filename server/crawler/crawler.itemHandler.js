@@ -6,8 +6,6 @@ var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
 
-var indexer = require('./crawler.indexer');
-
 /**
  * Returns a promise of the page at *url*.
  * 
@@ -80,6 +78,23 @@ function getItemPage(indexItem) {
   });
 }
 
+/**
+ * Returns a promise of a an array of complete items
+ * 
+ * @param {Array} indexItems - array of items from the index list
+ * @return {Promise} -> {Array} of complete items.
+ */
+function getManyItemPages(indexItems) {
+  return new Promise(function (resolve, reject) {
+    Promise.settle(_.map(indexItems, getItemPage))
+    .then(function (vals) { 
+      resolve(_.map(vals, function (val) { return val.value(); }))
+    })
+    .catch(reject);
+  });
+}
+
 module.exports = {
-  getItemPage: getItemPage
+  getItemPage: getItemPage,
+  getManyItemPages: getManyItemPages
 };

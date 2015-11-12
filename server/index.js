@@ -11,6 +11,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(root + '/public'));
 app.use('/api/', require('./api'));
+app.use('/crawler/', crawler);
 
 var server = app.listen(3000, function() {
   var host = server.address().address;

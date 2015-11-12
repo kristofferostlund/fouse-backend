@@ -43,6 +43,9 @@
     },
     "form-data/form-data.d.ts": {
       "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "bluebird/bluebird.d.ts": {
+      "commit": "4f7b7e01d3a9622bfab0bef469e169529e60c66b"
     }
   }
 }
