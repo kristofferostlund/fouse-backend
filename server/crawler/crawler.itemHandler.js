@@ -58,7 +58,8 @@ function processItemPage(content) {
     resolve({
       owner: owner,
       body: body,
-      images: images
+      images: images,
+      disabed: (/Hittade inte annonsen/.test(content)) ? true : undefined
     });
   });
 }
@@ -78,3 +79,7 @@ function getItemPage(indexItem) {
     });
   });
 }
+
+module.exports = {
+  getItemPage: getItemPage
+};
