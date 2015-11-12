@@ -26,9 +26,9 @@ function urlByNum (num) {
  * returns a promise of it's content in string format.
  * 
  * @param {String} url
- * @return {Promise} (String)
+ * @return {Promise} -> {String}
  */
- function getIndexPage(url) {
+ function getPage(url) {
   return new Promise(function (resolve, reject) {
     request.get({
       uri: url,
@@ -58,7 +58,6 @@ function processIndexPage(content) {
     
     content = content.replace(/\r?\n|\r|\t/g, '');
     var html = $.load(content);
-    
     
     var items = _.chain(html('div[itemtype="http://schema.org/Offer"]'))
       .map(function (e) { return e; })
@@ -104,6 +103,18 @@ function processListItem(e) {
   
 };
 
+/**
+ * Returns a promise of the index page at *pageNum*.
+ * 
+ * Serves as a shorthand for getPage(urlByNum(*pageNum*)).then(processIndexPage)
+ * 
+ * @param {Number|String} pageNum
+ * @return {Promise} -> {Object} - single index page
+ */
+function getIndexPage(pageNum) {
+  return getPage(urlByNum(pageNum))
+  .then(processIndexPage);
+}
 
 /**
  * Recursively gets all index pages.
@@ -113,7 +124,7 @@ function processListItem(e) {
  * @param {Boolean} isDone - set recursively
  * @return {Promise} -> {Array}
  */
-exports.getAllIndexPages = function getAllIndexPages(_items, pageNum, isDone) {
+function getAllIndexPages(_items, pageNum, isDone) {
   if (!_items) {
     _items = [];
     pageNum = 1;
@@ -125,8 +136,7 @@ exports.getAllIndexPages = function getAllIndexPages(_items, pageNum, isDone) {
     });
   }
   
-  return getIndexPage(urlByNum(pageNum))
-  .then(processIndexPage)
+  return getIndexPage(pageNum)
   .then(function (items) {
     pageNum++;
     
@@ -139,3 +149,8 @@ exports.getAllIndexPages = function getAllIndexPages(_items, pageNum, isDone) {
     }
   });
 }
+
+module.exports = {
+  getAllIndexPages: getAllIndexPages,
+  getIndexPage: getIndexPage
+};
