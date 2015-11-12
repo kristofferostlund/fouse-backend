@@ -8,7 +8,6 @@ var $ = require('cheerio');
 
 // The URL for every rentable blocket ad. ish.
 var __baseURL = 'http://www.blocket.se/bostad/uthyres/stockholm?o={pageNum}&f=p&f=c&f=b';
-// __baseURL.replace(/{pageNum}/gi, '' + 1)
 
 /*
 Returns the __baseUrl to the page for *num*.
@@ -18,7 +17,7 @@ For example, if num is 1 it returns:
 @param {String|Number} num
 @return {String}
 */
-function urlNum (num) {
+function urlByNum (num) {
   return __baseURL.replace(/{pageNum}/gi, '' + num);
 }
 
@@ -29,7 +28,7 @@ returns a promise of it's content in string format.
 @param {String} url
 @return {Promise} (String)
 */
-function getOne(url) {
+function getIndexPage(url) {
   return new Promise(function (resolve, reject) {
     request.get({
       uri: url,
@@ -49,7 +48,7 @@ If the last page is hit, it returns an object with only one property of info.
 @param {String} content
 @return {Promise} (String)
 */
-function procesAdsList(content) {
+function processIndexPage(content) {
   return new Promise(function (resolve, reject) {
     
     // Resolve this if no content no ads was found.
@@ -106,36 +105,41 @@ function processListItem(e) {
 };
 
 
-/*
-Tho, get this to work.
-Credit to http://stackoverflow.com/questions/24660096/correct-way-to-write-loops-for-promise
-*/
-var promiseLoop = Promise.method(function (condition, action, value) {
-  if (!condition(value)) return;
-  return action(value).then(promiseLoop.bind(null, condition, action));
-});
+/**
+ * Recursively gets all index pages.
+ * 
+ * @param {Array} _items - set recursively
+ * @param {Number} pageNum - set recursively
+ * @param {Boolean} isDone - set recursively
+ * @return {Promise} -> {Array}
+ */
+function getAllIndexPages(_items, pageNum, isDone) {
+  if (!_items) {
+    _items = [];
+    pageNum = 1;
+  }
+  
+  if (isDone) {
+    return new Promise(function (resolve, reject) {
+      resolve(_items);
+    });
+  }
+  
+  return getIndexPage(urlByNum(pageNum))
+  .then(processIndexPage)
+  .then(function (items) {
+    pageNum++;
+    
+    // After cleaning the page, this is returned: { info: 'Non content page.' }
+    if (items && items.info) {
+      return getAllIndexPages(_items, pageNum, true);
+    } else {
+      // Recursion!
+      return getAllIndexPages(_items.concat(items), pageNum);
+    }
+  });
+}
 
-var items = [];
-
-promiseLoop(function (lastItem) {
-  return !lastItem || lastItem.info == 'Non content page.';
-}, function (lastItem) {
-  return getOne(urlNum(items.length + 1))
-  .then(procesAdsList)
-  .then(function (item) {
-    return items.push(item);
-  })
-}, undefined)
-.then(function (val) {
-  console.log('ye', val);
-})
-.catch(function (err) {
-  console.log(err);
-});
-
-// getOne(urlNum(1))
-// .then(procesAdsList)
-// .then()
-// .catch(function (err) {
-//   console.log(err);
-// });
+getIndexPage(urlByNum(4444))
+.then(processIndexPage)
+.then(console.log);
