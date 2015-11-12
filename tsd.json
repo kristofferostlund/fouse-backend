@@ -1,0 +1,48 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "typings/tsd.d.ts",
+  "installed": {
+    "cheerio/cheerio.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "serve-static/serve-static.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "mime/mime.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "express/express.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "node/node.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "orchestrator/orchestrator.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "q/Q.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "gulp/gulp.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "lodash/lodash.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "mongoose/mongoose.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "react/react.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "request/request.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    },
+    "form-data/form-data.d.ts": {
+      "commit": "c2c22c3b953fe9730d4802022d5e0d18d083909e"
+    }
+  }
+}
