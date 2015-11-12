@@ -9,26 +9,26 @@ var $ = require('cheerio');
 // The URL for every rentable blocket ad. ish.
 var __baseURL = 'http://www.blocket.se/bostad/uthyres/stockholm?o={pageNum}&f=p&f=c&f=b';
 
-/*
-Returns the __baseUrl to the page for *num*.
-For example, if num is 1 it returns:
-'http://www.blocket.se/bostad/uthyres/stockholm?o=1&f=p&f=c&f=b'
-
-@param {String|Number} num
-@return {String}
-*/
+/**
+ * Returns the __baseUrl to the page for *num*.
+ * For example, if num is 1 it returns:
+ * 'http://www.blocket.se/bostad/uthyres/stockholm?o=1&f=p&f=c&f=b'
+ * 
+ * @param {String|Number} num
+ * @return {String} - the base url + the page number
+ */
 function urlByNum (num) {
   return __baseURL.replace(/{pageNum}/gi, '' + num);
 }
 
-/*
-Makes a GET request to the supplied url and
-returns a promise of it's content in string format.
-
-@param {String} url
-@return {Promise} (String)
-*/
-function getIndexPage(url) {
+/**
+ * Makes a GET request to the supplied url and
+ * returns a promise of it's content in string format.
+ * 
+ * @param {String} url
+ * @return {Promise} (String)
+ */
+ function getIndexPage(url) {
   return new Promise(function (resolve, reject) {
     request.get({
       uri: url,
@@ -41,13 +41,13 @@ function getIndexPage(url) {
   });
 }
 
-/*
-Processes the ads list page and returns an array of items.
-If the last page is hit, it returns an object with only one property of info.
-
-@param {String} content
-@return {Promise} (String)
-*/
+/**
+ * Processes the ads list page and returns an array of items.
+ * If the last page is hit, it returns an object with only one property of info.
+ * 
+ * @param {String} content - HTML content as string
+ * @return {Promise} -> {Array} of list items
+ */
 function processIndexPage(content) {
   return new Promise(function (resolve, reject) {
     
@@ -69,20 +69,20 @@ function processIndexPage(content) {
   });
 }
 
-/*
-Returns an object like the following:
-{
-  title: String,
-  rooms: String,
-  size: String,
-  rent: String,
-  location: String,
-  date: Date,
-  url: String,
-  thumbnail: String
-}
-@param {Object} e - Cheerio object
-@return {Objcet}
+/**
+ * Returns an object like the following:
+ * {
+ *   title: String,
+ *   rooms: String,
+ *   size: String,
+ *   rent: String,
+ *   location: String,
+ *   date: Date,
+ *   url: String,
+ *   thumbnail: String
+ * }
+ * @param {Object} e - Cheerio object
+ * @return {Object}
 */
 function processListItem(e) {
   var anchor = $(e).find('a')[0];
@@ -113,7 +113,7 @@ function processListItem(e) {
  * @param {Boolean} isDone - set recursively
  * @return {Promise} -> {Array}
  */
-function getAllIndexPages(_items, pageNum, isDone) {
+exports.getAllIndexPages = function getAllIndexPages(_items, pageNum, isDone) {
   if (!_items) {
     _items = [];
     pageNum = 1;
@@ -139,7 +139,3 @@ function getAllIndexPages(_items, pageNum, isDone) {
     }
   });
 }
-
-getIndexPage(urlByNum(4444))
-.then(processIndexPage)
-.then(console.log);
