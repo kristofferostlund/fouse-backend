@@ -2,9 +2,8 @@
   "name": "home_please",
   "version": "1.0.0",
   "description": "A web app to help me find a new home",
-  "main": "app.js",
+  "main": "server/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

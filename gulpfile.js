@@ -15,7 +15,7 @@ gulp.task('server', function () {
   if (mongod) { mongod.kill(); }
   
   // Run a node client on server/app.js
-  node = spawn('node', ['app.js'], { stdio: 'inherit' });
+  node = spawn('node', ['server/app.js'], { stdio: 'inherit' });
   
   // Run mongod in quiet mode
   mongod = spawn('mongod', ['--quiet'], { stdio: 'inherit' });
