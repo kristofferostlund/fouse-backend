@@ -4,8 +4,11 @@ var express = require('express');
 var app = express();
 var bodyParser = require('body-parser');
 var morgan = require('morgan');
+var mongoose = require('mongoose');
 
 var logger = require('./utils/logger.util');
+
+mongoose.connect('mongodb://localhost/home_please:27017');
 
 app.use(morgan('combined', { stream: logger.stream }));
 require('./routes')(app, logger);
@@ -18,4 +21,4 @@ var server = app.listen(3000, function() {
   var port = server.address().port;
   
   console.log('App listening at http://%s:%s', host, port);
-})
+});

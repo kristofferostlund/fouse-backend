@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "A web app to help me find a new home",
   "main": "server/app.js",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "git@github.com:kristofferostlund/home_please.git"
@@ -21,6 +20,7 @@
     "cheerio": "^0.19.0",
     "express": "^4.13.3",
     "lodash": "^3.10.1",
+    "mongodb": "^2.0.48",
     "mongoose": "^4.1.7",
     "morgan": "^1.6.1",
     "request": "^2.61.0",
