@@ -1,17 +1,17 @@
+'use strict'
+
 var express = require('express');
 var app = express();
-var path = require('path');
 var bodyParser = require('body-parser');
+var morgan = require('morgan');
 
-var crawler = require('./crawler');
+var logger = require('./utils/logger.util');
 
-var root = path.resolve();
+app.use(morgan('combined', { stream: logger.stream }));
+require('./routes')(app, logger);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(root + '/public'));
-app.use('/api/', require('./api'));
-app.use('/crawler/', crawler);
 
 var server = app.listen(3000, function() {
   var host = server.address().address;
