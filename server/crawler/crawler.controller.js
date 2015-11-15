@@ -26,6 +26,27 @@ function getPageAt(pageNum) {
   }); // Insert into db.
 }
 
+/**
+ * Returns a promise of the item at *pageNum* and *itemNum*.
+ * 
+ * @param {Number|String} pageNum
+ * @return {Promise} -> {Array} of complete items
+ */
+function getItemPageAt(pageNum, itemNum) {
+  return indexer.getIndexPage(pageNum)
+  .then(function (items) {
+    return itemHandler.getItemPage(items[itemNum]);
+  })
+  .then(function (items) {
+    return new Promise(function (resolve, reject) {
+      // Save to db
+      homeItem.createHistorical(items);
+      resolve(items);
+    });
+  }); // Insert into db.
+}
+
 module.exports = {
-  getPageAt: getPageAt
+  getPageAt: getPageAt,
+  getItemPageAt: getItemPageAt
 }

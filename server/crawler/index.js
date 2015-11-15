@@ -22,6 +22,21 @@ router.get('/:pageNum', function (req, res) {
 });
 
 /**
+ * Gets item page at *itemNum* on the index page at *pageNum*.
+ * 
+ * Route: /crawler/:pageNum/:itemNum
+ */
+router.get('/:pageNum/:itemNum', function (req, res) {
+  if (!req.params.itemNum) {
+    return handleError(res, new Error('No pageNum provided'));
+  }
+  
+  controller.getItemPageAt(req.params.pageNum, req.params.itemNum)
+  .then(function (items) { res.status(200).json(items); })
+  .catch(function (err) { handleError(res, err); })
+});
+
+/**
  * Sends a response with the status code 500
  * and *err* as body.
  * 

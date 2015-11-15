@@ -25,6 +25,8 @@ function getPage(url) {
 }
 
 /**
+ * Processes the html to get the images, body and owner.
+ * 
  * @param {String} content - html page as string
  * @return {Promise} -> {Object}
  */
@@ -32,15 +34,15 @@ function processItemPage(content) {
   return new Promise(function (resolve, reject) {
     // Remove extra whitespace
     content = content
-        .replace(/\r?\n|\r|\t/g, '')
-        .replace(/<br\s*\/>/gi, '\n');
+      .replace(/\r?\n|\r|\t/g, ' ')
+      .replace(/<br\s*\/>/gi, '\n\n');
     
     // Load the cheerio instance
     var html = $.load(content);
     
     // Images are linked in meta tags
     var images = _.map(html('meta[property="og:image"]'), function (element) {
-      // Image url is set as content
+      // Image url is accessed by content
       return element.attribs.content;
     });
     
@@ -50,8 +52,8 @@ function processItemPage(content) {
       .replace(/^\s|\s$/, ''); // Remove leading and trailing whitespace
     
     var body = html('.object-text').text()
-      .replace(/\s+/g, ' ')// clean whitespace to spaces
-      .replace(/((?![a-ö])[^\w|^\s](?=[A-Z]))/g, "$1\n\n"); // Add new lines after non letters?
+      .replace(/ +/g, ' ') // Replace multiple spaces by single space
+      .replace(/\n+/g, '\n\n'); // Replace multiple newlines by double newlines
       
     resolve({
       owner: owner,
