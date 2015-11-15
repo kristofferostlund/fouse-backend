@@ -78,10 +78,11 @@ function createHistorical(_homeItem) {
         .catch(function (err) {
           console.log(err);
         });
+        
         // Insert new and updated
         create(toInsert)
         .then(function (homeItems) {
-          console.log(homeItems.length + ' homeItems created.');
+          console.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
           resolve(homeItems);
         })
       }

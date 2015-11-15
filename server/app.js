@@ -8,7 +8,7 @@ var mongoose = require('mongoose');
 
 var logger = require('./utils/logger.util');
 
-mongoose.connect('mongodb://localhost/home_please:27017');
+mongoose.connect('mongodb://localhost/home-please');
 
 app.use(morgan('combined', { stream: logger.stream }));
 require('./routes')(app, logger);

@@ -57,7 +57,7 @@ function processItemPage(content) {
       owner: owner,
       body: body,
       images: images,
-      disabed: (/Hittade inte annonsen/.test(content)) ? true : undefined
+      disabled: (/Hittade inte annonsen/.test(content)) ? true : undefined
     });
   });
 }

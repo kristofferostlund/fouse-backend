@@ -28,13 +28,25 @@ function lazyCompare(source, target, exclude) {
   // Get keys for comparison
   var keys = _.chain(target)
     .map(function (value, key) { return key; })
-    .filter(function (key) { return !!~exclude.indexOf(key); })
+    .filter(function (key) { return !~exclude.indexOf(key); })
     .value();
   
-  return _.every(
-    // Note, had to add "+ ''" to the key for VS Code to not think key is an object
-    _.map(keys, function (key) { return source[key + ''] == target[key + '']; })
-  );
+  // TODO: add object comparison, recursion maybe?
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    if (_.isArray(source[key])) {
+      // For arrays
+      if (_.difference(source[key, target[key]]).length) { return false; }
+    } else if (_.isDate(source[key])) {
+      // For dates
+      if (source[key].getTime() != target[key].getTime()) { return false; }
+    } else {
+      // For values
+      if (source[key] != target[key]) { return false; }
+    }
+  }
+  
+  return true;
 }
 
 module.exports = {

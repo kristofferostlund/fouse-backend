@@ -6,15 +6,17 @@ var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
 var HomeItemSchema = new Schema({
-  owner: String,
-  body: String,
-  images: [ String ],
   title: String,
-  size: String,
+  owner: String,
   rent: String,
+  body: String,
+  rooms: String,
+  size: String,
   location: String,
   date: Date,
   url: String,
+  images: [ String ],
+  thumbnail: String,
   dateCreated: {
     type: Date,
     default: Date.now
