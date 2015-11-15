@@ -3,6 +3,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
+var utils = require('../../utils/general.utils');
 var HomeItem = require('./homeItem.model');
 
 /**
@@ -24,6 +25,71 @@ function create(_home) {
 }
 
 /**
+ * Inserts one or many *_homeItem* to the db
+ * and deactivates any documents which matches the url of the inserted documents
+ * and is different to the matching *_homeItem* (or item in *_homeItem* if it's an array).
+ * 
+ * @param {Object|Array} _homeItem (HomeItem)
+ * @return {Promise} -> {Object|Array} (HomeItem)
+ */
+function createHistorical(_homeItem) {
+  return new Promise(function (resolve, reject) {
+    
+    var _homeItems; // Ensure array
+    var options;
+    
+    if (_.isArray(_homeItem)) {
+      _homeItems = _homeItem;
+      options = {
+        url: { $in: _.map(_homeItem, function (home) { return home.url; }) },
+        disabled: { $ne: true }
+      };
+    } else {
+      _homeItems = [ _homeItem ];
+      options = {
+        url: { $in: [ _homeItem.url ] },
+        disabled: { $ne: true }
+      };
+    }
+    
+    HomeItem.find(options, function (err, homeItems) {
+      if (err) {
+        reject(err);
+      } else {
+        // Every item not found in the db should be added
+        var toInsert = _.filter(_homeItems, function (home) { return !_.find(homeItems, { url: home.url }); });
+        var toDisable = [];
+        
+        // Find elements to insert and disable which are present in the db.
+        homeItems.forEach(function (home) {
+          var _home = _.find(_homeItems, { url: home.url });
+          
+          if (_home && !utils.lazyCompare(home, _home, [ '_id', 'id' ])) {
+            toInsert.push(_home);
+            toDisable.push(home); // db object
+          }
+        });
+      
+        // Disable documents.
+        Promise.settle(_.map(toDisable, disable))
+        .then(function (vals) {
+          console.log(_.map(vals, function (val) { return val.value(); }).length + ' homeItems disabled.');
+        })
+        .catch(function (err) {
+          console.log(err);
+        });
+        // Insert new and updated
+        create(toInsert)
+        .then(function (homeItems) {
+          console.log(homeItems.length + ' homeItems created.');
+          resolve(homeItems);
+        })
+      }
+    });
+  });
+}
+
+/**
  * Gets all HomeItems matching *_options*.
  * 
  * @param {Object} _options - optional
@@ -32,9 +98,12 @@ function create(_home) {
 function find(_options) {
   return new Promise(function (resolve, reject) {
     var options = _.assign({}, _options, {
-      disabled: _options && _options.disabled
+      disabled: (_options && _options.disabled
         ? _options.disabled
-        : { $ne: true }
+        : { $ne: true }),
+      active: (_options && _options.active
+        ? _options.active
+        : true)
     });
     HomeItem.find(options, function (err, homeItems) {
       if (err) {
@@ -55,9 +124,12 @@ function find(_options) {
 function findOne(_options) {
   return new Promise(function (resolve, reject) {
     var options = _.assign({}, _options, {
-      disabled: _options && _options.disabled
+      disabled: (_options && _options.disabled
         ? _options.disabled
-        : { $ne: true } 
+        : { $ne: true }),
+      active: (_options && _options.active
+        ? _options.active
+        : true)
     });
     HomeItem.findOne(options, function (err, homeItems) {
       if (err) {
@@ -70,13 +142,14 @@ function findOne(_options) {
 }
 
 /**
- * Deletes *_homeItem* from the db.
+ * Disables, inactivates and sets dateRemoved to now for *_homeItem*.
+ * This effectively removes the HomeItem from regular queries.
  * *_homeItem* can be either the Object or its _id.
  * 
  * @param {Object|String} _homeItem - either the actual HomeItem or its _id
  * @return {Promise} -> {Object} (HomeItem)
  */
-function remove(_homeItem) {
+function disable(_homeItem) {
   return new Promise(function (resolve, reject) {
     var id;
     // Takes either the _homeItem as an Object or its _id
@@ -86,11 +159,26 @@ function remove(_homeItem) {
       id = _homeItem;
     }
     
-    HomeItem.findByIdAndRemove(id, function (err, homeItem) {
+    HomeItem.findById(id, function (err, homeItem) {
       if (err) {
         reject(err);
       } else {
-        resolve(homeItem);
+        
+        // Disable, inactivate and set dateRemoved
+        homeItem = _.assign(homeItem, {
+          disabled: true,
+          active: false,
+          dateRemoved: new Date()
+        });
+        
+        // Save the document.
+        homeItem.save(function (err, homeItem) {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(homeItem);
+          }
+        });
       }
     });
   });
@@ -98,6 +186,8 @@ function remove(_homeItem) {
 
 module.exports = {
   create: create,
+  createHistorical: createHistorical,
   find: find,
-  remove: remove
+  findOne: findOne,
+  remove: disable
 }

@@ -23,6 +23,15 @@ var HomeItemSchema = new Schema({
     type: Date,
     default: Date.now
   },
+  dateRemoved: {
+    // Approximate as I cannot know exactly when it was removed
+    type: Date
+  },
+  active: {
+    // For slowly changing dimensions like data
+    type: Boolean,
+    default: true
+  },
   disabled: Boolean
 });
 
