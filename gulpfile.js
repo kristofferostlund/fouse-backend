@@ -36,7 +36,7 @@ gulp.task('default', function () {
   gulp.run('server');
   
   // Every change, do this.
-  gulp.watch(['./**'], function () {
+  gulp.watch(['./server/**'], function () {
     gulp.run('server');
   });
 });
