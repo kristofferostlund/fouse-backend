@@ -32,7 +32,7 @@ router.get('/:pageNum/:itemNum', function (req, res) {
   }
   
   controller.getItemPageAt(req.params.pageNum, req.params.itemNum)
-  .then(function (items) { res.status(200).json(items.length); })
+  .then(function (items) { res.status(200).json(items); })
   .catch(function (err) { handleError(res, err); })
 });
 
