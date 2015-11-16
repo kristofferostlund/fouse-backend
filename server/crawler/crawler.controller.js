@@ -46,7 +46,25 @@ function getItemPageAt(pageNum, itemNum) {
   }); // Insert into db.
 }
 
+/**
+ * Returns a promise of all home items.
+ * 
+ * @return {Promise} -> {Array} (HomeItem)
+ */
+function getAllItems() {
+  return indexer.getAllIndexPages()
+  .then(itemHandler.getManyItemPages)
+  .then(function (items) {
+    return new Promise(function (resolve, reject) {
+      // Save to db
+      homeItem.createHistorical(items);
+      resolve(items);
+    });
+  }); // Insert into db.
+}
+
 module.exports = {
   getPageAt: getPageAt,
-  getItemPageAt: getItemPageAt
+  getItemPageAt: getItemPageAt,
+  getAllItems: getAllItems
 }

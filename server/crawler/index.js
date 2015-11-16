@@ -32,8 +32,14 @@ router.get('/:pageNum/:itemNum', function (req, res) {
   }
   
   controller.getItemPageAt(req.params.pageNum, req.params.itemNum)
-  .then(function (items) { res.status(200).json(items); })
+  .then(function (items) { res.status(200).json(items.length); })
   .catch(function (err) { handleError(res, err); })
+});
+
+router.get('/setup/all/items', function (req, res) {
+  controller.getAllItems()
+  .then(function (items) { res.status(200).json(items); })
+  .catch(function (err) { handleError(res, err); });
 });
 
 /**

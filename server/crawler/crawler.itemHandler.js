@@ -1,7 +1,6 @@
 'use strict'
 
 var _ = require('lodash');
-var mongoose = require('mongoose');
 var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
@@ -15,7 +14,7 @@ var $ = require('cheerio');
 function getPage(url) {
   return new Promise(function (resolve, reject) {
     request.get({
-      uri: url, 
+      uri: url,
       encoding: null
     }, function (err, res, body) {
       if (err) { reject(err); }

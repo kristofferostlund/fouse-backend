@@ -17,7 +17,7 @@ var __baseURL = 'http://www.blocket.se/bostad/uthyres/stockholm?o={pageNum}&f=p&
  * @param {String|Number} num
  * @return {String} - the base url + the page number
  */
-function urlByNum (num) {
+function urlByNum(num) {
   return __baseURL.replace(/{pageNum}/gi, '' + num);
 }
 
@@ -28,13 +28,13 @@ function urlByNum (num) {
  * @param {String} url
  * @return {Promise} -> {String}
  */
- function getPage(url) {
+function getPage(url) {
   return new Promise(function (resolve, reject) {
+    
     request.get({
       uri: url,
       encoding: null
-    },
-    function (err, res, body) {
+    }, function (err, res, body) {
       if (err) { reject(err); }
       else { resolve(body.toString('utf8')); }
     });
@@ -47,7 +47,7 @@ function urlByNum (num) {
  * 
  * @param {String} content - HTML content as string
  * @return {Promise} -> {Array} of list items
- */
+ */ 
 function processIndexPage(content) {
   return new Promise(function (resolve, reject) {
     
@@ -55,15 +55,15 @@ function processIndexPage(content) {
     if (~content.indexOf('ads-not-found-container')) {
       return resolve({ info: 'Non content page.' })
     }
-    
+
     content = content.replace(/\r?\n|\r|\t/g, '');
     var html = $.load(content);
-    
+
     var items = _.chain(html('div[itemtype="http://schema.org/Offer"]'))
       .map(function (e) { return e; })
       .map(processListItem)
       .value();
-      
+
     resolve(items);
   });
 }
@@ -89,7 +89,7 @@ function processListItem(e) {
   // Get image and check if it exists.
   var thumbnail = _.attempt(function () { return anchor.attribs.style.match(/\(.*?\)/g).toString().replace(/[()]/g, ''); });
   if (_.isError(thumbnail)) { thumbnail = undefined; }
-  
+
   return {
     title: $(e).find('.media-heading').text(),
     rooms: $(e).find('.rooms').text(),
@@ -100,7 +100,7 @@ function processListItem(e) {
     url: anchor.attribs.href,
     thumbnail: thumbnail
   };
-  
+
 };
 
 /**
@@ -113,7 +113,7 @@ function processListItem(e) {
  */
 function getIndexPage(pageNum) {
   return getPage(urlByNum(pageNum))
-  .then(processIndexPage);
+    .then(processIndexPage);
 }
 
 /**
@@ -129,25 +129,25 @@ function getAllIndexPages(_items, pageNum, isDone) {
     _items = [];
     pageNum = 1;
   }
-  
+
   if (isDone) {
     return new Promise(function (resolve, reject) {
       resolve(_items);
     });
   }
-  
+
   return getIndexPage(pageNum)
-  .then(function (items) {
-    pageNum++;
+    .then(function (items) {
+      pageNum++;
     
-    // After cleaning the page, this is returned: { info: 'Non content page.' }
-    if (items && items.info) {
-      return getAllIndexPages(_items, pageNum, true);
-    } else {
-      // Recursion!
-      return getAllIndexPages(_items.concat(items), pageNum);
-    }
-  });
+      // After cleaning the page, this is returned: { info: 'Non content page.' }
+      if (items && items.info) {
+        return getAllIndexPages(_items, pageNum, true);
+      } else {
+        // Recursion!
+        return getAllIndexPages(_items.concat(items), pageNum);
+      }
+    });
 }
 
 module.exports = {
