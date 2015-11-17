@@ -5,23 +5,7 @@ var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
 
-/**
- * Returns a promise of the page at *url*.
- * 
- * @param {String} url - the url to get the page for
- * @return {Promise} -> {String}
- */
-function getPage(url) {
-  return new Promise(function (resolve, reject) {
-    request.get({
-      uri: url,
-      encoding: null
-    }, function (err, res, body) {
-      if (err) { reject(err); }
-      else { resolve(body.toString('utf8')); }
-    });
-  });
-}
+var utils = require('../utils/general.utils');
 
 /**
  * Processes the html to get the images, body and owner.
@@ -71,7 +55,7 @@ function processItemPage(content) {
  */
 function getItemPage(indexItem) {
   return new Promise(function (resolve, reject) {
-    getPage(indexItem.url)
+    utils.getPage(indexItem.url)
     .then(processItemPage)
     .then(function (itemPage) {
       resolve(_.assign({}, itemPage, indexItem));

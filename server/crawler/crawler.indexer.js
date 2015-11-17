@@ -6,6 +6,8 @@ var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
 
+var utils = require('../utils/general.utils');
+
 // The URL for every rentable blocket ad. ish.
 var __baseURL = 'http://www.blocket.se/bostad/uthyres/stockholm?o={pageNum}&f=p&f=c&f=b';
 
@@ -21,25 +23,6 @@ function urlByNum(num) {
   return __baseURL.replace(/{pageNum}/gi, '' + num);
 }
 
-/**
- * Makes a GET request to the supplied url and
- * returns a promise of it's content in string format.
- * 
- * @param {String} url
- * @return {Promise} -> {String}
- */
-function getPage(url) {
-  return new Promise(function (resolve, reject) {
-    
-    request.get({
-      uri: url,
-      encoding: null
-    }, function (err, res, body) {
-      if (err) { reject(err); }
-      else { resolve(body.toString('utf8')); }
-    });
-  });
-}
 
 /**
  * Processes the ads list page and returns an array of items.
@@ -106,13 +89,13 @@ function processListItem(e) {
 /**
  * Returns a promise of the index page at *pageNum*.
  * 
- * Serves as a shorthand for getPage(urlByNum(*pageNum*)).then(processIndexPage)
+ * Serves as a shorthand for utils.getPage(urlByNum(*pageNum*)).then(processIndexPage)
  * 
  * @param {Number|String} pageNum
  * @return {Promise} -> {Object} - single index page
  */
 function getIndexPage(pageNum) {
-  return getPage(urlByNum(pageNum))
+  return utils.getPage(urlByNum(pageNum))
     .then(processIndexPage);
 }
 
@@ -135,7 +118,7 @@ function getAllIndexPages(_items, pageNum, isDone) {
       resolve(_items);
     });
   }
-
+  
   return getIndexPage(pageNum)
     .then(function (items) {
       pageNum++;

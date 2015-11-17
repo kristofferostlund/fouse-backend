@@ -49,6 +49,9 @@ function getItemPageAt(pageNum, itemNum) {
 /**
  * Returns a promise of all home items.
  * 
+ * // TODO: make this work haha
+ * 
+ * 
  * @return {Promise} -> {Array} (HomeItem)
  */
 function getAllItems() {

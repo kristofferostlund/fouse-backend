@@ -50,6 +50,7 @@ router.get('/setup/all/items', function (req, res) {
  * @param {Object} err - error object
  */
 function handleError(res, err) {
+  console.log(err);
   res.status(500).json(err);
 }
 
