@@ -1,6 +1,7 @@
 'use strict'
 
 var _ = require('lodash');
+var request = require('request');
 
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
@@ -49,6 +50,32 @@ function lazyCompare(source, target, exclude) {
   return true;
 }
 
+/**
+ * Makes a GET request to *url*
+ * and returns a promise of the body as a string.
+ * 
+ * @param {String} url - URI to request
+ * @param {Object} options - optional, options object
+ */
+function getPage(url, options) {
+  return new Promise(function (resolve, reject) {
+    // *options* must be an object
+    if (!_.isObject(options)) { options = {}; }
+    
+    request.get({
+      uri: url,
+      encoding: options.encoding || null,
+      headers: _.assign({}, {
+        'Connection': 'keep-alive'
+      }, options.headers)
+    }, function (err, res, body) {
+      if (err) { reject(err); }
+      else { resolve(body.toString('utf8')); }
+    })
+  });
+}
+
 module.exports = {
+  getPage: getPage,
   lazyCompare: lazyCompare
 };
