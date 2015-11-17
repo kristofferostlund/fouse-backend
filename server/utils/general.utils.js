@@ -110,7 +110,6 @@ function getManyPages(items, options, urls, pages) {
     console.log(res.length + ' pages fetched.', new Date().toISOString());
     return getManyPages(items, options, urls, pages.concat(res));
   });
-  // request like ten items and then do some recursion
 }
 
 module.exports = {
