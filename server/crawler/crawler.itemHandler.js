@@ -47,6 +47,28 @@ function processItemPage(content) {
   });
 }
 
+
+
+/**
+ * Processes all the item pages.
+ * 
+ * @param {Array} contents
+ * @return {Promise} -> {Array} (ItemPage)
+*/
+function processManyItemPages(contents) {
+  
+  if (!_.isArray(contents)) { contents = [ contents ]; }
+  
+  return new Promise(function (resolve, reject) {
+    Promise.settle(_.map(contents, processItemPage))
+    .then(function (vals) {
+      resolve(_.map(vals, function (val) { return val.value(); }));
+    })
+    .catch(resolve);
+  });
+  
+}
+
 /**
  * Returns a promise of a combined object of *indexItem* and its corresponding item page.
  * 
@@ -64,17 +86,26 @@ function getItemPage(indexItem) {
 }
 
 /**
- * Returns a promise of a an array of complete items
+ * Returns a promise of a an array of complete items.
  * 
  * @param {Array} indexItems - array of items from the index list
  * @return {Promise} -> {Array} of complete items.
  */
 function getManyItemPages(indexItems) {
   return new Promise(function (resolve, reject) {
-    Promise.settle(_.map(indexItems, getItemPage))
-    .then(function (vals) { 
-      resolve(_.map(vals, function (val) { return val.value(); }))
+    // Promise.settle(_.map(indexItems, getItemPage))
+    utils.getManyPages(indexItems)
+    .then(processManyItemPages)
+    .then(function (itemPages) {
+      return new Promise(function (resolve, reject) {
+        resolve(
+          _.map(indexItems, function (iItem, i) {
+            return _.assign({}, iItem, itemPages[i]);
+          })
+        );
+      });
     })
+    .then(resolve)
     .catch(reject);
   });
 }

@@ -2,6 +2,7 @@
 
 var _ = require('lodash');
 var request = require('request');
+var Promise = require('bluebird');
 
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
@@ -75,7 +76,35 @@ function getPage(url, options) {
   });
 }
 
+function getManyPages(items, options, urls, pages) {
+  // Initial setup
+  if (!urls) {
+    urls = _.map(items, function (item) { return _.isObject(item) ? item.url : item; });
+    pages = [];
+    console.time('Fetching ' + urls.length + ' items')
+  }
+  
+  if (items.length === pages.length) {
+    return new Promise(function (resolve, reject) {
+      console.timeEnd('Fetching ' + urls.length + ' items')
+      console.log('All pages gotten!');
+      resolve(pages);
+    });
+  }
+  
+  var toGet = _.map(urls.slice(pages.length, pages.length + 50), function (url) { return getPage(url, options); });
+  
+  return Promise.settle(toGet)
+  .then(function (_pages) {
+    var res = _.map(_pages, function (val) { return val.value(); });
+    console.log(res.length + ' pages fetched.', new Date().toISOString());
+    return getManyPages(items, options, urls, pages.concat(res));
+  });
+  // request like ten items and then do some recursion
+}
+
 module.exports = {
   getPage: getPage,
+  getManyPages: getManyPages,
   lazyCompare: lazyCompare
 };
