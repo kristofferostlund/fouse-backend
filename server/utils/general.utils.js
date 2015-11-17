@@ -76,6 +76,16 @@ function getPage(url, options) {
   });
 }
 
+/**
+ * Gets all pages in *items* and returns them as a promise.
+ * Pages are gotten 50 at a time.
+ * 
+ * @params {Array} items - items to fetch
+ * @params {Object} options - request opions
+ * @param {Array} urls - DO NOT SET, set recursively!
+ * @param {Array} pages - DO NOT SET, set recursively!
+ * @return {Promise} -> {Array} Item pages
+ */
 function getManyPages(items, options, urls, pages) {
   // Initial setup
   if (!urls) {
