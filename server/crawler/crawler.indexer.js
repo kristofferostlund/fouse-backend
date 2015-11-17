@@ -68,6 +68,7 @@ function processIndexPage(content) {
 */
 function processListItem(e) {
   var anchor = $(e).find('a')[0];
+  var rent = $(e).find('.monthly_rent').text();
   
   // Get image and check if it exists.
   var thumbnail = _.attempt(function () { return anchor.attribs.style.match(/\(.*?\)/g).toString().replace(/[()]/g, ''); });
@@ -77,7 +78,8 @@ function processListItem(e) {
     title: $(e).find('.media-heading').text(),
     rooms: $(e).find('.rooms').text(),
     size: $(e).find('.li_detail_params.size').text(),
-    rent: $(e).find('.monthly_rent').text(),
+    rent: rent,
+    price: parseInt(rent.replace(/[^0-9]/gi, '')),
     location: $(e).find('.address').text(),
     date: new Date($(e).find('.jlist_date_image')[0].attribs['datetime']),
     url: anchor.attribs.href,

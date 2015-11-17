@@ -36,6 +36,11 @@ router.get('/:pageNum/:itemNum', function (req, res) {
   .catch(function (err) { handleError(res, err); })
 });
 
+/**
+ * Gets absolutely every page there is.
+ * 
+ * Route: /crawler/setup/all/items
+ */
 router.get('/setup/all/items', function (req, res) {
   controller.getAllItems()
   .then(function (items) { res.status(200).json(items); })

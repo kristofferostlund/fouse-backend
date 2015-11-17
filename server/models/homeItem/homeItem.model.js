@@ -8,7 +8,8 @@ var ObjectId = Schema.ObjectId;
 var HomeItemSchema = new Schema({
   title: String,
   owner: String,
-  rent: String,
+  rent: String, // As is
+  price: Number, // Parsed from this.rent
   body: String,
   rooms: String,
   size: String,
