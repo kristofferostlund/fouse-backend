@@ -18,6 +18,13 @@ var HomeItemSchema = new Schema({
   url: String,
   images: [ String ],
   thumbnail: String,
+  classifications: {
+    girls: Boolean, // For girls only
+    commuters: Boolean, // Something like only 5 days a week
+    shared: Boolean, // Rooms, collectives and other shared solutions
+    swap: Boolean, // For swap - home for home
+    noKitchen: Boolean // Tenant lacks access to kitchen
+  },
   dateCreated: {
     type: Date,
     default: Date.now

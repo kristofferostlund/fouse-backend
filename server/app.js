@@ -10,11 +10,12 @@ var logger = require('./utils/logger.util');
 
 mongoose.connect('mongodb://localhost/home-please');
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.use(morgan('combined', { stream: logger.stream }));
 require('./routes')(app, logger);
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
 
 var server = app.listen(3000, function() {
   var host = server.address().address;

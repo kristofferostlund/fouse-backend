@@ -79,7 +79,7 @@ function processListItem(e) {
     rooms: $(e).find('.rooms').text(),
     size: $(e).find('.li_detail_params.size').text(),
     rent: rent,
-    price: parseInt(rent.replace(/[^0-9]/gi, '')),
+    price: parseInt(rent.replace(/[^0-9]/gi, '')) || undefined,
     location: $(e).find('.address').text(),
     date: new Date($(e).find('.jlist_date_image')[0].attribs['datetime']),
     url: anchor.attribs.href,

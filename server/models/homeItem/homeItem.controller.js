@@ -16,6 +16,7 @@ function create(_home) {
   return new Promise(function (resolve, reject) {
     HomeItem.create(_home, function (err, home) {
       if (err) {
+        console.log(err);
         reject(err);
       } else {
         resolve(home);
@@ -73,7 +74,10 @@ function createHistorical(_homeItem) {
         // Disable documents.
         Promise.settle(_.map(toDisable, disable))
         .then(function (vals) {
-          console.log(_.map(vals, function (val) { return val.value(); }).length + ' homeItems disabled.');
+          
+          vals = _.map(vals, function (val) { return val.value(); });
+          
+          console.log(vals.length + ' homeItems disabled.');
         })
         .catch(function (err) {
           console.log(err);
@@ -84,7 +88,7 @@ function createHistorical(_homeItem) {
         .then(function (homeItems) {
           console.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
           resolve(homeItems);
-        })
+        });
       }
     });
   });
