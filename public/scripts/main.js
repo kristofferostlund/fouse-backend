@@ -52,6 +52,7 @@ after which it selects the home and updates the preview.
 @param {Object} home
 */
 function openHome(event, home) {
+  if (home.url == preview.data.url) return updatePreview(preview.data, home);
   getPreview(home)
     .then(function (value) {
       selectHome(home);
