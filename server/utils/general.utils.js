@@ -36,12 +36,16 @@ function lazyCompare(source, target, exclude) {
   // TODO: add object comparison, recursion maybe?
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
+    
     if (_.isArray(source[key])) {
       // For arrays
       if (_.difference(source[key, target[key]]).length) { return false; }
     } else if (_.isDate(source[key])) {
       // For dates
       if (source[key].getTime() != target[key].getTime()) { return false; }
+    } else if (_.isObject(source[key])) {
+      // For plain objects
+      return lazyCompare(source[key], target[key]);
     } else {
       // For values
       if (source[key] != target[key]) { return false; }
