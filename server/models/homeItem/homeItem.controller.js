@@ -35,7 +35,6 @@ function create(_home) {
  */
 function createHistorical(_homeItem) {
   return new Promise(function (resolve, reject) {
-    
     var _homeItems; // Ensure array
     var options;
     

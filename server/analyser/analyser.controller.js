@@ -101,20 +101,37 @@ function forCommuters(body) {
  * @return {Boolean}
  */
 function lacksKitchen(body) {
-  return !/kök saknas|inget kök| (ej|ingen).{1,15}tillgång.{1,15}kök|ej kök|no( | access.{1,5})kitchen/gi.test(body);
+  return /kök saknas|inget kök| (ej|ingen).{1,15}tillgång.{1,15}kök|ej kök|no( | access.{1,5})kitchen/gi.test(body);
 }
 
 /**
- * @param {String} body
- * @param {String} title
+ * @param {Object} homeItem
  * @returm {Object}
- */
-function getClassifications(body, title) {
-  return {
-    girls: forGirls(body) || forGirls(title),
-    commuters: forCommuters(body) || forCommuters(title),
-    shared: isShared(body) || isShared(title),
-    swap: isSwap(body) || isSwap(title),
-    noKitchen: lacksKitchen(body) || lacksKitchen(title)
-  };
+ */ 
+function getClassifications(homeItem) {
+  return _.assign({}, homeItem, { classifications: {
+    girls: forGirls(homeItem.body) || forGirls(homeItem.title),
+    commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
+    shared: isShared(homeItem.body) || isShared(homeItem.title),
+    swap: isSwap(homeItem.body) || isSwap(homeItem.title),
+    noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
+  }});
 }
+
+/**
+ * @param {Array|Object} homeItems
+ * @return {Array|Object}
+ */
+function classify(homeItems) {
+  return new Promise(function (resolve, reject) {
+    if (!_.isArray(homeItems)) { resolve(getClassifications(homeItems)); }
+    else { resolve(_.map(homeItems, getClassifications)); }
+  });
+}
+
+module.exports = {
+  getClassifications: getClassifications,
+  classify: classify
+};
+
+// TODO: Add area stuff (use Google maps API?)

@@ -5,6 +5,7 @@ var Promise = require('bluebird');
 
 var indexer = require('./crawler.indexer');
 var itemHandler = require('./crawler.itemHandler');
+var analyser = require('../analyser/analyser.controller');
 
 var homeItem = require('../models/homeItem/homeItem.controller');
 
@@ -17,6 +18,7 @@ var homeItem = require('../models/homeItem/homeItem.controller');
 function getPageAt(pageNum) {
   return indexer.getIndexPage(pageNum)
   .then(itemHandler.getManyItemPages)
+  .then(analyser.classify)
   .then(function (items) {
     return new Promise(function (resolve, reject) {
       // Save to db
@@ -37,6 +39,7 @@ function getItemPageAt(pageNum, itemNum) {
   .then(function (items) {
     return itemHandler.getItemPage(items[itemNum]);
   })
+  .then(analyser.classify)
   .then(function (items) {
     return new Promise(function (resolve, reject) {
       // Save to db
@@ -49,14 +52,12 @@ function getItemPageAt(pageNum, itemNum) {
 /**
  * Returns a promise of all home items.
  * 
- * // TODO: make this work haha
- * 
- * 
  * @return {Promise} -> {Array} (HomeItem)
  */
 function getAllItems() {
   return indexer.getAllIndexPages()
   .then(itemHandler.getManyItemPages)
+  .then(analyser.classify)
   .then(function (items) {
     return new Promise(function (resolve, reject) {
       // Save to db
