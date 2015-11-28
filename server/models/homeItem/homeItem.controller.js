@@ -218,13 +218,13 @@ function getItemsOfInterest(_options) {
     }
     
     options = _.assign({}, {
-      date: { $gte: moment().subtract('days', 1).startOf('day').toDate() },
+      date: { $gte: moment().subtract(15, 'minutes').toDate() },
       price: { $lt: 8001 },
-      'classifcation.noKitchen': { $ne: true },
-      'classifcation.swap': { $ne: true },
-      'classifcation.shared': { $ne: true },
-      'classifcation.commuters': { $ne: true },
-      'classifcation.girls': { $ne: true },
+      'classification.noKitchen': { $ne: true },
+      'classification.swap': { $ne: true },
+      'classification.shared': { $ne: true },
+      'classification.commuters': { $ne: true },
+      'classification.girls': { $ne: true },
       disabled: { $ne: true },
       active: true
     }, __options);
@@ -268,18 +268,19 @@ function getDaySummary(_options) {
     }
     
     options = _.assign({}, {
-      date: { $gte: moment().subtract('days', 1).startOf('day').add('hours', 6).toDate() },
+      date: { $gte: moment().subtract('days', 1).startOf('day').add(6, 'hours').toDate() },
       price: { $lt: 8001 },
-      'classifcation.noKitchen': { $ne: true },
-      'classifcation.swap': { $ne: true },
-      'classifcation.shared': { $ne: true },
-      'classifcation.commuters': { $ne: true },
-      'classifcation.girls': { $ne: true },
+      'classification.noKitchen': { $ne: true },
+      'classification.swap': { $ne: true },
+      'classification.shared': { $ne: true },
+      'classification.commuters': { $ne: true },
+      'classification.girls': { $ne: true },
       disabled: { $ne: true },
       active: true
     }, __options);
-    
-    HomeItem.find(options, function (err, items) {
+
+    HomeItem.find(options)
+    .exec(function (err, items) {
       if (err) {
         reject(err);
       } else {
