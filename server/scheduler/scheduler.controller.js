@@ -38,11 +38,16 @@ function getEveryPage() {
 
 // Schedule to get the first index page
 var scheduleEvery15 = later.parse.recur()
-  .every(15).minute();
+  .every(15).minute()
+  .except().every().hour().between(0,6);
 
 // Schedule to get every index page
 var scheduleOn6 = later.parse.recur()
   .on(6).hour();
 
-// later.setInterval(getFirstPage(), scheduleEvery15);
-// later.setInterval(getEveryPage(), scheduleOn6);
+// Starts schedules in 15 minutes
+setTimeout(function() {
+  later.setInterval(getFirstPage(), scheduleEvery15);
+  later.setInterval(getEveryPage(), scheduleOn6);
+}, 900000);
+
