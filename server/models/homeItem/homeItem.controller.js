@@ -2,6 +2,7 @@
 
 var _ = require('lodash');
 var Promise = require('bluebird');
+var moment = require('moment');
 
 var utils = require('../../utils/general.utils');
 var HomeItem = require('./homeItem.model');
@@ -188,10 +189,113 @@ function disable(_homeItem) {
   });
 }
 
+/**
+ * Finds all items matching the options.
+ * Options default to items created the last 15 minutes,
+ * with a price of up to 8000 kr,
+ * is for not share,
+ * is not only for girls,
+ * has a kitchen
+ * and isn't for students only.
+ * 
+ * @param {Object} _options - optional
+ * @return {Promise} -> {Array} (HomeItem)
+ */
+function getItemsOfInterest(_options) {
+  return new Promise(function (resolve, reject) {
+    var options;
+    var __options;
+    
+    // Ensure nothing weird happens with options
+    if (_.some([
+      _.isArray(_options),
+      _.isDate(_options),
+      !_.isObject(_options)
+    ])) {
+      __options = {};
+    } else {
+      __options = options;
+    }
+    
+    options = _.assign({}, {
+      date: { $gte: moment().subtract(15, 'minutes').toDate() },
+      price: { $lt: 8001 },
+      'classification.noKitchen': { $ne: true },
+      'classification.swap': { $ne: true },
+      'classification.shared': { $ne: true },
+      'classification.commuters': { $ne: true },
+      'classification.girls': { $ne: true },
+      disabled: { $ne: true },
+      active: true
+    }, __options);
+    
+    HomeItem.find(options, function (err, items) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(items);
+      }
+    });
+  });
+}
+
+/**
+ * Finds sall items matching options.
+ * Options default to items created after since yestarday 06.00,
+ * with a price of up to 8000 kr,
+ * is for not share,
+ * is not only for girls,
+ * has a kitchen
+ * and isn't for students only.
+ * 
+ * @param {Object} options - optional
+ * @return {Promise} -> {Array} (HomeItem)
+ */
+function getDaySummary(_options) {
+  return new Promise(function (resolve, reject) {
+    var options;
+    var __options;
+    
+    // Ensure nothing weird happens with options
+    if (_.some([
+      _.isArray(_options),
+      _.isDate(_options),
+      !_.isObject(_options)
+    ])) {
+      __options = {};
+    } else {
+      __options = _options;
+    }
+    
+    options = _.assign({}, {
+      date: { $gte: moment().subtract('days', 1).startOf('day').add(6, 'hours').toDate() },
+      price: { $lt: 8001 },
+      'classification.noKitchen': { $ne: true },
+      'classification.swap': { $ne: true },
+      'classification.shared': { $ne: true },
+      'classification.commuters': { $ne: true },
+      'classification.girls': { $ne: true },
+      disabled: { $ne: true },
+      active: true
+    }, __options);
+
+    HomeItem.find(options)
+    .exec(function (err, items) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(items);
+      }
+    });
+  });
+}
+
 module.exports = {
   create: create,
   createHistorical: createHistorical,
   find: find,
   findOne: findOne,
-  remove: disable
+  remove: disable,
+  getItemsOfInterest: getItemsOfInterest,
+  getDaySummary: getDaySummary
 }

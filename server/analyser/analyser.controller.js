@@ -109,7 +109,7 @@ function lacksKitchen(body) {
  * @returm {Object}
  */ 
 function getClassifications(homeItem) {
-  return _.assign({}, homeItem, { classifications: {
+  return _.assign({}, homeItem, { classification: {
     girls: forGirls(homeItem.body) || forGirls(homeItem.title),
     commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
     shared: isShared(homeItem.body) || isShared(homeItem.title),
