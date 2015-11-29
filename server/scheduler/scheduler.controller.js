@@ -22,6 +22,7 @@ function getFirstPage() {
     // Send sms if any are of interest
     items.forEach(function(item) {
       notifier.sendSms(item);
+      notifier.sendEmail(item);
     }, this);
   })
   .catch(function (err) {
@@ -40,7 +41,7 @@ function getEveryPage() {
     console.log('All pages gotten at', moment().format('YYYY-MM-DD, HH:mm'));
     // Send an email if any are of interest
     items.forEach(function(item) {
-      console.log(item.url);
+      notifier.sendEmail(item);
     }, this);
   })
   .catch(function (err) {

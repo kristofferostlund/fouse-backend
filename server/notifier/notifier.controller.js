@@ -5,12 +5,15 @@ var Promise = require('bluebird');
 var chalk = require('chalk');
 var fs = require('fs');
 var path = require('path');
+var mandrill  = require('mandrill-api');
 
 var utils = require('../utils/general.utils');
 
 var config; // Set it to the requried file if it exists
 try { config = require('../../userConfig'); }
-catch (error) { config = {}; }
+catch (error) { config = {}; console.log('argh:', error); }
+
+var emailClient = new mandrill.Mandrill(config.mandrill_api_key);
 
 /**
  * Returns the url for which to make a
@@ -88,6 +91,25 @@ function createSmsBody(content, shortUrl, encode) {
 }
 
 /**
+ * @param {Object} homeItem (HomeItem)
+ * @return {String}
+ */
+function createEmailBody(homeItem) {
+  return [
+    homeItem.title,
+    '--------',
+    ['Pris: ' + (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
+    'Rum: ' + homeItem.rooms,
+    'Storlek: ' + homeItem.size,
+    'Uthyrare: ' + homeItem.owner,
+    'Länk: ' + homeItem.url].join('\n'),
+    '--------',
+    homeItem.body,
+    ['Vänligen', config.name].join('\n')
+  ].join('\n\n');
+}
+
+/**
  * Sends a text message to to tel in config
  * with the title of *homeItem*
  * and a shortened link using the Bitly API.
@@ -124,6 +146,34 @@ function sendSms(homeItem) {
   })
 }
 
+function sendEmail(homeItem) {
+  
+  if (_.isEqual({}, config)) {
+    console.log('Can\'t send email as there\'s no config file.');
+    return; // early
+  }
+  
+  emailClient.messages.send({ message: {
+      subject: 'Intressant bostad: ' + homeItem.title,
+      text: createEmailBody(homeItem),
+      from_email: config.email_from || 'example@email.com',
+      from_name: 'Home Please',
+      to: [{
+        email: config.email || 'example@email.com',
+        name: config.name || 'John Doe',
+        type: 'to'
+      }]
+    }
+  }, function (result) {
+    console.log(result);
+  }, function (err) {
+    console.log(err);
+  });
+}
+
+var HomeItem = require('../models/homeItem/homeItem.model');
+
 module.exports = {
-  sendSms: sendSms
+  sendSms: sendSms,
+  sendEmail: sendEmail
 }
