@@ -6,6 +6,7 @@ var chalk = require('chalk');
 var fs = require('fs');
 var path = require('path');
 var mandrill  = require('mandrill-api');
+var moment = require('moment');
 
 var utils = require('../utils/general.utils');
 
@@ -105,8 +106,28 @@ function createEmailBody(homeItem) {
     'Länk: ' + homeItem.url].join('\n'),
     '--------',
     homeItem.body,
-    ['Vänligen', config.name].join('\n')
+    ['Vänligen', 'Home Please'].join('\n')
   ].join('\n\n');
+}
+
+/**
+ * @param {Array} homeItems (HomeItem)
+ * @return {String}
+ */
+function createSummaryEmail(homeItems) {
+  return [
+    'Hej, här en summering av gårdagens bostäder.'
+  ].concat(_.map(homeItems, function (homeItem) {
+    return [
+      homeItem.rooms,
+      homeItem.size,
+      (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
+      homeItem.title
+    ].join(', ') + '\n' + homeItem.url;
+  })).concat([
+    ['Vänligen', 'Home Please'].join('\n')
+  ])
+  .join('\n\n');
 }
 
 /**
@@ -146,16 +167,17 @@ function sendSms(homeItem) {
   })
 }
 
-function sendEmail(homeItem) {
-  
-  if (_.isEqual({}, config)) {
-    console.log('Can\'t send email as there\'s no config file.');
-    return; // early
-  }
-  
-  emailClient.messages.send({ message: {
-      subject: 'Intressant bostad: ' + homeItem.title,
-      text: createEmailBody(homeItem),
+/**
+ * @param {String} subject
+ * @param {String} text
+ * @param {Object} options - optional
+ * return {Promise}
+ */
+function abstractEmail(subject, text, options) {
+  return new Promise(function (resolve, reject) {
+    emailClient.messages.send({ message: _.assign({}, {
+      subject: subject,
+      text: text,
       from_email: config.email_from || 'example@email.com',
       from_name: 'Home Please',
       to: [{
@@ -163,17 +185,65 @@ function sendEmail(homeItem) {
         name: config.name || 'John Doe',
         type: 'to'
       }]
-    }
-  }, function (result) {
-    console.log(result);
-  }, function (err) {
+      }, options)
+    }, function (result) {
+      resolve(result);
+    }, function (err) {
+      reject(err);
+    })
+  });
+}
+
+/**
+ * Sends a detailed email of *homeItem*.
+ * 
+ * @param {Object} homeItem (HomeItem)
+ */
+function sendEmail(homeItem) {
+  
+  if (_.isEqual({}, config)) {
+    console.log('Can\'t send email as there\'s no config file.');
+    return; // early
+  }
+  
+  abstractEmail(
+    'Intressant bostad: ' + homeItem.title,
+    createEmailBody(homeItem)
+  )
+  .then(function (res) {
+    console.log(res);
+  })
+  .catch(function (err) {
+    console.log(err);
+  })
+}
+
+/**
+ * Sends a summary email of *homeItems*.
+ * 
+ * @param {Array} homeItems (HomeItem)
+ */
+function sendSummaryEmail(homeItems) {
+  
+  if (_.isEqual({}, config)) {
+    console.log('Can\'t send email as there\'s no config file.');
+    return; // early
+  }
+  
+  abstractEmail(
+    'Summering av intressanta bostäder för: ' + moment().subtract(1, 'days').format('YYYY-MM-DD'),
+    createSummaryEmail(homeItems)
+  )
+  .then(function (res) {
+    console.log(res);
+  })
+  .catch(function (err) {
     console.log(err);
   });
 }
 
-var HomeItem = require('../models/homeItem/homeItem.model');
-
 module.exports = {
   sendSms: sendSms,
-  sendEmail: sendEmail
+  sendEmail: sendEmail,
+  sendSummaryEmail: sendSummaryEmail
 }
