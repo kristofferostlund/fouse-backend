@@ -16,6 +16,7 @@ var HomeItemSchema = new Schema({
   location: String,
   date: Date,
   url: String,
+  shortUrl: String,
   images: [ String ],
   thumbnail: String,
   classification: {
