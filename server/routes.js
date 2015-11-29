@@ -14,4 +14,5 @@ module.exports = function (app) {
   app.use('/crawler/', require('./crawler'));
   app.use('/analyser/', require('./analyser'));
   app.use('/scheduler/', require('./scheduler'));
+  app.use('/notifier/', require('./notifier'));
 }

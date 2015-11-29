@@ -8,6 +8,7 @@ var moment = require('moment');
 
 var crawler = require('../crawler/crawler.controller');
 var homeItemController = require('../models/homeItem/homeItem.controller');
+var notifier = require('../notifier/notifier.controller');
 
 /**
  * Gets the first page.
@@ -17,8 +18,11 @@ function getFirstPage() {
   crawler.getPageAt(1)
   .then(homeItemController.getItemsOfInterest)
   .then(function (items) {
-    // Send sms if any are of interest
     console.log('First page gotten at ', moment().format('YYYY-MM-DD, HH:mm'));
+    // Send sms if any are of interest
+    items.forEach(function(item) {
+      notifier.sendSms(item);
+    }, this);
   })
   .catch(function (err) {
     console.log(err);
@@ -33,8 +37,11 @@ function getEveryPage() {
   crawler.getAllItems()
   .then(homeItemController.getDaySummary)
   .then(function (items) {
-    // Send an email if any are of interest
     console.log('All pages gotten at ', moment().format('YYYY-MM-DD, HH:mm'));
+    // Send an email if any are of interest
+    items.forEach(function(item) {
+      console.log(item.url);
+    }, this);
   })
   .catch(function (err) {
     console.log(err);
@@ -50,8 +57,8 @@ var scheduleEvery15 = later.parse.recur()
 var scheduleOn6 = later.parse.recur()
   .on(6).hour();
 
-console.log('Schedule starts in 15 minutes.');
 // Starts schedules in 15 minutes
+console.log('Schedule starts in 15 minutes.');
 setTimeout(function() {
   later.setInterval(getFirstPage(), scheduleEvery15);
   later.setInterval(getEveryPage(), scheduleOn6);
