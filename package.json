@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "A web app to help me find a new home",
   "main": "server/app.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node server/app.js"
+  },
   "repository": {
     "type": "git",
     "url": "git@github.com:kristofferostlund/home_please.git"
