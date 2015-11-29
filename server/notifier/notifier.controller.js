@@ -9,10 +9,7 @@ var mandrill  = require('mandrill-api');
 var moment = require('moment');
 
 var utils = require('../utils/general.utils');
-
-var config; // Set it to the requried file if it exists
-try { config = require('../../userConfig'); }
-catch (error) { config = {}; console.log('argh:', error); }
+var config = require('../config');
 
 var emailClient = new mandrill.Mandrill(config.mandrill_api_key);
 
