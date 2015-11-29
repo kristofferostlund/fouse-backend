@@ -6,16 +6,16 @@ var bodyParser = require('body-parser');
 var morgan = require('morgan');
 var mongoose = require('mongoose');
 
+var config = require('./config');
 var logger = require('./utils/logger.util');
 
-mongoose.connect('mongodb://localhost/home-please');
+mongoose.connect(config.dbString);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(morgan('combined', { stream: logger.stream }));
 require('./routes')(app, logger);
-
 
 var server = app.listen(3000, function() {
   var host = server.address().address;
