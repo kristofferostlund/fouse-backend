@@ -218,7 +218,7 @@ function getItemsOfInterest(_options) {
     }
     
     options = _.assign({}, {
-      date: { $gte: moment().subtract(15, 'minutes').toDate() },
+      dateCreated: { $gte: moment().subtract(15, 'minutes').toDate() },
       price: { $lt: 8001 },
       'classification.noKitchen': { $ne: true },
       'classification.swap': { $ne: true },
@@ -268,7 +268,7 @@ function getDaySummary(_options) {
     }
     
     options = _.assign({}, {
-      date: { $gte: moment().subtract('days', 1).startOf('day').add(6, 'hours').toDate() },
+      dateCreated: { $gte: moment().subtract('days', 1).startOf('day').add(6, 'hours').toDate() },
       price: { $lt: 8001 },
       'classification.noKitchen': { $ne: true },
       'classification.swap': { $ne: true },
