@@ -15,7 +15,7 @@ var notifier = require('../notifier/notifier.controller');
  */
 function getFirstPage() {
   console.log('Getting first page at', moment().format('YYYY-MM-DD, HH:mm'));
-  crawler.getPageAt(1)
+  crawler.getAndSavePageAt(1)
   .then(homeItemController.getItemsOfInterest)
   .then(function (items) {
     console.log('First page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
@@ -35,7 +35,7 @@ function getFirstPage() {
  */
 function getEveryPage() {
   console.log('Getting all pages at', moment().format('YYYY-MM-DD, HH:mm'));
-  crawler.getAllItems()
+  crawler.getAndSaveAllItems()
   .then(homeItemController.getDaySummary)
   .then(function (items) {
     console.log('All pages gotten at', moment().format('YYYY-MM-DD, HH:mm'));
@@ -64,4 +64,3 @@ setTimeout(function() {
   later.setInterval(getFirstPage, scheduleEvery15);
   later.setInterval(getEveryPage, scheduleOn6);
 }, 300000);
-
