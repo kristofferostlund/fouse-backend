@@ -3,6 +3,7 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var moment = require('moment');
+var chalk = require('chalk');
 
 var utils = require('../../utils/general.utils');
 var HomeItem = require('./homeItem.model');
@@ -233,6 +234,13 @@ function getItemsOfInterest(_options) {
       if (err) {
         reject(err);
       } else {
+        if (items && items.length) {
+          console.log(chalk.blue([
+            'Found',
+            items.length,
+            'ineresting items!'
+          ].join(' ')))
+        }
         resolve(items);
       }
     });

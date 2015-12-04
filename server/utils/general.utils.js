@@ -3,6 +3,7 @@
 var _ = require('lodash');
 var request = require('request');
 var Promise = require('bluebird');
+var moment = require('moment');
 
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
@@ -33,7 +34,6 @@ function lazyCompare(source, target, exclude) {
     .filter(function (key) { return !~exclude.indexOf(key); })
     .value();
   
-  // TODO: add object comparison, recursion maybe?
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i];
     
@@ -67,6 +67,8 @@ function getPage(url, options) {
     // *options* must be an object
     if (!_.isObject(options)) { options = {}; }
     
+    console.log('-- Requesting: ' + url + ' at ' + moment().format('YYYY-MM-DD, HH:mm')) + ' --';
+    
     request.get({
       uri: url,
       encoding: options.encoding || null,
@@ -74,6 +76,7 @@ function getPage(url, options) {
         'Connection': 'keep-alive'
       }, options.headers)
     }, function (err, res, body) {
+      console.log('-- Finished: ' + url + ' at ' + moment().format('YYYY-MM-DD, HH:mm') + ' --');
       if (err) { reject(err); }
       else { resolve(body.toString('utf8')); }
     })

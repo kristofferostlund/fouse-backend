@@ -97,7 +97,7 @@ function createEmailBody(homeItem) {
     homeItem.title,
     '--------',
     ['Pris: ' + (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
-    'Rum: ' + homeItem.rooms,
+    'Rum: ' + homeItem ? homeItem.rooms : 'info saknas',
     'Storlek: ' + homeItem.size,
     'Uthyrare: ' + homeItem.owner,
     'Länk: ' + homeItem.url].join('\n'),
@@ -114,14 +114,20 @@ function createEmailBody(homeItem) {
 function createSummaryEmail(homeItems) {
   return [
     'Hej, här en summering av gårdagens bostäder.'
-  ].concat(_.map(homeItems, function (homeItem) {
-    return [
+  ].concat(_.chain(homeItems).filter().map(function (homeItem) {
+    if (!homeItem) {
+      console.log('homeItem ...is not?');
+      console.log(homeItem);
+      return '';
+    } else {
+      return [
       homeItem.rooms,
       homeItem.size,
       (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
       homeItem.title
     ].join(', ') + '\n' + homeItem.url;
-  })).concat([
+    }
+  }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
   ])
   .join('\n\n');
@@ -148,12 +154,12 @@ function sendSms(homeItem) {
     } else {
       var smsBody = createSmsBody(homeItem.title, shortUrl);
       
-      console.log([
+      console.log(chalk.green([
         'Sending to ',
         config.tel,
         ' with the body:\n',
         createSmsBody(homeItem.title, shortUrl, false)
-        ].join(''));
+        ].join('')));
         
       utils.getPage(cellsyntUrl(smsBody));
     }
@@ -202,6 +208,13 @@ function sendEmail(homeItem) {
     console.log('Can\'t send email as there\'s no config file.');
     return; // early
   }
+  
+  console.log(chalk.green([
+    'Sendingn email for',
+    homeItem.title,
+    'at',
+    moment().format('YYYY-MM-DD, HH:mm') + '.'
+    ].join(' ')));
   
   abstractEmail(
     'Intressant bostad: ' + homeItem.title,

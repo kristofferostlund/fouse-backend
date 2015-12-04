@@ -14,11 +14,11 @@ var notifier = require('../notifier/notifier.controller');
  * Gets the first page.
  */
 function getFirstPage() {
-  console.log('Getting first page at', moment().format('YYYY-MM-DD, HH:mm'));
+  console.log('Getting front page at', moment().format('YYYY-MM-DD, HH:mm'));
   crawler.getAndSavePageAt(1)
   .then(homeItemController.getItemsOfInterest)
   .then(function (items) {
-    console.log('First page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
+    console.log('Front page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
     // Send sms if any are of interest
     items.forEach(function(item) {
       notifier.sendSms(item);
