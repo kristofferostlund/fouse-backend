@@ -67,8 +67,6 @@ function getPage(url, options) {
     // *options* must be an object
     if (!_.isObject(options)) { options = {}; }
     
-    console.log('-- Requesting: ' + url + ' at ' + moment().format('YYYY-MM-DD, HH:mm')) + ' --';
-    
     request.get({
       uri: url,
       encoding: options.encoding || null,
@@ -76,7 +74,6 @@ function getPage(url, options) {
         'Connection': 'keep-alive'
       }, options.headers)
     }, function (err, res, body) {
-      console.log('-- Finished: ' + url + ' at ' + moment().format('YYYY-MM-DD, HH:mm') + ' --');
       if (err) { reject(err); }
       else { resolve(body.toString('utf8')); }
     })

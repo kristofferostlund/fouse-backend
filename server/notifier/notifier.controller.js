@@ -120,12 +120,12 @@ function createSummaryEmail(homeItems) {
       console.log(homeItem);
       return '';
     } else {
-      return [
+      return _.filter([
       homeItem.rooms,
       homeItem.size,
       (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
       homeItem.title
-    ].join(', ') + '\n' + homeItem.url;
+    ]).join(', ') || homeItem + '\n' + homeItem.url;
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
@@ -241,7 +241,7 @@ function sendSummaryEmail(homeItems) {
   }
   
   abstractEmail(
-    'Summering av intressanta bostäder för: ' + moment().subtract(1, 'days').format('YYYY-MM-DD'),
+    'Summering av intressanta bostäder',
     createSummaryEmail(homeItems)
   )
   .then(function (res) {
