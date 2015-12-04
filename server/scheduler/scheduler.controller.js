@@ -22,8 +22,10 @@ function getFirstPage() {
     // Send sms if any are of interest
     items.forEach(function(item) {
       notifier.sendSms(item);
-      notifier.sendSummaryEmail(item);
     }, this);
+    if (items && items.length) {
+      notifier.sendSummaryEmail(items);
+    }
   })
   .catch(function (err) {
     console.log(err);
