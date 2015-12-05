@@ -191,6 +191,20 @@ function disable(_homeItem) {
 }
 
 /**
+ * 
+ * @param {Object} homeItem (HomeItem)
+ * @return {Promise} -> {Object} (HomeItem)
+ */
+function setNotified(homeItem) {
+  return new Promise(function (resolve, reject) {
+    homeItem.notified = true;
+    homeItem.save(function (item) {
+      resolve(item);
+    })
+  });
+}
+
+/**
  * Finds all items matching the options.
  * Options default to items created the last 15 minutes,
  * with a price of up to 8000 kr,
@@ -227,6 +241,7 @@ function getItemsOfInterest(_options) {
       'classification.commuters': { $ne: true },
       'classification.girls': { $ne: true },
       disabled: { $ne: true },
+      notified: { $ne: true },
       active: true
     }, __options);
     
@@ -241,7 +256,16 @@ function getItemsOfInterest(_options) {
             'ineresting items!'
           ].join(' ')))
         }
-        resolve(items);
+        
+        Promise.settle(_.map(items, function (item) { return setNotified(item); }))
+        .then(function (_items) {
+          resolve(items);
+        })
+        .catch(function (err) {
+          
+          console.log(err);
+          resolve(items);
+        });
       }
     });
   });

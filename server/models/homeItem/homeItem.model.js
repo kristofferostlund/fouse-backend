@@ -19,6 +19,7 @@ var HomeItemSchema = new Schema({
   shortUrl: String,
   images: [ String ],
   thumbnail: String,
+  notified: Boolean,
   classification: {
     girls: Boolean, // For girls only
     commuters: Boolean, // Something like only 5 days a week
