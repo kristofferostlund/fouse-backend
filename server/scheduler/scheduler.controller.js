@@ -51,6 +51,22 @@ function getEveryPage() {
   });
 }
 
+/**
+ * Simply gets all items from yesterday instead of fetching first.
+ */
+function getDaySummary() {
+  console.log('Summarizing ' + moment().subtract('days', 1).format('YYYY-MM-DD'));
+  homeItemController.getDaySummary()
+  .then(function (items) {
+    if (items && items.length) {
+      notifier.sendSummaryEmail(items);
+    } else {
+      console.log('No items were deemed interesting yesterday, ' + moment().subtract('days', 1).format('YYYY-MM-DD'));
+      return;
+    }
+  })
+}
+
 // Schedule to get the first index page
 var scheduleEvery15 = later.parse.recur()
   .every(15).minute()
@@ -64,5 +80,5 @@ var scheduleOn6 = later.parse.recur()
 console.log('Schedule starts in 5 minutes.');
 setTimeout(function() {
   later.setInterval(getFirstPage, scheduleEvery15);
-  later.setInterval(getEveryPage, scheduleOn6);
+  later.setInterval(getDaySummary, scheduleOn6);
 }, 300000);

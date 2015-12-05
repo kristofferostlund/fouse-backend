@@ -89,22 +89,35 @@ function createSmsBody(content, shortUrl, encode) {
 }
 
 /**
- * @param {Object} homeItem (HomeItem)
+ * @param {Array} homeItems (HomeItem)
  * @return {String}
  */
-function createEmailBody(homeItem) {
+function createEmailBody(homeItems) {
   return [
-    homeItem.title,
-    '--------',
-    ['Pris: ' + (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
-    'Rum: ' + homeItem ? homeItem.rooms : 'info saknas',
-    'Storlek: ' + homeItem.size,
-    'Uthyrare: ' + homeItem.owner,
-    'Länk: ' + homeItem.url].join('\n'),
-    '--------',
-    homeItem.body,
+    'Hej, här kommer de senaste bostäderna.'
+  ].concat(_.chain(homeItems).filter().map(function (homeItem) {
+    if (!homeItem) {
+      console.log('homeItem ...is not?');
+      console.log(homeItem);
+      return '';
+      
+    } else {
+      
+      return _.filter([
+      homeItem.rooms,
+      homeItem.size,
+      (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
+      homeItem.location,
+      homeItem.title
+    ]).join(', ') + '\n' + [
+      homeItem.url,
+      homeItem.body
+    ].join('\'n\n   ');
+    }
+  }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
-  ].join('\n\n');
+  ])
+  .join('\n\n');
 }
 
 /**
@@ -113,7 +126,7 @@ function createEmailBody(homeItem) {
  */
 function createSummaryEmail(homeItems) {
   return [
-    'Hej, här en summering av gårdagens bostäder.'
+    'Hej, här kommer gårdagens bostäder.'
   ].concat(_.chain(homeItems).filter().map(function (homeItem) {
     if (!homeItem) {
       console.log('homeItem ...is not?');
@@ -124,8 +137,9 @@ function createSummaryEmail(homeItems) {
       homeItem.rooms,
       homeItem.size,
       (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
+      homeItem.location,
       homeItem.title
-    ]).join(', ') || homeItem + '\n' + homeItem.url;
+    ]).join(', ') + '\n' + homeItem.url;
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
@@ -202,7 +216,7 @@ function abstractEmail(subject, text, options) {
  * 
  * @param {Object} homeItem (HomeItem)
  */
-function sendEmail(homeItem) {
+function sendEmail(homeItems) {
   
   if (_.isEqual({}, config)) {
     console.log('Can\'t send email as there\'s no config file.');
@@ -211,14 +225,14 @@ function sendEmail(homeItem) {
   
   console.log(chalk.green([
     'Sendingn email for',
-    homeItem.title,
+    _.map(homeItems, function (item) { return item.title }).join(', '),
     'at',
     moment().format('YYYY-MM-DD, HH:mm') + '.'
     ].join(' ')));
   
   abstractEmail(
-    'Intressant bostad: ' + homeItem.title,
-    createEmailBody(homeItem)
+    'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
+    createEmailBody(homeItems)
   )
   .then(function (res) {
     console.log(res);
