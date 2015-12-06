@@ -89,6 +89,24 @@ function createSmsBody(content, shortUrl, encode) {
 }
 
 /**
+ * Returns a filtered array
+ * of the various short properties of *homeItem*.
+ * 
+ * @param {Object} homeItem
+ * @return {Array}
+ */
+function homeItemSummaryArr(homeItem) {
+  return _.filter([
+      homeItem.rooms,
+      homeItem.size,
+      (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
+      homeItem.location,
+      (homeItem.adress ? '(' + homeItem.adress + ')' : undefined),
+      homeItem.title
+    ]);
+}
+
+/**
  * @param {Array} homeItems (HomeItem)
  * @return {String}
  */
@@ -103,13 +121,8 @@ function createEmailBody(homeItems) {
       
     } else {
       
-      return _.filter([
-      homeItem.rooms,
-      homeItem.size,
-      (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
-      homeItem.location,
-      homeItem.title
-    ]).join(', ') + '\n' + [
+      return homeItemSummaryArr(homeItem)
+      .join(', ') + '\n' + [
       homeItem.url,
       homeItem.body
     ].join('\'n\n   ');
@@ -133,13 +146,8 @@ function createSummaryEmail(homeItems) {
       console.log(homeItem);
       return '';
     } else {
-      return _.filter([
-      homeItem.rooms,
-      homeItem.size,
-      (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
-      homeItem.location,
-      homeItem.title
-    ]).join(', ') + '\n' + homeItem.url;
+      return homeItemSummaryArr(homeItem)
+      .join(', ') + '\n' + homeItem.url;
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')

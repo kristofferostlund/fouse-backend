@@ -11,9 +11,9 @@ var homeItemController = require('../models/homeItem/homeItem.controller');
 var notifier = require('../notifier/notifier.controller');
 
 /**
- * Gets the first page.
+ * Gets the front page.
  */
-function getFirstPage() {
+function getFrontPage() {
   console.log('Getting front page at', moment().format('YYYY-MM-DD, HH:mm'));
   crawler.getAndSavePageAt(1)
   .then(homeItemController.getItemsOfInterest)
@@ -24,7 +24,7 @@ function getFirstPage() {
       notifier.sendSms(item);
     }, this);
     if (items && items.length) {
-      notifier.sendSummaryEmail(items);
+      notifier.sendEmail(items);
     }
   })
   .catch(function (err) {
@@ -79,6 +79,6 @@ var scheduleOn6 = later.parse.recur()
 // Starts schedules in 5 minutes
 console.log('Schedule starts in 5 minutes.');
 setTimeout(function() {
-  later.setInterval(getFirstPage, scheduleEvery15);
+  later.setInterval(getFrontPage, scheduleEvery15);
   later.setInterval(getDaySummary, scheduleOn6);
 }, 300000);

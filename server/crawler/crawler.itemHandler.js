@@ -38,16 +38,29 @@ function processItemPage(content) {
       .replace(/ +/g, ' ') // Replace multiple spaces by single space
       .replace(/\n+/g, '\n\n'); // Replace multiple newlines by double newlines
       
+    // Get the adress if it exists, which is an h3 tag with the class h5
+    var adress = _.attempt(function () {
+      var addrContent = _.find(html('h3.h5').contents(), function (data) {
+        // return find
+        return !/hyra tryggt/gi.test(data.data);
+      });
+      
+      // return attempt
+      return addrContent.data;
+    });
+    
+    // if an error was caught, there's no adress
+    if (_.isError(adress)) { adress = undefined; }
+    
     resolve({
       owner: owner,
       body: body,
+      adress: adress,
       images: images,
       disabled: (/Hittade inte annonsen/.test(content)) ? true : undefined
     });
   });
 }
-
-
 
 /**
  * Processes all the item pages.

@@ -14,6 +14,7 @@ var HomeItemSchema = new Schema({
   rooms: String,
   size: String,
   location: String,
+  adress: String,
   date: Date,
   url: String,
   shortUrl: String,
