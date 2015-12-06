@@ -101,8 +101,7 @@ function homeItemSummaryArr(homeItem) {
       homeItem.size,
       (homeItem.price ? homeItem.price + ' kr/mån' : homeItem.rent),
       homeItem.location,
-      (homeItem.adress ? '(' + homeItem.adress + ')' : undefined),
-      homeItem.title
+      (homeItem.adress ? '(' + homeItem.adress + ')' : undefined)
     ]);
 }
 
@@ -121,11 +120,12 @@ function createEmailBody(homeItems) {
       
     } else {
       
-      return homeItemSummaryArr(homeItem)
-      .join(', ') + '\n' + [
-      homeItem.url,
-      homeItem.body
-    ].join('\'n\n   ');
+      return homeItem.title + '\n' +
+        homeItemSummaryArr(homeItem)
+        .join(', ') + '\n' + [
+        homeItem.url,
+        homeItem.body
+    ].join('\'n\n');
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
@@ -146,8 +146,9 @@ function createSummaryEmail(homeItems) {
       console.log(homeItem);
       return '';
     } else {
-      return homeItemSummaryArr(homeItem)
-      .join(', ') + '\n' + homeItem.url;
+      return homeItem.title + '\n' +
+        homeItemSummaryArr(homeItem)
+        .join(', ') + '\n' + homeItem.url;
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
