@@ -125,7 +125,7 @@ function createEmailBody(homeItems) {
         .join(', ') + '\n' + [
         homeItem.url,
         homeItem.body
-    ].join('\'n\n');
+    ].join('\n\n');
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')

@@ -7,12 +7,6 @@ var chalk = require('chalk');
 var HomeItem = require('../models/homeItem/homeItem.model');
 var utils = require('../utils/general.utils');
 
-var options = {
-  price: { $lt: 8000 },
-  location: /stockholm/gi
-};
-
-
 var sweMonths = [
   'Januari',
   'Februari',
@@ -43,6 +37,30 @@ var sweMonthsShort = [
   'Dec'
 ];
 
+
+/**
+ * Returns the number of months 
+ * 
+ * @param {String} body
+ * @return {Number}
+ */
+function getGivenTimeByMonth(body) {
+  
+  var years = body.match(/[0-9]{1,2}(?=\s{0,3}år)/gi);
+  var months = body.match(/[0-9]{1,2}(?=\s{0,3}månad(?!shyra))/gi);
+  var weeks = body.match(/[0-9]{1,2}(?=\s{0,3}veck)/gi);
+  var days = body.match(/[0-9]{1,2}(?=\s{0,3}dag)/gi);
+  
+  return Math.round(_.chain([
+    years * 12,
+    months,
+    weeks / 4,
+    days / 30 // accurate enough
+  ])
+  .filter()
+  .value()) || undefined;
+}
+
 /**
  * Checks whether there is a month referenced in the text.
  * 
@@ -53,6 +71,71 @@ function hasMonth(body) {
   return sweMonths.concat(sweMonthsShort)
     .some(function (month) { return utils.literalRegExp(month, 'gi').test(body); });
 }
+
+function findDayMonthStringYear(body) {
+  
+  var months = sweMonthsShort.map(function (i) { return i.toLowerCase(); }).join('|');;
+  
+  // var r = new RegExp('((20)?[0-9]{2})?((' + months + ')[a-z]{0,7}\\s?[0-9]{1,2}(:e)?|[0-9]{1,2}(:e)?\\s?(' + months + ')[a-z]{0,7}\\s?((20)?[0-9]{2})?)', 'gi');
+  var r = new RegExp([
+    '(20?\-?[0-9]{2})?((\/|\\s|\-|[0-9])(' + months + ')[a-z]{0,7}(\\s|\-)?[0-9]{1,4}(:e)?',
+    '(\\s|\-)?[0-9]{1,4}(:e)?\\s?(\/|\\s|\-|[0-9])(' + months + ')[a-z]{0,7}\\s?(20?\-?[0-9]{2})?)'
+  ].join('|'), 'gi');
+  
+  var dates = (/[0-9]-[a-z]|[a-z]-[0-9]/i.test(body) ? body.replace(/\-/, ' - ') : body).match(r);
+  
+  console.log('Dates:');
+  console.log(dates);
+  
+  console.log('---');
+  
+}
+
+function getDateSpan(body) {
+  
+  console.log('___');
+  
+  console.log('months', getGivenTimeByMonth(body));
+  findDayMonthStringYear(body);
+}
+
+setTimeout(function() {
+  console.log('\n\n');
+  
+  HomeItem.find(function (err, _items) {
+    
+    var items = _.filter(_items, function (item) {
+      return hasMonth(item.body);
+    });
+    
+  
+    var pos = _.random(0, items.length, false);
+    
+    // pos = 533; // 1Dec 2015
+    // pos = 209; // 1 jan 2016
+    // pos = 87; //  15:e December
+    // pos = 597; // 1 /januari -15, misses -15 (though it should probably be 2016)
+    // pos = 293; // 20 dec-15 april
+    // pos = 481; // Februari 2016-Januari 2017, catches [ ' Februari 2016', '-Januari 2017' ] which needs cleaning
+    // pos = 745; // jan-mar, not solved without messing with the others
+    // pos = 240; // nyrenoverad 2:a, should not match
+    pos = 613; // ['\njulhelgen 23', '12 separat '], neither should match
+ 
+    console.log(pos);
+  
+    console.log('\n');
+    
+ 
+    console.log(items[pos].title);
+    console.log('\n');
+    console.log(items[pos].body);
+    
+   
+    getDateSpan(items[pos].body)
+  })
+  
+  console.log('\n\n');
+}, 200);
 
 /**
  * Checks whether there are amounts of months referenced in the item.
