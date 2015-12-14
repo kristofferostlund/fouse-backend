@@ -76,7 +76,36 @@ function findDayMonthStringYear(body) {
   
   var months = sweMonthsShort.map(function (i) { return i.toLowerCase(); }).join('|');;
   
-  // var r = new RegExp('((20)?[0-9]{2})?((' + months + ')[a-z]{0,7}\\s?[0-9]{1,2}(:e)?|[0-9]{1,2}(:e)?\\s?(' + months + ')[a-z]{0,7}\\s?((20)?[0-9]{2})?)', 'gi');
+  var year = '(20?\-?[0-9]{2})?';
+  var preMonths = '(\/|\\s|\-|[0-9])';
+  var postMonths = '[a-z]{0,7}';
+  var _months = '(' + months + ')';
+  var date = '(\\s|\-)?[0-9]{1,4}(:e)?';
+  
+  
+  var rString = [
+    
+    [
+      year,
+      '(',
+      preMonths,
+      _months,
+      postMonths,
+      date
+    ].join(''),
+    [
+      date,
+      preMonths,
+      _months,
+      postMonths,
+      year  
+    ].join('')
+    
+  ].join('|');
+  
+  
+  
+  
   var r = new RegExp([
     '(20?\-?[0-9]{2})?((\/|\\s|\-|[0-9])(' + months + ')[a-z]{0,7}(\\s|\-)?[0-9]{1,4}(:e)?',
     '(\\s|\-)?[0-9]{1,4}(:e)?\\s?(\/|\\s|\-|[0-9])(' + months + ')[a-z]{0,7}\\s?(20?\-?[0-9]{2})?)'
@@ -84,11 +113,7 @@ function findDayMonthStringYear(body) {
   
   var dates = (/[0-9]-[a-z]|[a-z]-[0-9]/i.test(body) ? body.replace(/\-/, ' - ') : body).match(r);
   
-  console.log('Dates:');
   console.log(dates);
-  
-  console.log('---');
-  
 }
 
 function getDateSpan(body) {
@@ -111,27 +136,33 @@ setTimeout(function() {
   
     var pos = _.random(0, items.length, false);
     
-    // pos = 533; // 1Dec 2015
-    // pos = 209; // 1 jan 2016
-    // pos = 87; //  15:e December
-    // pos = 597; // 1 /januari -15, misses -15 (though it should probably be 2016)
-    // pos = 293; // 20 dec-15 april
-    // pos = 481; // Februari 2016-Januari 2017, catches [ ' Februari 2016', '-Januari 2017' ] which needs cleaning
-    // pos = 745; // jan-mar, not solved without messing with the others
-    // pos = 240; // nyrenoverad 2:a, should not match
-    pos = 613; // ['\njulhelgen 23', '12 separat '], neither should match
- 
-    console.log(pos);
-  
-    console.log('\n');
-    
- 
-    console.log(items[pos].title);
-    console.log('\n');
-    console.log(items[pos].body);
-    
-   
+    pos = 533; // 1Dec 2015
     getDateSpan(items[pos].body)
+    
+    pos = 209; // 1 jan 2016
+    getDateSpan(items[pos].body)
+    
+    pos = 87; //  15:e December
+    getDateSpan(items[pos].body)
+    
+    pos = 597; // 1 /januari -15, misses -15 (though it should probably be 2016)
+    getDateSpan(items[pos].body)
+    
+    pos = 293; // 20 dec-15 april
+    getDateSpan(items[pos].body)
+    
+    pos = 481; // Februari 2016-Januari 2017, catches [ ' Februari 2016', '-Januari 2017' ] which needs cleaning
+    getDateSpan(items[pos].body)
+    
+    pos = 745; // jan-mar, not solved without messing with the others
+    getDateSpan(items[pos].body)
+    
+    pos = 240; // nyrenoverad 2:a, should not match | fix in clearing cleaning out these instead.
+    getDateSpan(items[pos].body)
+    
+    pos = 613; // ['\njulhelgen 23', '12 separat '], neither should match | fix in clearing cleaning out these instead.
+    getDateSpan(items[pos].body)
+   
   })
   
   console.log('\n\n');
