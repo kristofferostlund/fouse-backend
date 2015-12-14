@@ -52,6 +52,11 @@ var HomeItemSchema = new Schema({
 HomeItemSchema.pre('save', function (next) {
   this.dateModified = new Date();
   
+  // Remove trailing "'n" to fix bug where linking doesn't work.
+  if (/'n$/.test(this.url)) {
+    this.url = this.url.replace(/('n)$/, '')
+  }
+  
   next();
 });
 

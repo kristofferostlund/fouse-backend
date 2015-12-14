@@ -82,7 +82,7 @@ function processListItem(e) {
     price: parseInt(rent.replace(/[^0-9]/gi, '')) || undefined,
     location: $(e).find('.address').text(),
     date: new Date($(e).find('.jlist_date_image')[0].attribs['datetime']),
-    url: anchor.attribs.href.replace(/('n)$/, ''), // The replace removes the very annoying 'n on the end which screws linking up.
+    url: anchor.attribs.href,
     thumbnail: thumbnail
   };
 
