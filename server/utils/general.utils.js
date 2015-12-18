@@ -141,10 +141,26 @@ function literalRegExp(text, flags) {
   return new RegExp(escapeRegex(text), flags);
 }
 
+/**
+ * Returns the start of the upcoming *month*
+ * as a moment object.
+ * 
+ * @param {Date} now
+ * @param {Number|String} month
+ * @return {Moment}
+ */
+function nextMonth(now, month) {
+  var input = moment(now);
+  var output = input.startOf('month').month(['1', month, '2016'].join(' '));
+  
+  return output > input ? output : output.add(1, 'years');
+}
+
 module.exports = {
   getPage: getPage,
   getManyPages: getManyPages,
   lazyCompare: lazyCompare,
   escapeRegex: escapeRegex,
-  literalRegExp: literalRegExp
+  literalRegExp: literalRegExp,
+  nextMonth: nextMonth
 };
