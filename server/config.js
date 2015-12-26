@@ -12,6 +12,7 @@ module.exports = {
   dbString: userConfig.dbString || process.env.dbString || 'mongodb://localhost/home-please',
   tel: userConfig.tel || process.env.tel || '0046700000000',
   email: userConfig.email || process.env.email || 'recipient.email@example.com',
+  sendSms: userConfig.sendSms || process.env.sendSms || false,
   name: userConfig.name || process.env.name || 'John Doe',
   email_from: userConfig.email_from || process.env.email_from || 'outbound.email@example.com',
   bitlyToken: userConfig.bitlyToken || process.env.bitlyToken || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
