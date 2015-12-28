@@ -40,7 +40,12 @@ var sweMonthsShort = [
 
 
 /**
- * Returns the number of months 
+ * Returns the number of months found in the text.
+ * 
+ * Years are kind of matched as '<length> år' and multiplied by twelve.
+ * Months are kind of matched as '<length> måndad' whilst not matching if it's 'månadshyra'.
+ * Weeks are kind of matched as '<length> veck' and are divided by 4 (assumed to be accurate enough).
+ * Days are matched as '<length> dag' and are divided by 30 (assumed to be accurate enough).
  * 
  * @param {String} body
  * @return {Number}
@@ -52,29 +57,38 @@ function getGivenTimeByMonth(body) {
   var weeks = body.match(/[0-9,.]{1,4}(?=\s{0,3}veck)/gi);
   var days = body.match(/[0-9,.]{1,4}(?=\s{0,3}dag)/gi);
   
+  years = _.chain(years)
+    .map(function (year) {
+      // Replaces Swedish decimals with English version (',' -> '.')
+      year = parseFloat(year.replace(/\,/g, '.'));
+      // It's very unlikely someone would want to rent out for over ten years.
+      // Like really?
+      return year < 10 ? year : undefined;
+    })
+    .filter() // Filter out any undefined entries:
+    .value();
   
-  if (years) {
-    
-    console.log(Math.round(_.chain([
-    _.sum(years) * 12,
-    _.sum(months),
-    _.sum(weeks) / 4,
-    _.sum(days) / 30 // accurate enough
-  ])
-  .filter()
-  .value()));
-    
-    console.log(typeof(years), years);
-    
-    console.log(body);
-    console.log('\n\n');
-  }
+  months = _.chain(months)
+    .map(function (month) {
+      // Replaces Swedish decimals with English version (',' -> '.')
+      return parseFloat(month.replace(/\,/g, '.'));
+    })
+    .value();
   
-  // Assume a period over from and above five years isn't the rental period.
-  if (years && 60 <= years) {
-    years = 0;
-  }
+  weeks = _.chain(weeks)
+    .map(function (week) {
+      // Replaces Swedish decimals with English version (',' -> '.')
+      return parseFloat(week.replace(/\,/g, '.'));
+    })
+    .value();
   
+  days = _.chain(days)
+    .map(function (day) {
+      // Replaces Swedish decimals with English version (',' -> '.')
+      return parseFloat(day.replace(/\,/g, '.'));
+    })
+    .value();
+    
   return Math.round(_.chain([
     years * 12,
     months,
