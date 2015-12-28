@@ -3,56 +3,11 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var chalk = require('chalk');
+var moment = require('moment');
 
+// var timeAnalyser = require('./analyser.time');
 var HomeItem = require('../models/homeItem/homeItem.model');
 var utils = require('../utils/general.utils');
-
-var options = {
-  price: { $lt: 8000 },
-  location: /stockholm/gi
-};
-
-
-var sweMonths = [
-  'Januari',
-  'Februari',
-  'Mars',
-  'April',
-  'Maj',
-  'Juni',
-  'Juli',
-  'Augusti',
-  'Septemper',
-  'Oktober',
-  'November',
-  'December'
-];
-
-var sweMonthsShort = [
-  'Jan',
-  'Feb',
-  'Mar',
-  'Apr',
-  'Maj',
-  'Jun',
-  'Jul',
-  'Aug',
-  'Sep',
-  'Okt',
-  'Nov',
-  'Dec'
-];
-
-/**
- * Checks whether there is a month referenced in the text.
- * 
- * @param {String} body - string to test
- * @return {Boolean}
- */
-function hasMonth(body) {
-  return sweMonths.concat(sweMonthsShort)
-    .some(function (month) { return utils.literalRegExp(month, 'gi').test(body); });
-}
 
 /**
  * Checks whether there are amounts of months referenced in the item.

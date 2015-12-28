@@ -125,7 +125,7 @@ function createEmailBody(homeItems) {
         .join(', ') + '\n' + [
         homeItem.url,
         homeItem.body
-    ].join('\'n\n');
+    ].join('\n\n');
     }
   }).value()).concat([
     ['Vänligen', 'Home Please'].join('\n')
@@ -183,8 +183,11 @@ function sendSms(homeItem) {
         ' with the body:\n',
         createSmsBody(homeItem.title, shortUrl, false)
         ].join('')));
-        
-      utils.getPage(cellsyntUrl(smsBody));
+      
+      // Only send if somewhere set to true
+      if (config.sendSms) {
+        utils.getPage(cellsyntUrl(smsBody));
+      }
     }
   })
   .catch(function (err) {
