@@ -151,9 +151,38 @@ function literalRegExp(text, flags) {
  */
 function nextMonth(now, month) {
   var input = moment(now);
-  var output = input.startOf('month').month(['1', month, '2016'].join(' '));
+  var output = moment(input).startOf('month').month([month].join(' '));
   
-  return output > input ? output : output.add(1, 'years');
+  return (output > input || input.month() === output.month())
+    ? output
+    : output.add(1, 'years');
+}
+
+/**
+ * Returns the closes date provided by month and day
+ * 
+ * @param {String|Number} month
+ * @param {String|Number} day
+ * @param {Date} baseDate - Defaults to now
+ * @return {Date}
+ */
+function getClosestDate(month, day, baseDate) {
+  baseDate = baseDate || new Date();
+  
+  // Return *baseDate* if no month is provided
+  if (!month) return baseDate;
+  
+  var currentYear = moment(baseDate).startOf('month').month(month).date(day || 1);
+  
+  // Return the date closes to *baseDate*
+  return [
+    currentYear.subtract(1, 'years').toDate(),
+    currentYear.toDate(),
+    currentYear.add(1, 'years').toDate(),
+  ]
+  .sort(function (a, b) { return Math.abs(a - baseDate) > Math.abs(b - baseDate) })
+  .shift();
+  
 }
 
 module.exports = {
@@ -162,5 +191,6 @@ module.exports = {
   lazyCompare: lazyCompare,
   escapeRegex: escapeRegex,
   literalRegExp: literalRegExp,
-  nextMonth: nextMonth
+  nextMonth: nextMonth,
+  getClosestDate: getClosestDate
 };
