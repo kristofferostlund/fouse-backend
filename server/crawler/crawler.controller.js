@@ -8,6 +8,7 @@ var itemHandler = require('./crawler.itemHandler');
 var analyser = require('../analyser/analyser.controller');
 
 var homeItem = require('../models/homeItem/homeItem.controller');
+var HomeItem = require('../models/homeItem/homeItem.model');
 
 /**
  * Returns a promise of an array of complete items.
@@ -28,6 +29,7 @@ function getPageAt(pageNum) {
   }); // Insert into db.
 }
 
+
 /**
  * Like getPageAt but returns only after the items been saved to db.
  * 
@@ -36,9 +38,35 @@ function getPageAt(pageNum) {
  */
 function getAndSavePageAt(pageNum) {
   return indexer.getIndexPage(pageNum)
+  .then(filterOutExisting)
   .then(itemHandler.getManyItemPages)
   .then(analyser.classify)
   .then(homeItem.createHistorical);
+}
+
+/**
+ * Filters out all existing items and only returns new ones.
+ * 
+ * @param {Array|Object} indexItems
+ * @return {Promise}
+ */
+function filterOutExisting(indexItems) {
+  return new Promise(function (resolve, reject) {
+    
+    var _indexItems =
+    _.isArray(indexItems)
+    ? indexItems
+    : [ indexItems ];
+    
+    HomeItem.find({ disabled: { $ne: true }, url: { $in: _.map(_indexItems, function (item) { return _.isObject(item) ? item.url : item; }) } })
+    .exec(function (err, items) {
+      // If an error occured, assume everything is fine.
+      if (err) { items = []; }
+      
+      // Resolve all indexItems which are not in the DB already.
+      resolve(_.filter(_indexItems, function (indexItem) { return !_.find(items, { url: indexItem.url }) }));
+    })
+  });
 }
 
 /**

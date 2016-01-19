@@ -32,6 +32,8 @@ function getFrontPage() {
   });
 }
 
+getFrontPage()
+
 /**
  * Gets every page.
  */
