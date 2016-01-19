@@ -234,12 +234,17 @@ function getItemsOfInterest(_options) {
     
     options = _.assign({}, {
       dateCreated: { $gte: moment().subtract(15, 'minutes').toDate() },
-      price: { $lt: 8001 },
+      price: { $lte: 8000 },
       'classification.noKitchen': { $ne: true },
       'classification.swap': { $ne: true },
       'classification.shared': { $ne: true },
       'classification.commuters': { $ne: true },
       'classification.girls': { $ne: true },
+      $or: [
+        { 'time.period':  { $gte: 6 } },
+        { 'time.isLongTerm': true },
+        { 'time.end': null }
+      ],
       disabled: { $ne: true },
       notified: { $ne: true },
       active: true
@@ -301,12 +306,17 @@ function getDaySummary(_options) {
     
     options = _.assign({}, {
       dateCreated: { $gte: moment().subtract('days', 1).startOf('day').add(6, 'hours').toDate() },
-      price: { $lt: 8001 },
+      price: { $lte: 8000 },
       'classification.noKitchen': { $ne: true },
       'classification.swap': { $ne: true },
       'classification.shared': { $ne: true },
       'classification.commuters': { $ne: true },
       'classification.girls': { $ne: true },
+      $or: [
+        { 'time.period':  { $gte: 6 } },
+        { 'time.isLongTerm': true },
+        { 'time.end': null }
+      ],
       disabled: { $ne: true },
       active: true
     }, __options);
