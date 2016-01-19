@@ -4,6 +4,7 @@ var _ = require('lodash');
 var request = require('request');
 var Promise = require('bluebird');
 var moment = require('moment');
+var Browser = require('zombie');
 
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
@@ -185,6 +186,60 @@ function getClosestDate(month, day, baseDate) {
   
 }
 
+/**
+ * Checks whether *content* contains either phonenumber-btn or show-phonenumber,
+ * which indicates there's a phone number in the ad.
+ * 
+ * @param {String} content
+ * @return {Boolean}
+ */
+function hasTel(content) {
+  return /phonenumber\-btn|show\-phonenumber/i.test(content);
+}
+
+/**
+ * Returns the phone number from an item page
+ * by visiting its mobile page using Zombie, a headless browser.
+ * 
+ * @param {String} url
+ * @return {Promise} -> {String}
+ */
+function getTel(url) {
+  return new Promise(function (resolve, reject) {
+    var browser = new Browser({ debug: true });
+    
+    // replace 'www' with 'm' to get the mobile page
+    var _url = url.replace(/www(?=\.blocket\.se)/, 'm');
+    console.log(_url);
+    
+    // Navigate to the page
+    browser.visit(_url, function () {
+      
+      var phoneLink = browser.document.querySelector('#show-phonenumber');
+      
+      // If no phonelink can be found, return an empty string
+      if (!phoneLink) { return resolve(); /* No tel found. */ }
+      
+      // Click the link 
+      browser.clickLink('#show-phonenumber')
+      .then(function () {
+        
+        var phoneNumber = browser.document.querySelector('#show-phonenumber .button-label');
+        
+        resolve(!!phoneNumber ? phoneNumber.textContent : '');
+      })
+      .catch(function (err) {
+        if (/phone\-number\.json./i.test(err)) {
+          // Can't bother with the error.
+          resolve();
+        } else {
+          reject(err);
+        }
+      })
+    });
+  });
+}
+
 module.exports = {
   getPage: getPage,
   getManyPages: getManyPages,
@@ -192,5 +247,7 @@ module.exports = {
   escapeRegex: escapeRegex,
   literalRegExp: literalRegExp,
   nextMonth: nextMonth,
-  getClosestDate: getClosestDate
+  getClosestDate: getClosestDate,
+  hasTel: hasTel,
+  getTel: getTel
 };

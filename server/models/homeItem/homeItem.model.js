@@ -18,6 +18,7 @@ var HomeItemSchema = new Schema({
   date: Date,
   url: String,
   shortUrl: String,
+  tel: String,
   images: [ String ],
   thumbnail: String,
   notified: Boolean,
