@@ -120,7 +120,7 @@ function getPeriod(body) {
       year = parseFloat(year.replace(/\,/g, '.'));
       // It's very unlikely someone would want to rent out for over ten years.
       // Like really?
-      return year < 10 ? year : undefined;
+      return (year < 10) ? year : undefined;
     })
     .filter() // Filter out any undefined entries:
     .value();
@@ -329,6 +329,8 @@ function getTimeSpan(dates, period, isLongTerm, homeItem) {
       ? _.map(dates).concat([ moment().add(period, 'months').toDate() ])
       : [ homeItem.date, moment().add(period, 'months').toDate() ];
   }
+  
+  dates.sort(function (a, b) { return a > b; });
   
   return {
     period: period,
