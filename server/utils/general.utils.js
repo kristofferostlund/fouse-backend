@@ -4,6 +4,7 @@ var _ = require('lodash');
 var request = require('request');
 var Promise = require('bluebird');
 var moment = require('moment');
+var Browser = require('zombie');
 
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
@@ -151,9 +152,91 @@ function literalRegExp(text, flags) {
  */
 function nextMonth(now, month) {
   var input = moment(now);
-  var output = input.startOf('month').month(['1', month, '2016'].join(' '));
+  var output = moment(input).startOf('month').month([month].join(' '));
   
-  return output > input ? output : output.add(1, 'years');
+  return (output > input || input.month() === output.month())
+    ? output
+    : output.add(1, 'years');
+}
+
+/**
+ * Returns the closes date provided by month and day
+ * 
+ * @param {String|Number} month
+ * @param {String|Number} day
+ * @param {Date} baseDate - Defaults to now
+ * @return {Date}
+ */
+function getClosestDate(month, day, baseDate) {
+  baseDate = baseDate || new Date();
+  
+  // Return *baseDate* if no month is provided
+  if (!month) return baseDate;
+  
+  var currentYear = moment(baseDate).startOf('month').month(month).date(day || 1);
+  
+  // Return the date closes to *baseDate*
+  return [
+    currentYear.subtract(1, 'years').toDate(),
+    currentYear.toDate(),
+    currentYear.add(1, 'years').toDate(),
+  ]
+  .sort(function (a, b) { return Math.abs(a - baseDate) > Math.abs(b - baseDate) })
+  .shift();
+  
+}
+
+/**
+ * Checks whether *content* contains either phonenumber-btn or show-phonenumber,
+ * which indicates there's a phone number in the ad.
+ * 
+ * @param {String} content
+ * @return {Boolean}
+ */
+function hasTel(content) {
+  return /phonenumber\-btn|show\-phonenumber/i.test(content);
+}
+
+/**
+ * Returns the phone number from an item page
+ * by visiting its mobile page using Zombie, a headless browser.
+ * 
+ * @param {String} url
+ * @return {Promise} -> {String}
+ */
+function getTel(url) {
+  return new Promise(function (resolve, reject) {
+    var browser = new Browser({ debug: true });
+    
+    // replace 'www' with 'm' to get the mobile page
+    var _url = url.replace(/www(?=\.blocket\.se)/, 'm');
+    
+    // Navigate to the page
+    browser.visit(_url, function () {
+      
+      var phoneLink = browser.document.querySelector('#show-phonenumber');
+      
+      // If no phonelink can be found, return an empty string
+      if (!phoneLink) { return resolve(); /* No tel found. */ }
+      
+      // Click the link 
+      browser.clickLink('#show-phonenumber')
+      .then(function () {
+        
+        var phoneNumber = browser.document.querySelector('#show-phonenumber .button-label');
+        
+        resolve(!!phoneNumber ? phoneNumber.textContent : '');
+      })
+      .catch(function (err) {
+        if (/phone\-number\.json./i.test(err)) {
+          // Can't bother with the error.
+          resolve();
+        } else {
+          reject(err);
+        }
+      })
+    });
+  });
 }
 
 module.exports = {
@@ -162,5 +245,8 @@ module.exports = {
   lazyCompare: lazyCompare,
   escapeRegex: escapeRegex,
   literalRegExp: literalRegExp,
-  nextMonth: nextMonth
+  nextMonth: nextMonth,
+  getClosestDate: getClosestDate,
+  hasTel: hasTel,
+  getTel: getTel
 };

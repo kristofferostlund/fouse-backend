@@ -5,19 +5,9 @@ var Promise = require('bluebird');
 var chalk = require('chalk');
 var moment = require('moment');
 
-// var timeAnalyser = require('./analyser.time');
+var timeAnalyser = require('./analyser.time');
 var HomeItem = require('../models/homeItem/homeItem.model');
 var utils = require('../utils/general.utils');
-
-/**
- * Checks whether there are amounts of months referenced in the item.
- * 
- * @param {String} body
- * @return {Boolean}
- */
-function hasAmountOfMonths(body) {
-  return /[0-9]{1,2} {0,1}mån/i.test(body);
-}
 
 /**
  * @param {String} body
@@ -64,13 +54,15 @@ function lacksKitchen(body) {
  * @returm {Object}
  */ 
 function getClassifications(homeItem) {
-  return _.assign({}, homeItem, { classification: {
-    girls: forGirls(homeItem.body) || forGirls(homeItem.title),
-    commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
-    shared: isShared(homeItem.body) || isShared(homeItem.title),
-    swap: isSwap(homeItem.body) || isSwap(homeItem.title),
-    noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
-  }});
+  return _.assign({}, homeItem, {
+    classification: {
+      girls: forGirls(homeItem.body) || forGirls(homeItem.title),
+      commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
+      shared: isShared(homeItem.body) || isShared(homeItem.title),
+      swap: isSwap(homeItem.body) || isSwap(homeItem.title),
+      noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
+    }, time: timeAnalyser.getTimeInfo(homeItem)
+  });
 }
 
 /**

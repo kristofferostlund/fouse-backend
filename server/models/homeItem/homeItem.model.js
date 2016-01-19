@@ -18,6 +18,7 @@ var HomeItemSchema = new Schema({
   date: Date,
   url: String,
   shortUrl: String,
+  tel: String,
   images: [ String ],
   thumbnail: String,
   notified: Boolean,
@@ -27,6 +28,12 @@ var HomeItemSchema = new Schema({
     shared: Boolean, // Rooms, collectives and other shared solutions
     swap: Boolean, // For swap - home for home
     noKitchen: Boolean // Tenant lacks access to kitchen
+  },
+  time: {
+    period: Number, // The rental period in month
+    start: Date, // Approximate start of the the contract
+    end: Date, // Approximate end of the contract
+    isLongTerm: Boolean // 'Until further notice'
   },
   dateCreated: {
     type: Date,

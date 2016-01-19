@@ -45,20 +45,32 @@ function processItemPage(content) {
         return !/hyra tryggt/gi.test(data.data);
       });
       
-      // return attempt
+      // Return attempt
       return addrContent.data;
     });
     
-    // if an error was caught, there's no adress
+    // If an error was caught, there's no adress
     if (_.isError(adress)) { adress = undefined; }
     
-    resolve({
-      owner: owner,
-      body: body,
-      adress: adress,
-      images: images,
-      disabled: (/Hittade inte annonsen/.test(content)) ? true : undefined
-    });
+    // Get tel if exists
+    (function () {
+      if (utils.hasTel(content)) {
+        var url = _.first(html('link[rel="canonical"]')).attribs.href;
+        return utils.getTel(url);
+      } else {
+        return new Promise(function (resolve) { resolve(); })
+      }
+    })().then(function (tel) {
+      resolve({
+        owner: owner,
+        body: body,
+        adress: adress,
+        images: images,
+        tel: tel,
+        disabled: (/Hittade inte annonsen/.test(content)) ? true : undefined
+      });
+    })
+    
   });
 }
 
