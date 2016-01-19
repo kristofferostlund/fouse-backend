@@ -145,14 +145,15 @@ function getPeriod(body) {
       return parseFloat(day.replace(/\,/g, '.'));
     })
     .value();
-    
+  
   return Math.round(_.chain([
-    years * 12,
-    months,
-    weeks / 4,
-    days / 30 // accurate enough
+    _.sum(years) * 12,
+    _.sum(months),
+    _.sum(weeks) / 4,
+    _.sum(days) / 30 // accurate enough
   ])
   .filter()
+  .sum()
   .value()) || undefined;
 }
 
