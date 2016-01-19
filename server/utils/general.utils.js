@@ -210,7 +210,6 @@ function getTel(url) {
     
     // replace 'www' with 'm' to get the mobile page
     var _url = url.replace(/www(?=\.blocket\.se)/, 'm');
-    console.log(_url);
     
     // Navigate to the page
     browser.visit(_url, function () {

@@ -54,13 +54,15 @@ function lacksKitchen(body) {
  * @returm {Object}
  */ 
 function getClassifications(homeItem) {
-  return _.assign({}, homeItem, { classification: {
-    girls: forGirls(homeItem.body) || forGirls(homeItem.title),
-    commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
-    shared: isShared(homeItem.body) || isShared(homeItem.title),
-    swap: isSwap(homeItem.body) || isSwap(homeItem.title),
-    noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
-  }});
+  return _.assign({}, homeItem, {
+    classification: {
+      girls: forGirls(homeItem.body) || forGirls(homeItem.title),
+      commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
+      shared: isShared(homeItem.body) || isShared(homeItem.title),
+      swap: isSwap(homeItem.body) || isSwap(homeItem.title),
+      noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
+    }, time: timeAnalyser.getTimeInfo(homeItem)
+  });
 }
 
 /**
