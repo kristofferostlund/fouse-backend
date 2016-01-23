@@ -202,6 +202,8 @@ function hasTel(content) {
  * Returns the phone number from an item page
  * by visiting its mobile page using Zombie, a headless browser.
  * 
+ * TODO: Add retries.
+ * 
  * @param {String} url
  * @return {Promise} -> {String}
  */
@@ -220,19 +222,25 @@ function getTel(url) {
       // If no phonelink can be found, return an empty string
       if (!phoneLink) { return resolve(); /* No tel found. */ }
       
+      console.log('Found phone number at {url}, clicking button to get it.'.replace('{url}', _url));
+      
       // Click the link 
       browser.clickLink('#show-phonenumber')
       .then(function () {
         
         var phoneNumber = browser.document.querySelector('#show-phonenumber .button-label');
         
+        console.log('Found phone number: ' + phoneNumber);
+        
         resolve(!!phoneNumber ? phoneNumber.textContent : '');
       })
       .catch(function (err) {
         if (/phone\-number\.json./i.test(err)) {
           // Can't bother with the error.
+          console.log('Something went wrong with getting the the \'phone-number.json\'.');
           resolve();
         } else {
+          console.log('Something went wrong when getting the phone number.');
           reject(err);
         }
       })
