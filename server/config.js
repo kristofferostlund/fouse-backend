@@ -9,6 +9,20 @@ var userConfig; // Set it to the requried file if it exists
 try { userConfig = require('../userConfig'); }
 catch (error) { userConfig = {}; }
 
+/**
+ * Converts somewhat boolean values and strings such as 'false'.
+ * 
+ * @param {Any} input
+ * @return {Boolean}
+ */
+function parseBool(input) {
+  if (_.isUndefined(input)) { return undefined; }
+  if (_.isBoolean(input)) { return input; }
+  if (_.isString(input)) { return input != 'false'; }
+  
+  return !!input;
+}
+
 module.exports = {
   port: process.env.PORT || '3000',
   ip: process.env.IP || 'localhost',
@@ -16,7 +30,7 @@ module.exports = {
   dbString: process.env.DB_STRING || 'mongodb://localhost/home_please',
   tel: process.env.TEL || '0046700000000',
   email: process.env.EMAIL || 'recipient.email@example.com',
-  sendSms: process.env.SEND_SMS || false,
+  sendSms: parseBool(process.env.SEND_SMS) || false,
   name: process.env.NAME || 'John Doe',
   email_from: process.env.EMAIL_FROM || 'outbound.email@example.com',
   bitlyToken: process.env.BITLY_TOKEN || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
