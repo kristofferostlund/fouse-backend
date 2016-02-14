@@ -7,9 +7,17 @@ var ObjectId = Schema.ObjectId;
 
 var UserSchema = new Schema({
   name: String,
-  email: String,
-  homeOptions: {
-    price: Number,
+  email: {
+    type: String,
+    unique: true
+  },
+  tel: {
+    unique: true,
+    type: String
+  },
+  options: {
+    price: Number, // Translates into { $lte: *price* }
+    minPrice: Number, // Translates into { $gte: *maxPrice* }
     classification: {
       girls: Boolean, // For girls only
       commuters: Boolean, // Something like only 5 days a week
@@ -25,7 +33,7 @@ var UserSchema = new Schema({
       isLongTerm: Boolean
     }
   },
-  notificationOptions: {
+  notify: {
     email: Boolean,
     sms: Boolean
   },
@@ -42,6 +50,12 @@ var UserSchema = new Schema({
 
 UserSchema.pre('save', function (next) {
   this.modified = new Date();
+  
+  // Ensure proper formatting.
+  // only allows Swedish numbers for now
+  if (this.tel && !/^46/.test(this.tel)) {
+    this.tel = this.tel.replace(/(^\+46|^46|^0046|^0(?!046))/, '46');
+  }
   
   next();
 });
