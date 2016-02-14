@@ -42,7 +42,7 @@ function processItemPage(content) {
     var adress = _.attempt(function () {
       var addrContent = _.find(html('h3.h5').contents(), function (data) {
         // return find
-        return !/hyra tryggt/gi.test(data.data);
+        return !/(hyra|handla) tryggt/gi.test(data.data);
       });
       
       // Return attempt

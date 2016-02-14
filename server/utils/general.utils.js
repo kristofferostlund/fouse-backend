@@ -61,10 +61,14 @@ function lazyCompare(source, target, exclude) {
  * Makes a GET request to *url*
  * and returns a promise of the body as a string.
  * 
+ * If *doParse* is true, return the body as parsed
+ * 
  * @param {String} url - URI to request
  * @param {Object} options - optional, options object
+ * @parma {Boolean} doParse
+ * @return {Promie} -> {String|Object}
  */
-function getPage(url, options) {
+function getPage(url, options, doParse) {
   return new Promise(function (resolve, reject) {
     // *options* must be an object
     if (!_.isObject(options)) { options = {}; }
@@ -77,7 +81,21 @@ function getPage(url, options) {
       }, options.headers)
     }, function (err, res, body) {
       if (err) { reject(err); }
-      else { resolve(body.toString('utf8')); }
+      else {
+        var _body = body.toString('utf8')
+        
+        // Only parse if doParse is truthy
+        if (!doParse)  { return resolve(_body); }
+        
+        var parsed = _.attempt(function () { return JSON.parse(_body); })
+        
+        resolve(
+          _.isError(parsed)
+            ? _body
+            : parsed
+        );
+        
+      }
     })
   });
 }
@@ -228,7 +246,12 @@ function getTel(url) {
       browser.clickLink('#show-phonenumber')
       .then(function () {
         
-        var phoneNumber = browser.document.querySelector('#show-phonenumber .button-label');
+        var phoneNumber = _.attempt(function () { return browser.document.querySelector('#show-phonenumber .button-label').textContent; });
+        
+        if (_.isError(phoneNumber)) {
+          console.log('Couldn\'t get the phone number.');
+          return resolve();
+        }
         
         console.log('Found phone number: ' + phoneNumber);
         
@@ -241,7 +264,7 @@ function getTel(url) {
           resolve();
         } else {
           console.log('Something went wrong when getting the phone number.');
-          reject(err);
+          resolve();
         }
       })
     });

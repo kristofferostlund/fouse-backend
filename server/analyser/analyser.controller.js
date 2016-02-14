@@ -6,6 +6,7 @@ var chalk = require('chalk');
 var moment = require('moment');
 
 var timeAnalyser = require('./analyser.time');
+var locationAnalyser = require('./analyser.location');
 var HomeItem = require('../models/homeItem/homeItem.model');
 var utils = require('../utils/general.utils');
 
@@ -50,29 +51,68 @@ function lacksKitchen(body) {
 }
 
 /**
+ * Returns a Promise of 
+ * 
  * @param {Object} homeItem
  * @returm {Object}
  */ 
 function getClassifications(homeItem) {
-  return _.assign({}, homeItem, {
-    classification: {
-      girls: forGirls(homeItem.body) || forGirls(homeItem.title),
-      commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
-      shared: isShared(homeItem.body) || isShared(homeItem.title),
-      swap: isSwap(homeItem.body) || isSwap(homeItem.title),
-      noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
-    }, time: timeAnalyser.getTimeInfo(homeItem)
+  return new Promise(function (resolve, reject) {
+    
+    var _homeItem = _.assign(homeItem, {
+        classification: {
+          girls: forGirls(homeItem.body) || forGirls(homeItem.title),
+          commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
+          shared: isShared(homeItem.body) || isShared(homeItem.title),
+          swap: isSwap(homeItem.body) || isSwap(homeItem.title),
+          noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
+        }, time: timeAnalyser.getTimeInfo(homeItem)
+      });
+    
+    // Get location data
+    locationAnalyser.getLocationInfo(_homeItem)
+    .then(resolve)
+    .catch(function (err) {
+      
+      console.log(
+        chalk.red(
+          'Something went wrong with fetchin location data for {url}.\nResolving object without location data.'
+            .replace('{url}', homeItem.url)
+        )
+      );
+      
+      // Something went wrong with the location, but keep going.
+      resolve(_homeItem);
+    });
+    
   });
 }
 
 /**
+ * Completely classifies the *homeItems*,
+ * including chronological info, locational info and general info, such as gender specific rules and the like.
+ * 
  * @param {Array|Object} homeItems
- * @return {Array|Object}
+ * @return {Promise} -> {Array|Object}
  */
 function classify(homeItems) {
+  
+  // If there's only one, return the promise of its classification
+  if (!_.isArray(homeItems)) { return getClassifications(homeItems); }
+  
+  // Otherwise we first need to get them all first
   return new Promise(function (resolve, reject) {
-    if (!_.isArray(homeItems)) { resolve(getClassifications(homeItems)); }
-    else { resolve(_.map(homeItems, getClassifications)); }
+    var promises = _.map(homeItems, function (homeItem) { return getClassifications(homeItem);
+ });
+    
+    Promise.all(_.map(promises, function (promise) { return promise.reflect(); }))
+    .then(function (data) {
+      resolve(_.map(data, function (val, i) { return val.isRejected() ? homeItems[i] : val.value() }))
+    })
+    .catch(function (err) {
+      console.log(err);
+      resolve(homeItems);
+    });
   });
 }
 
@@ -80,5 +120,3 @@ module.exports = {
   getClassifications: getClassifications,
   classify: classify
 };
-
-// TODO: Add area stuff (use Google maps API?)
