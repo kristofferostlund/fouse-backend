@@ -5,6 +5,7 @@ var request = require('request');
 var Promise = require('bluebird');
 var moment = require('moment');
 var Browser = require('zombie');
+var DataObjectParser = require('dataobject-parser')
 
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
@@ -201,6 +202,8 @@ function hasTel(content) {
  * Returns the phone number from an item page
  * by visiting its mobile page using Zombie, a headless browser.
  * 
+ * TODO: Add retries.
+ * 
  * @param {String} url
  * @return {Promise} -> {String}
  */
@@ -219,24 +222,168 @@ function getTel(url) {
       // If no phonelink can be found, return an empty string
       if (!phoneLink) { return resolve(); /* No tel found. */ }
       
+      console.log('Found phone number at {url}, clicking button to get it.'.replace('{url}', _url));
+      
       // Click the link 
       browser.clickLink('#show-phonenumber')
       .then(function () {
         
         var phoneNumber = browser.document.querySelector('#show-phonenumber .button-label');
         
+        console.log('Found phone number: ' + phoneNumber);
+        
         resolve(!!phoneNumber ? phoneNumber.textContent : '');
       })
       .catch(function (err) {
         if (/phone\-number\.json./i.test(err)) {
           // Can't bother with the error.
+          console.log('Something went wrong with getting the the \'phone-number.json\'.');
           resolve();
         } else {
+          console.log('Something went wrong when getting the phone number.');
           reject(err);
         }
       })
     });
   });
+}
+
+/**
+ * Returns a new object where property names
+ * with dots are converted into nested objects and arrays.
+ * 
+ * Example: { 'prop.sub': 'value' } -> { prop: { sub: value } }
+ * 
+ * @param {Array|Object} dotArray
+ * @return {Array|Object}
+ */
+function objectify(dotArray) {
+  // Ensure it's an array
+  var isObj;
+  if (!_.isArray(dotArray)) {
+    dotArray = [ dotArray ];
+    isObj = true;
+  }
+  
+  var arr = _.map(dotArray, function (dotObject) {
+    var d = new DataObjectParser();
+    
+    // Get all values
+    _.forEach(dotObject, function (value, key) {
+      // If there's an array of dotted objects, recursive value
+      
+      if (_.isArray(value) && _.some(value, _.isObject)) {
+        if (key)
+        d.set(key, objectify(value));
+      } else {
+        d.set(key, value);
+      }
+    });
+    
+    var output = d.data();
+    var keys = _.map(dotArray, function (v, key) { return key; });
+    
+    return d.data();;
+  });
+  
+  return isObj ? _.first(arr) : arr;
+}
+
+/**
+ * Returns the object ready for querying.
+ * 
+ * @param {Object} _options
+ * @return {Object}
+ */
+function querify(_options) {
+  
+  // Nothing to go about
+  if (!_options) { return {}; }
+  
+  // Allow either a user object or onlu its options to be used.
+  var options = !!_options.options
+    ? (_options._doc || _options).options
+    : (_options._doc  || _options);
+  
+  var __options = _.assign(
+    {
+      // Default options
+      disabled: { $ne: true },
+      notified: { $ne: true },
+      active: true
+    }
+    , {
+      // User options
+      price: _.isUndefined(options.price)
+        ? undefined
+        : { $lte: options.price },
+      // At least one of these must be met.
+      // Any object without a value will be filtered out
+      $or: _.filter([
+        {
+          // Get time period object, which, if there're any properties of time.period, will be $gte or $lte min or max,
+          // otherwise it'll be undefined.
+          'time.period': _.isUndefined(_.get(options, 'time.period.min') || _.get(options, 'time.period.max'))
+            ? undefined
+            : _.assign(
+              {}
+            , _.isUndefined(_.get(options, 'time.period.min')) ? undefined : { $gte: _.get(options, 'time.period.min') }
+            , _.isUndefined(_.get(options, 'time.period.max')) ? undefined : { $lte: _.get(options, 'time.period.max') }
+            )
+        },
+        {
+          'time.isLongTerm': _.isUndefined(_.get(options, 'time.isLongTerm'))
+            ? undefined
+            : options.time.isLongTerm
+        },
+        {
+          end: _.isUndefined(_.get(options, 'time.period.min') || _.get(options, 'time.period.max'))
+            ? undefined
+            : null
+        }
+      ], function (item) { return !_.all(item, _.isUndefined); })
+    }
+    , _.chain(options.classification)
+      .map(function (val, key) {
+        return [
+          ['classification', key].join('.'),
+          (
+            // If it's undefined, don't bother with it,
+            // if it's truthy, return true, if it's falsy, negate true.
+            _.isUndefined(val)
+              ? undefined
+              : (!!val || { $ne: true })
+          )
+        ]
+      })
+      .filter()
+      .zipObject()
+      .value()
+    );
+  
+  return __options;
+}
+
+
+
+/**
+ * Returns the value at the dot-separated path.
+ * 
+ * @param {Object} obj
+ * @param {String} path
+ * @return {Any}
+ */
+function deepFind(obj, path) {
+  // Return *obj* as-is if it's not an object
+  if (!_.isObject(obj)) { return obj; }
+  
+  // If there's no path, return *obj* as-is
+  if (!path) { return obj; }
+  var arr = path.split('.');
+  
+  arr.forEach(function(key) { if (obj) { obj = obj[key]; } }, this);
+  
+  return obj;
 }
 
 module.exports = {
@@ -248,5 +395,8 @@ module.exports = {
   nextMonth: nextMonth,
   getClosestDate: getClosestDate,
   hasTel: hasTel,
-  getTel: getTel
+  getTel: getTel,
+  objectify: objectify,
+  querify: querify,
+  deepFind: deepFind
 };

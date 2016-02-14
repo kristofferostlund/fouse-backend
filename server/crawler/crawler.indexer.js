@@ -7,22 +7,22 @@ var Promise = require('bluebird');
 var $ = require('cheerio');
 
 var utils = require('../utils/general.utils');
+var config = require('../config');
 
 // The URL for every rentable blocket ad. ish.
-var __baseURL = 'http://www.blocket.se/bostad/uthyres/stockholm?o={pageNum}&f=p&f=c&f=b';
+var __baseURL = config.base_url;
 
 /**
  * Returns the __baseUrl to the page for *num*.
- * For example, if num is 1 it returns:
- * 'http://www.blocket.se/bostad/uthyres/stockholm?o=1&f=p&f=c&f=b'
+ * 
+ * Page num is decided by the query 'o=1' (or whatever page it is).
  * 
  * @param {String|Number} num
  * @return {String} - the base url + the page number
  */
 function urlByNum(num) {
-  return __baseURL.replace(/{pageNum}/gi, '' + num);
+  return __baseURL.replace(/(o\=)[0-9]{1,2}/gi, '$1' + num);
 }
-
 
 /**
  * Processes the ads list page and returns an array of items.
