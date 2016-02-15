@@ -181,15 +181,15 @@ function sendSms(homeItem) {
       } else {
         var smsBody = createSmsBody(homeItem.title, shortUrl);
         
+        // Only send if somewhere set to true
+        if (!config.sendSms) { return resolve(); }
+        
         console.log(chalk.green([
           'Sending SMS to ',
           config.tel,
           ' with the body:\n',
           createSmsBody(homeItem.title, shortUrl, false)
           ].join('')));
-        
-        // Only send if somewhere set to true
-        if (!config.sendSms) { return resolve(); }
         
         // Send the SMS
         utils.getPage(cellsyntUrl(smsBody))
@@ -246,15 +246,15 @@ function sendEmail(homeItems) {
       return resolve(); // early
     }
     
+    // Return early if emails shouldn't be sent.
+    if (!config.sendEmail) { return resolve(); }
+    
     console.log(chalk.green([
       'Sendingn email for',
       _.map(homeItems, function (item) { return item.title }).join(', '),
       'at',
       moment().format('YYYY-MM-DD, HH:mm') + '.'
       ].join(' ')));
-    
-    // Return early if emails shouldn't be sent.
-    if (!config.sendEmail) { return; }
     
     abstractEmail(
       'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
@@ -332,7 +332,7 @@ function createOneAsanaTask(homeItem) {
       ].join('\n')
     };
     
-    var logMessage = chalk.green('Creating task: ' + task.workspace + ', ' + task.name + ' at' + moment().format('YYYY-MM-DD, HH:mm'));
+    var logMessage = chalk.green('\nCreating task: ' + task.workspace + ', ' + task.name + ' at' + moment().format('YYYY-MM-DD, HH:mm') + '\n');
     
     // Check to see if the Asana stuff has any other alphanumeric characters than only 'x',
     // to ensure calls can be made to a working endpoint.
