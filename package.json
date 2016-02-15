@@ -24,7 +24,7 @@
     "dataobject-parser": "^1.0.6",
     "express": "^4.13.3",
     "later": "^1.2.0",
-    "lodash": "^3.10.1",
+    "lodash": "4.3.0",
     "mandrill-api": "^1.0.45",
     "moment": "^2.10.6",
     "mongodb": "^2.0.48",

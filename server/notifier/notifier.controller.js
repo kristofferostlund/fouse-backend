@@ -289,6 +289,14 @@ function sendSummaryEmail(homeItems) {
 }
 
 /**
+ * @param {homeItem} homeItem
+ * @return {String|Number}
+ */
+function getProject(homeItem) {
+  return config.asana_projects[(homeItem.region || '').toLowerCase()];
+}
+
+/**
  * Creates the asan task and returns a promise of it.
  * 
  * @param {Object} homeItem (HomeItem)
@@ -299,6 +307,7 @@ function createOneAsanaTask(homeItem) {
     
     var task = {
       workspace: config.asana_workspace,
+      projects: getProject(homeItem),
       name: _.filter([
         homeItem.region,
         homeItem.title,
@@ -309,7 +318,7 @@ function createOneAsanaTask(homeItem) {
         homeItem.url,
         '',
         'Owner: ' + homeItem.owner,
-        'Phone number: ' + homeItem.tel,
+        'Phone number: ' + (homeItem.tel || 'data missing'),
         'Price: ' + homeItem.price,
         'Rooms: ' + homeItem.rooms,
         'Size: ' + homeItem.size,
@@ -335,7 +344,6 @@ function createOneAsanaTask(homeItem) {
     
     // Log what's going on
     console.log(logMessage);
-    
     
     request.post({
       uri: 'https://app.asana.com/api/1.0/tasks',
