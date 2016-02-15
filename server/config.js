@@ -32,6 +32,7 @@ module.exports = {
   email: process.env.EMAIL || 'recipient.email@example.com',
   sendSms: parseBool(process.env.SEND_SMS) || false,
   sendEmail: parseBool(process.env.SEND_EMAIL) || false,
+  notifyAll: parseBool(process.env.NOTIFY_ALL) || false,
   name: process.env.NAME || 'John Doe',
   email_from: process.env.EMAIL_FROM || 'outbound.email@example.com',
   bitlyToken: process.env.BITLY_TOKEN || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',

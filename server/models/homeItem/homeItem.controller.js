@@ -6,6 +6,7 @@ var moment = require('moment');
 var chalk = require('chalk');
 
 var utils = require('../../utils/general.utils');
+var config = require('../../config');
 var HomeItem = require('./homeItem.model');
 
 /**
@@ -249,6 +250,16 @@ function getItemsOfInterest(_options) {
       notified: { $ne: true },
       active: true
     }, __options);
+    
+    // Lazy temp solution for allowing notifications on all items
+    if (config.notifyAll) {
+      options = {
+        dateCreated: options.dateCreated,
+        disabled: { $ne: true },
+        notified: { $ne: true },
+        active: true
+      }
+    }
     
     HomeItem.find(options, function (err, items) {
       if (err) {

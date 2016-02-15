@@ -21,7 +21,11 @@ function getFrontPage() {
     console.log('Front page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
     
     // Notify if there are any items of interest.
-    notifier.notify(items);
+    notifier.notify(items)
+    .then(function (items) {
+      if (items && items.length)
+      console.log('All notifications sent.');
+    });
     
   })
   .catch(function (err) {
