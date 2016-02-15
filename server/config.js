@@ -48,5 +48,7 @@ module.exports = {
     .map(function (project) { return project.split(':'); })
     .unzip()
     .thru(function (items) { return _.zipObject(_.first(items), _.last(items)); })
-    .value()
+    .value(),
+  interval: process.env.INTERVAL || 15,
+  wait: process.env.WAIT || 5
 };
