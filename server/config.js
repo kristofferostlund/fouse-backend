@@ -43,4 +43,12 @@ module.exports = {
   geo_api_key: process.env.GEO_API_KEY || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   asana_token: process.env.ASANA_TOKEN || 'xxxxxxxxxxxxx',
   asana_workspace: process.env.ASANA_WORKSPACE || 'xxxxxxxxxxxxx',
+  asana_projects: _.chain((process.env.ASANA_PROJECTS || '').split('|'))
+    .filter()
+    .map(function (project) { return project.split(':'); })
+    .unzip()
+    .thru(function (items) { return _.zipObject(_.first(items), _.last(items)); })
+    .value(),
+  interval: process.env.INTERVAL || 15,
+  wait: process.env.WAIT || 5
 };

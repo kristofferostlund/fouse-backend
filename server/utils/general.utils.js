@@ -255,7 +255,7 @@ function getTel(url) {
         
         console.log('Found phone number: ' + phoneNumber);
         
-        resolve(!!phoneNumber ? phoneNumber.textContent : '');
+        resolve(phoneNumber);
       })
       .catch(function (err) {
         if (/phone\-number\.json./i.test(err)) {

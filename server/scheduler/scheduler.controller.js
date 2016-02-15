@@ -6,6 +6,7 @@ var chalk = require('chalk');
 var later = require('later');
 var moment = require('moment');
 
+var config = require('../config');
 var crawler = require('../crawler/crawler.controller');
 var homeItemController = require('../models/homeItem/homeItem.controller');
 var notifier = require('../notifier/notifier.controller');
@@ -69,8 +70,8 @@ function getDaySummary() {
 }
 
 // Schedule to get the first index page
-var scheduleEvery15 = later.parse.recur()
-  .every(15).minute()
+var scheduleEveryInterval = later.parse.recur()
+  .every(config.interval).minute()
   .except().every().hour().between(0,6);
 
 // Schedule to get every index page
@@ -78,8 +79,9 @@ var scheduleOn6 = later.parse.recur()
   .on(6).hour();
 
 // Starts schedules in 5 minutes
-console.log('Schedule starts in 5 minutes.');
+console.log('Schedule starts in :wait minutes.'.replace(':wait', config.wait));
 setTimeout(function() {
-  later.setInterval(getFrontPage, scheduleEvery15);
+  console.log('Schedule for every :interval minute started.'.replace(':interval', config.interval));
+  later.setInterval(getFrontPage, scheduleEveryInterval);
   later.setInterval(getDaySummary, scheduleOn6);
-}, 300000);
+}, config.wait * 60000);

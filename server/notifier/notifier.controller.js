@@ -181,15 +181,15 @@ function sendSms(homeItem) {
       } else {
         var smsBody = createSmsBody(homeItem.title, shortUrl);
         
+        // Only send if somewhere set to true
+        if (!config.sendSms) { return resolve(); }
+        
         console.log(chalk.green([
           'Sending SMS to ',
           config.tel,
           ' with the body:\n',
           createSmsBody(homeItem.title, shortUrl, false)
           ].join('')));
-        
-        // Only send if somewhere set to true
-        if (!config.sendSms) { return resolve(); }
         
         // Send the SMS
         utils.getPage(cellsyntUrl(smsBody))
@@ -246,15 +246,15 @@ function sendEmail(homeItems) {
       return resolve(); // early
     }
     
+    // Return early if emails shouldn't be sent.
+    if (!config.sendEmail) { return resolve(); }
+    
     console.log(chalk.green([
       'Sendingn email for',
       _.map(homeItems, function (item) { return item.title }).join(', '),
       'at',
       moment().format('YYYY-MM-DD, HH:mm') + '.'
       ].join(' ')));
-    
-    // Return early if emails shouldn't be sent.
-    if (!config.sendEmail) { return; }
     
     abstractEmail(
       'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
@@ -289,6 +289,14 @@ function sendSummaryEmail(homeItems) {
 }
 
 /**
+ * @param {homeItem} homeItem
+ * @return {String|Number}
+ */
+function getProject(homeItem) {
+  return config.asana_projects[(homeItem.region || '').toLowerCase()];
+}
+
+/**
  * Creates the asan task and returns a promise of it.
  * 
  * @param {Object} homeItem (HomeItem)
@@ -299,18 +307,19 @@ function createOneAsanaTask(homeItem) {
     
     var task = {
       workspace: config.asana_workspace,
+      projects: getProject(homeItem),
       name: _.filter([
         homeItem.region,
         homeItem.title,
-        homeItem.price,
+        (homeItem.price || 0) + ' kr',
         homeItem.tel
       ]).join(', '),
       notes: [
         homeItem.url,
         '',
         'Owner: ' + homeItem.owner,
-        'Phone number: ' + homeItem.tel,
-        'Price: ' + homeItem.price,
+        'Phone number: ' + (homeItem.tel || 'data missing'),
+        'Price: ' + homeItem.price + ' kr',
         'Rooms: ' + homeItem.rooms,
         'Size: ' + homeItem.size,
         'Region: ' + homeItem.region,
@@ -323,7 +332,7 @@ function createOneAsanaTask(homeItem) {
       ].join('\n')
     };
     
-    var logMessage = chalk.green('Creating task: ' + task.workspace + ', ' + task.name + ' at' + moment().format('YYYY-MM-DD, HH:mm'));
+    var logMessage = chalk.green('\nCreating task: ' + task.workspace + ', ' + task.name + ' at' + moment().format('YYYY-MM-DD, HH:mm') + '\n');
     
     // Check to see if the Asana stuff has any other alphanumeric characters than only 'x',
     // to ensure calls can be made to a working endpoint.
@@ -335,7 +344,6 @@ function createOneAsanaTask(homeItem) {
     
     // Log what's going on
     console.log(logMessage);
-    
     
     request.post({
       uri: 'https://app.asana.com/api/1.0/tasks',
