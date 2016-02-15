@@ -311,7 +311,7 @@ function createOneAsanaTask(homeItem) {
       name: _.filter([
         homeItem.region,
         homeItem.title,
-        homeItem.price,
+        (homeItem.price || 0) + ' kr',
         homeItem.tel
       ]).join(', '),
       notes: [
@@ -319,7 +319,7 @@ function createOneAsanaTask(homeItem) {
         '',
         'Owner: ' + homeItem.owner,
         'Phone number: ' + (homeItem.tel || 'data missing'),
-        'Price: ' + homeItem.price,
+        'Price: ' + homeItem.price + ' kr',
         'Rooms: ' + homeItem.rooms,
         'Size: ' + homeItem.size,
         'Region: ' + homeItem.region,
