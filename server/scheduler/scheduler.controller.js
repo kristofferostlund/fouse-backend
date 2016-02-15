@@ -19,13 +19,14 @@ function getFrontPage() {
   .then(homeItemController.getItemsOfInterest)
   .then(function (items) {
     console.log('Front page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
-    // Send sms if any are of interest
-    items.forEach(function(item) {
-      notifier.sendSms(item);
-    }, this);
-    if (items && items.length) {
-      notifier.sendEmail(items);
-    }
+    
+    // Notify if there are any items of interest.
+    notifier.notify(items)
+    .then(function (items) {
+      if (items && items.length)
+      console.log('All notifications sent.');
+    });
+    
   })
   .catch(function (err) {
     console.log(err);

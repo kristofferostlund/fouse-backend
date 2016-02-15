@@ -14,7 +14,8 @@ var HomeItemSchema = new Schema({
   rooms: String,
   size: String,
   location: String,
-  adress: String,
+  adress: String, // TODO: fix this spelling mistake
+  region: String,
   date: Date,
   url: String,
   shortUrl: String,
@@ -22,7 +23,6 @@ var HomeItemSchema = new Schema({
   images: [ String ],
   thumbnail: String,
   notified: Boolean,
-  region: String,
   classification: {
     girls: Boolean, // For girls only
     commuters: Boolean, // Something like only 5 days a week
