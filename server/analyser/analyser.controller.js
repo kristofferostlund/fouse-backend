@@ -102,8 +102,7 @@ function classify(homeItems) {
   
   // Otherwise we first need to get them all first
   return new Promise(function (resolve, reject) {
-    var promises = _.map(homeItems, function (homeItem) { return getClassifications(homeItem);
- });
+    var promises = _.map(homeItems, function (homeItem) { return getClassifications(homeItem); });
     
     Promise.all(_.map(promises, function (promise) { return promise.reflect(); }))
     .then(function (data) {

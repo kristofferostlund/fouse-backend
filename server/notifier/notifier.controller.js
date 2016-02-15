@@ -7,6 +7,7 @@ var fs = require('fs');
 var path = require('path');
 var mandrill  = require('mandrill-api');
 var moment = require('moment');
+var request = require('request');
 
 var utils = require('../utils/general.utils');
 var config = require('../config');
@@ -162,45 +163,53 @@ function createSummaryEmail(homeItems) {
  * and a shortened link using the Bitly API.
  * 
  * @param {Object} homeItem (HomeItem)
+ * @return {Promise} -> {Object}
  */
 function sendSms(homeItem) {
-  
-  if (_.isEqual({}, config)) {
-    console.log('Can\'t send sms as there\'s no config file.');
-    return; // early
-  }
-  
-  getShortUrl(getBitly(homeItem.url))
-  .then(function (shortUrl) {
-    if (!shortUrl) {
-      console.log('No url received.');
-    } else {
-      var smsBody = createSmsBody(homeItem.title, shortUrl);
-      
-      console.log(chalk.green([
-        'Sending to ',
-        config.tel,
-        ' with the body:\n',
-        createSmsBody(homeItem.title, shortUrl, false)
-        ].join('')));
-      
-      // Only send if somewhere set to true
-      if (config.sendSms) {
-        utils.getPage(cellsyntUrl(smsBody));
-      }
+  return new Promise(function (resolve, reject) {
+    
+    if (_.isEqual({}, config)) {
+      console.log('Can\'t send sms as there\'s no config file.');
+      return resolve(); // early
     }
-  })
-  .catch(function (err) {
-    // Couldn't get the 
-    console.log(err);
-  })
+    
+    getShortUrl(getBitly(homeItem.url))
+    .then(function (shortUrl) {
+      if (!shortUrl) {
+        console.log('No url received.');
+        return resolve();
+      } else {
+        var smsBody = createSmsBody(homeItem.title, shortUrl);
+        
+        console.log(chalk.green([
+          'Sending SMS to ',
+          config.tel,
+          ' with the body:\n',
+          createSmsBody(homeItem.title, shortUrl, false)
+          ].join('')));
+        
+        // Only send if somewhere set to true
+        if (!config.sendSms) { return resolve(); }
+        
+        // Send the SMS
+        utils.getPage(cellsyntUrl(smsBody))
+        .then(resolve)
+        .catch(reject);
+      }
+    })
+    .catch(function (err) {
+      // Couldn't get the url
+      console.log(err);
+      reject(err);
+    })
+  });
 }
 
 /**
  * @param {String} subject
  * @param {String} text
  * @param {Object} options - optional
- * return {Promise}
+ * @return {Promise} -> {Object}
  */
 function abstractEmail(subject, text, options) {
   return new Promise(function (resolve, reject) {
@@ -227,59 +236,199 @@ function abstractEmail(subject, text, options) {
  * Sends a detailed email of *homeItem*.
  * 
  * @param {Object} homeItem (HomeItem)
+ * @return {Promise} -> {Object}
  */
 function sendEmail(homeItems) {
-  
-  if (_.isEqual({}, config)) {
-    console.log('Can\'t send email as there\'s no config file.');
-    return; // early
-  }
-  
-  console.log(chalk.green([
-    'Sendingn email for',
-    _.map(homeItems, function (item) { return item.title }).join(', '),
-    'at',
-    moment().format('YYYY-MM-DD, HH:mm') + '.'
-    ].join(' ')));
-  
-  abstractEmail(
-    'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
-    createEmailBody(homeItems)
-  )
-  .then(function (res) {
-    console.log(res);
-  })
-  .catch(function (err) {
-    console.log(err);
-  })
+  return new Promise(function (resolve, reject) {
+    
+    if (_.isEqual({}, config)) {
+      console.log('Can\'t send email as there\'s no config file.');
+      return resolve(); // early
+    }
+    
+    console.log(chalk.green([
+      'Sendingn email for',
+      _.map(homeItems, function (item) { return item.title }).join(', '),
+      'at',
+      moment().format('YYYY-MM-DD, HH:mm') + '.'
+      ].join(' ')));
+    
+    // Return early if emails shouldn't be sent.
+    if (!config.sendEmail) { return; }
+    
+    abstractEmail(
+      'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
+      createEmailBody(homeItems)
+    )
+    .then(resolve)
+    .catch(reject);
+  });
 }
 
 /**
  * Sends a summary email of *homeItems*.
  * 
  * @param {Array} homeItems (HomeItem)
+ * @return {Promise} -> {Object}
  */
 function sendSummaryEmail(homeItems) {
-  
-  if (_.isEqual({}, config)) {
-    console.log('Can\'t send email as there\'s no config file.');
-    return; // early
-  }
-  
-  abstractEmail(
-    'Summering av intressanta bostäder',
-    createSummaryEmail(homeItems)
-  )
-  .then(function (res) {
-    console.log(res);
-  })
-  .catch(function (err) {
-    console.log(err);
+  return new Promise(function (resolve, reject) {
+    
+    if (_.isEqual({}, config)) {
+      console.log('Can\'t send email as there\'s no config file.');
+      return resolve(); // early
+    }
+    
+    abstractEmail(
+      'Summering av intressanta bostäder',
+      createSummaryEmail(homeItems)
+    )
+    .then(resolve)
+    .catch(reject);
+  });
+}
+
+/**
+ * Creates the asan task and returns a promise of it.
+ * 
+ * @param {Object} homeItem (HomeItem)
+ * @return {Promise} -> {Object}
+ */
+function createOneAsanaTask(homeItem) {
+  return new Promise(function (resolve, reject) {
+    
+    var task = {
+      workspace: config.asana_workspace,
+      name: _.filter([
+        homeItem.region,
+        homeItem.title,
+        homeItem.price,
+        homeItem.tel
+      ]).join(', '),
+      notes: [
+        homeItem.url,
+        '',
+        'Owner: ' + homeItem.owner,
+        'Phone number: ' + homeItem.tel,
+        'Price: ' + homeItem.price,
+        'Rooms: ' + homeItem.rooms,
+        'Size: ' + homeItem.size,
+        'Region: ' + homeItem.region,
+        'Location: ' + homeItem.location,
+        'Address: ' + homeItem.adress,
+        '',
+        '----',
+        '',
+        homeItem.body
+      ].join('\n')
+    };
+    
+    var logMessage = chalk.green('Creating task: ' + task.workspace + ', ' + task.name + ' at' + moment().format('YYYY-MM-DD, HH:mm'));
+    
+    // Check to see if the Asana stuff has any other alphanumeric characters than only 'x',
+    // to ensure calls can be made to a working endpoint.
+    if (!/[a-vy-ä0-9]+/.test(config.asana_token) || !/[a-vy-ä0-9]+/.test(config.asana_workspace)) {
+      console.log('No valid Asana token, or workspace found.\nWould have sent the following task:');
+      console.log(logMessage);
+      return resolve();
+    }
+    
+    // Log what's going on
+    console.log(logMessage);
+    
+    
+    request.post({
+      uri: 'https://app.asana.com/api/1.0/tasks',
+      headers: {
+        'Authorization': 'Bearer ' + config.asana_token
+      },
+      json: true,
+      body: {
+        data: task
+      }
+    }, function (err, response, body) {
+      
+      // Whoops, something went wrong here
+      if (err) {
+        console.log(chalk.red('The following error occurred when trying to create a task to Asana:'));
+        console.log(err);
+        reject(err);
+      } else {
+        console.log('\n' + chalk.green('Task created: ' + task.name) + '\n');
+        resolve(homeItem);
+      }
+
+    });
+    
+  });
+}
+
+/**
+ * Creates tasks Asana tasks for all *homeItems*
+ * and returns a Promise of the *homeItems*.
+ * 
+ * @param {Object|Array} homeItems
+ * @return {Promise} -> {Object|Array}
+ */
+function createAsanaTasks(homeItems) {
+  new Promise(function (resolve, reject) {
+    
+    // Ensure array
+    var _homeItems = _.isArray(homeItems)
+      ? homeItems
+      : [ homeItems ];
+    
+    var promises = _.map(_homeItems, createOneAsanaTask);
+    
+    Promise.all(_.map(promises, function (promise) { return promise.reflect(); }))
+    .then(function (data) {
+      resolve(_.map(data, function (val, i) { return val.isRejected() ? _homeItems[i] : val.value() }))
+    })
+    .catch(function (err) {
+      console.log(err);
+      resolve(homeItems);
+    });
+  });
+}
+
+/**
+ * Sends out all notifications.
+ * 
+ * @param {Array} homeItems
+ * @return {Promise} -> {Array}
+ */
+function notify(homeItems) {
+  return new Promise(function (resolve, reject) {
+    
+    if (homeItems && homeItems.length) {
+      
+      var promises = _.chain([
+        sendEmail(homeItems),
+        createAsanaTasks(homeItems),
+        _.map(homeItems, sendSms)
+      ])
+      .flatten()
+      .filter()
+      .value();
+      
+      Promise.all(_.map(promises, function (promise) { return promise.reflect(); }))
+      .then(function (data) {
+        console.log('Finished here');
+        resolve(_.map(data, function (val, i) { return val.isRejected() ? val.reason() : val.value() }))
+      })
+      .catch(function (err) {
+        console.log(err);
+        resolve(homeItems);
+      });
+    }
+    
   });
 }
 
 module.exports = {
   sendSms: sendSms,
   sendEmail: sendEmail,
-  sendSummaryEmail: sendSummaryEmail
+  sendSummaryEmail: sendSummaryEmail,
+  createAsanaTasks: createAsanaTasks,
+  notify: notify
 }
