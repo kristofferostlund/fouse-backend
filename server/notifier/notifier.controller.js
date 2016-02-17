@@ -311,6 +311,12 @@ function getProjects(homeItem) {
           : undefined;
       }
       
+      if (/isApartment/i.test(key)) {
+        return !_.get(homeItem, 'classification.shared')
+          ? projectId
+          : undefined;
+      }
+      
       return (homeItem.classification || {})[key]
         ? projectId
         : undefined;

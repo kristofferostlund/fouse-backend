@@ -50,5 +50,5 @@ module.exports = {
     .thru(function (items) { return _.zipObject(_.first(items), _.last(items)); })
     .value(),
   interval: !_.isUndefined(process.env.INTERVAL) ? parseInt(process.env.INTERVAL) : 15,
-  wait: !_.isUndefinded(process.env.WAIT) ? parseInt(process.env.WAIT) : 5
+  wait: !_.isUndefined(process.env.WAIT) ? parseInt(process.env.WAIT) : 5
 };
