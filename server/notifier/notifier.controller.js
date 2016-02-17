@@ -421,7 +421,6 @@ function notify(homeItems) {
       
       Promise.all(_.map(promises, function (promise) { return promise.reflect(); }))
       .then(function (data) {
-        console.log('Finished here');
         resolve(_.map(data, function (val, i) { return val.isRejected() ? val.reason() : val.value() }))
       })
       .catch(function (err) {
