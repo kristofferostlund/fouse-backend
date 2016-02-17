@@ -235,10 +235,10 @@ function getTel(url) {
     // Navigate to the page
     browser.visit(_url, function () {
       
-      var phoneLink = browser.document.querySelector('#show-phonenumber');
+      var phoneLink = _.attempt(function () { return browser.document.querySelector('#show-phonenumber'); });
       
       // If no phonelink can be found, return an empty string
-      if (!phoneLink) { return resolve(); /* No tel found. */ }
+      if (!phoneLink || _.isError(phoneLink)) { return resolve(); /* No tel found. */ }
       
       console.log('Found phone number at {url}, clicking button to get it.'.replace('{url}', _url));
       
@@ -266,7 +266,7 @@ function getTel(url) {
           console.log('Something went wrong when getting the phone number.');
           resolve();
         }
-      })
+      });
     });
   });
 }

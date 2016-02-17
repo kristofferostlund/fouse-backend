@@ -289,11 +289,33 @@ function sendSummaryEmail(homeItems) {
 }
 
 /**
+ * Returns all matching project IDs.
+ * 
  * @param {homeItem} homeItem
- * @return {String|Number}
+ * @return {Array}
  */
-function getProject(homeItem) {
-  return config.asana_projects[(homeItem.region || '').toLowerCase()];
+function getProjects(homeItem) {
+  
+  return _.chain(config.asana_projects)
+    .filter(function (projectId, key) {
+      
+      if (/stockholm|göteborg/i.test(key)) {
+        return (homeItem.region || '').toLowerCase() === key
+          ? projectId
+          : undefined;
+      }
+      
+      if (/hasTel/.test(key)) {
+        return /[0-9]/.test(homeItem.tel)
+          ? projectId
+          : undefined;
+      }
+      
+      return (homeItem.classification || {})[key]
+        ? projectId
+        : undefined;
+    })
+    .value();
 }
 
 /**
@@ -307,7 +329,7 @@ function createOneAsanaTask(homeItem) {
     
     var task = {
       workspace: config.asana_workspace,
-      projects: getProject(homeItem),
+      projects: getProjects(homeItem),
       name: _.filter([
         homeItem.region,
         homeItem.title,
@@ -421,7 +443,6 @@ function notify(homeItems) {
       
       Promise.all(_.map(promises, function (promise) { return promise.reflect(); }))
       .then(function (data) {
-        console.log('Finished here');
         resolve(_.map(data, function (val, i) { return val.isRejected() ? val.reason() : val.value() }))
       })
       .catch(function (err) {
