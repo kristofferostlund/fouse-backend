@@ -49,6 +49,6 @@ module.exports = {
     .unzip()
     .thru(function (items) { return _.zipObject(_.first(items), _.last(items)); })
     .value(),
-  interval: parseInt(process.env.INTERVAL) || 15,
-  wait: parseInt(process.env.WAIT) || 5
+  interval: !_.isUndefined(process.env.INTERVAL) ? parseInt(process.env.INTERVAL) : 15,
+  wait: !_.isUndefinded(process.env.WAIT) ? parseInt(process.env.WAIT) : 5
 };
