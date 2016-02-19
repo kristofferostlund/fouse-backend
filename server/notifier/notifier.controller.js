@@ -305,14 +305,21 @@ function getProjects(homeItem) {
           : undefined;
       }
       
-      if (/hasTel/.test(key)) {
+      if (/^hasTel/i.test(key)) {
         return /[0-9]/.test(homeItem.tel)
           ? projectId
           : undefined;
       }
       
-      if (/isApartment/i.test(key)) {
+      if (/^isApartment/i.test(key)) {
         return !_.get(homeItem, 'classification.shared')
+          ? projectId
+          : undefined;
+      }
+      
+      // TODO: Test this, and create this project.
+      if (/apartmentTel/i.test(key)) {
+        return (/[0-9]/.test(homeItem.tel) && !_.get(homeItem, 'classification.shared'))
           ? projectId
           : undefined;
       }
