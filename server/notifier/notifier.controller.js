@@ -12,9 +12,12 @@ var request = require('request');
 var utils = require('../utils/general.utils');
 var config = require('../config');
 
+var userController = require('../models/user/user.controller');
+
 var asanaNotifier = require('./notifier.asana');
 var emailNotifier = require('./notifier.email');
 var smsNotifier = require('./notifier.sms');
+var userNotifier = require('./notifier.user');
 
 /**
  * Sends out all notifications.
@@ -44,12 +47,40 @@ function notify(homeItems) {
         console.log(err);
         resolve(homeItems);
       });
+    } else {
+      // Still resolve
+      resolve();
     }
+  });
+}
 
+/**
+ * Matches *homeItems* to Users, notifies them,
+ * and returns a Promise of *homeItems* or the results.
+ *
+ * @param {Array} homeItems Array of HomeItems to try to match users against
+ * @param {Boolean} resolveResults
+ * @return {Promise} -> {Array} All homeItems
+ */
+function notifyUsers(homeItems, resolveResults) {
+  return new Promise(function (resolve, reject) {
+    // Find all notifiable users
+    userController.find()
+    .then(function (users) {
+
+      // This handles all matching _and_ actual notifications
+      return userNotifier.notify(users, homeItems)
+    })
+    .then(function (results) {
+      // Resolve all homeItems
+      resolve((resolveResults === true) ? results : homeItems);
+    })
+    .catch(reject);
   });
 }
 
 module.exports = {
   sendSummaryEmail: emailNotifier.sendSummaryEmail,
-  notify: notify
+  notify: notify,
+  notifyUsers: notifyUsers,
 }

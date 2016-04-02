@@ -14,10 +14,12 @@ var config = require('../config');
 
 var emailClient = new mandrill.Mandrill(config.mandrill_api_key);
 
+
+
 /**
  * Returns a filtered array
  * of the various short properties of *homeItem*.
- * 
+ *
  * @param {Object} homeItem
  * @return {Array}
  */
@@ -43,9 +45,9 @@ function createEmailBody(homeItems) {
       console.log('homeItem ...is not?');
       console.log(homeItem);
       return '';
-      
+
     } else {
-      
+
       return homeItem.title + '\n' +
         homeItemSummaryArr(homeItem)
         .join(', ') + '\n' + [
@@ -112,28 +114,28 @@ function abstractEmail(subject, text, options) {
 
 /**
  * Sends a detailed email of *homeItem*.
- * 
+ *
  * @param {Object} homeItem (HomeItem)
  * @return {Promise} -> {Object}
  */
 function sendEmail(homeItems) {
   return new Promise(function (resolve, reject) {
-    
+
     if (_.isEqual({}, config)) {
       console.log('Can\'t send email as there\'s no config file.');
       return resolve(); // early
     }
-    
+
     // Return early if emails shouldn't be sent.
     if (!config.sendEmail) { return resolve(); }
-    
+
     console.log(chalk.green([
       'Sendingn email for',
       _.map(homeItems, function (item) { return item.title }).join(', '),
       'at',
       moment().format('YYYY-MM-DD, HH:mm') + '.'
       ].join(' ')));
-    
+
     abstractEmail(
       'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
       createEmailBody(homeItems)
@@ -145,18 +147,18 @@ function sendEmail(homeItems) {
 
 /**
  * Sends a summary email of *homeItems*.
- * 
+ *
  * @param {Array} homeItems (HomeItem)
  * @return {Promise} -> {Object}
  */
 function sendSummaryEmail(homeItems) {
   return new Promise(function (resolve, reject) {
-    
+
     if (_.isEqual({}, config)) {
       console.log('Can\'t send email as there\'s no config file.');
       return resolve(); // early
     }
-    
+
     abstractEmail(
       'Summering av intressanta bostäder',
       createSummaryEmail(homeItems)
@@ -166,6 +168,45 @@ function sendSummaryEmail(homeItems) {
   });
 }
 
+/**
+ * @param {Object} user The user to notify
+ * @param {Array} homeItems Array of HomeItems the user may find interesting
+ * @return {Promise}
+ */
+function send(user, homeItems) {
+  // Don't send emails to users not asking for it
+  if (!user || !_.get(user, 'notify.email') || !user.email) {
+    return Promise.resolve();
+  }
+
+  // Get the email
+  var _email = user.email;
+
+  // Create the title
+  var _title = homeItems.length + ' nya bostäder av intresse: ' + moment().format('YYYY-MM-DD, HH:mm');
+
+  // Create the message
+  var _message = [
+    'Följande bostäder tror vi kan vara intressanta:',
+    _.map(homeItems, function (homeItem) {
+      return [
+        _.chain(homeItem)
+          .pick()
+          .filter(['rooms', 'size', 'rent', 'location', 'adress'])
+          .value()
+          .join(', '),
+        homeItem.body
+      ].join('\n');
+    }).join('\n---\n'),
+    ['Vänligen', 'Home Please'].join('\n'),
+  ].join('\n\n');
+
+  // TODO: Implement SendGrid, actually send the email
+  // return _send(_email, _title, _message);
+  return Promise.resolve();
+}
+
 module.exports = {
-  sendEmail: sendEmail
+  send: sendEmail,
+  send: send,
 }

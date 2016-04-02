@@ -18,16 +18,17 @@ function getFrontPage() {
   console.log('Getting front page at', moment().format('YYYY-MM-DD, HH:mm'));
   crawler.getAndSavePageAt(1)
   .then(homeItemController.getItemsOfInterest)
+  .then(notifier.notifyUsers)
   .then(function (items) {
     console.log('Front page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
-    
+
     // Notify if there are any items of interest.
-    notifier.notify(items)
-    .then(function (items) {
-      if (items && items.length)
+    return notifier.notify(items)
+  })
+  .then(function (items) {
+    if (items && items.length) {
       console.log('All notifications sent.');
-    });
-    
+    }
   })
   .catch(function (err) {
     console.log(err);
@@ -85,3 +86,5 @@ setTimeout(function() {
   later.setInterval(getFrontPage, scheduleEveryInterval);
   later.setInterval(getDaySummary, scheduleOn6);
 }, config.wait * 60000);
+
+getFrontPage();
