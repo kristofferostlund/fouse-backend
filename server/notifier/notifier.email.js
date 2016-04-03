@@ -207,6 +207,6 @@ function send(user, homeItems) {
 }
 
 module.exports = {
-  send: sendEmail,
+  sendEmail: sendEmail,
   send: send,
 }
