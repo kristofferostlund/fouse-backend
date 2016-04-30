@@ -24,22 +24,22 @@ function processItemPage(content) {
     var html = $.load(content);
 
     // Images are linked in meta tags
-    var images = _.map(html('meta[property="og:image"]'), function (element) {
+    var _images = _.map(html('meta[property="og:image"]'), function (element) {
       // Image url is accessed by content
       return element.attribs.content;
     });
 
     // Owner is in an h2 tag with the class h4
-    var owner = html('h2.h4').text()
+    var _owner = html('h2.h4').text()
       .replace(/uthyres av: /ig, '')
       .replace(/^\s|\s$/, ''); // Remove leading and trailing whitespace
 
-    var body = html('.object-text').text()
+    var _body = html('.object-text').text()
       .replace(/ +/g, ' ') // Replace multiple spaces by single space
       .replace(/\n+/g, '\n\n'); // Replace multiple newlines by double newlines
 
     // Get the adress if it exists, which is an h3 tag with the class h5
-    var adress = _.attempt(function () {
+    var _adress = _.attempt(function () {
       var addrContent = _.find(html('h3.h5').contents(), function (data) {
         // return find
         return !/(hyra|handla) tryggt/gi.test(data.data);
@@ -50,7 +50,11 @@ function processItemPage(content) {
     });
 
     // If an error was caught, there's no adress
-    if (_.isError(adress)) { adress = undefined; }
+    if (_.isError(_adress)) { _adress = undefined; }
+
+    // Get the homeType and set the first character to upper case
+    var _homeType = _.upperFirst(html('.subject-param.category').text())
+      .replace(/\s/g, '');
 
     // Get tel if exists
     (function () {
@@ -62,11 +66,12 @@ function processItemPage(content) {
       }
     })().then(function (tel) {
       resolve({
-        owner: owner,
-        body: body,
-        adress: adress,
-        images: images,
+        owner: _owner,
+        body: _body,
+        adress: _adress,
+        images: _images,
         tel: tel,
+        homeType: _homeType,
         disabled: (/Hittade inte annonsen/.test(content)) ? true : undefined
       });
     })

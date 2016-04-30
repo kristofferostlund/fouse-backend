@@ -22,6 +22,7 @@ var HomeItemSchema = new Schema({
   tel: String,
   images: [ String ],
   thumbnail: String,
+  homeType: String,
   notified: Boolean,
   classification: {
     girls: Boolean, // For girls only
