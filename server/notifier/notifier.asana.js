@@ -91,7 +91,7 @@ function createOneAsanaTask(homeItem) {
       ].join('\n')
     };
 
-    var logMessage = chalk.green('\nCreating task: ' + task.workspace + ', ' + task.name + ' at' + moment().format('YYYY-MM-DD, HH:mm') + '\n');
+    var logMessage = chalk.green('\nCreating task: ' + task.workspace + ', ' + task.name + ' at ' + moment().format('YYYY-MM-DD, HH:mm') + '\n');
 
     // Check to see if the Asana stuff has any other alphanumeric characters than only 'x',
     // to ensure calls can be made to a working endpoint.

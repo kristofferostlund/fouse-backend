@@ -3,8 +3,6 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var chalk = require('chalk');
-var fs = require('fs');
-var path = require('path');
 var moment = require('moment');
 var request = require('request');
 

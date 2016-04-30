@@ -17,6 +17,7 @@ var asanaNotifier = require('./notifier.asana');
 var emailNotifier = require('./notifier.email');
 var smsNotifier = require('./notifier.sms');
 var userNotifier = require('./notifier.user');
+var qasaNotifier = require('./notifier.qasa');
 
 /**
  * Sends out all notifications.
@@ -82,4 +83,5 @@ module.exports = {
   sendSummaryEmail: emailNotifier.sendSummaryEmail,
   notify: notify,
   notifyUsers: notifyUsers,
+  notifyQasa: qasaNotifier.notify,
 }
