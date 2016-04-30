@@ -428,6 +428,50 @@ function getShortUrl(homeItem) {
   });
 }
 
+/**
+ * Calls all promises in chunks.
+ *
+ * @param {Array} promiseFunctions Array of functions returning
+ * @param {Number} chunkSize The number of items to chunk together promises
+ * @param {Array} finished DO NOT SET, array of finished promises
+ * @return {Promise} -> {Array}
+ */
+function chunkSequence(promiseFunctions, chunkSize, finished) {
+  // Initial setup
+  if (_.isUndefined(finished)) {
+    finished = [];
+  }
+
+  // Finish iterations
+  if (promiseFunctions.length === finished.length) {
+    return Promise.resolve(finished);
+  }
+
+  var _length = finished.length;
+
+  // Get the promise functions to call this round
+  var _promiseFunctions = isFinite(chunkSize)
+    ? promiseFunctions.slice(_length, _length + chunkSize)
+    : _promiseFunctions;
+
+  return Promise.all(_.map(_promiseFunctions, function (promiseFunction) {
+    // Return the promise
+    if (_.isFunction(promiseFunction)) {
+      // Call the function and reflect it
+      return promiseFunction().reflect();
+    } else {
+      // Only reflect it
+      return promiseFunction.reflect();
+    }
+  }))
+  .then(function (results) {
+    var _values = _.map(results, function (res) { return res.isRejected() ? res.reason() : res.value(); });
+
+    return chunkSequence(promiseFunctions, chunkSize, finished.concat(_values));
+  })
+  .catch(Promise.reject);
+}
+
 module.exports = {
   getPage: getPage,
   getManyPages: getManyPages,
@@ -441,4 +485,5 @@ module.exports = {
   objectify: objectify,
   querify: querify,
   getShortUrl: getShortUrl,
+  chunkSequence: chunkSequence,
 };

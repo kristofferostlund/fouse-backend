@@ -51,30 +51,27 @@ function notify(users, homeItems) {
       // Flatten the arrays to only a single
       .flatten()
       // Send the SMSs
-      .map(function (notifyObj) { return sms.send(notifyObj.user, notifyObj.homeItem) })
-      // Reflect the promise
-      .map(function (promise) { return promise.reflect(); })
+      .map(function (notifyObj) { return function () { return sms.send(notifyObj.user, notifyObj.homeItem); }; })
       .value();
 
     // Get promises of emails
     var _email = _.chain(_notifiableUsers)
       // Filter out non emailable
       .filter(function (notifyObj) { return _.get(notifyObj, 'user.notify.email') && !!_.get(notifyObj, 'user.email'); })
-      // Send the emails
-      .map(function (notifyObj) { return email.send(notifyObj.user, notifyObj.homeItems) })
-      // Reflect the promise
-      .map(function (promise) { return promise.reflect(); })
+      // Return callable functions for
+      .map(function (notifyObj) { return function () { return email.send(notifyObj.user, notifyObj.homeItems); }; })
       .value();
 
     // Make a single array of them
-    var _promises = _sms.concat(_email);
+    var _promiseFunctions = _sms.concat(_email);
 
-    // Run all promises
-    Promise.all(_promises)
+
+    // Used instead of Promise.All to ensure not too many
+    // requests are made at the same time.
+    utils.chunkSequence(_promiseFunctions, 50)
     .then(resolve)
     .catch(reject);
   });
-
 }
 
 module.exports = {
