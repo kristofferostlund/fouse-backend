@@ -60,14 +60,14 @@ function getClassification(homeItem) {
   return new Promise(function (resolve, reject) {
 
     var _homeItem = _.assign(homeItem, {
-        classification: {
-          girls: forGirls(homeItem.body) || forGirls(homeItem.title),
-          commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
-          shared: isShared(homeItem.body) || isShared(homeItem.title),
-          swap: isSwap(homeItem.body) || isSwap(homeItem.title),
-          noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
-        }, time: timeAnalyser.getTimeInfo(homeItem)
-      });
+      classification: {
+        girls: forGirls(homeItem.body) || forGirls(homeItem.title),
+        commuters: forCommuters(homeItem.body) || forCommuters(homeItem.title),
+        shared: isShared(homeItem.body) || isShared(homeItem.title),
+        swap: isSwap(homeItem.body) || isSwap(homeItem.title),
+        noKitchen: lacksKitchen(homeItem.body) || lacksKitchen(homeItem.title)
+      }, time: timeAnalyser.getTimeInfo(homeItem)
+    });
 
     // Get location data
     locationAnalyser.getLocationInfo(_homeItem)

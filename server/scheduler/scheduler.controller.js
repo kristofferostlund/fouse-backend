@@ -18,6 +18,7 @@ function getFrontPage() {
   console.log('Getting front page at', moment().format('YYYY-MM-DD, HH:mm'));
   crawler.getAndSavePageAt(1)
   .then(notifier.notifyUsers)
+  .then(notifier.notifyQasa)
   .then(homeItemController.getItemsOfInterest)
   .then(function (items) {
     console.log('Front page gotten at', moment().format('YYYY-MM-DD, HH:mm'));

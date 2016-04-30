@@ -51,4 +51,6 @@ module.exports = {
   interval: !_.isUndefined(process.env.INTERVAL) ? parseInt(process.env.INTERVAL) : 15,
   wait: !_.isUndefined(process.env.WAIT) ? parseInt(process.env.WAIT) : 5,
   send_grid_api_key: process.env.SEND_GRID_API_KEY || 'XXXXXXXXXXXX.xxxxxxxxxxxxxxxxxxxx',
+  qasa_sms_api_token: process.env.QASA_SMS_API_TOKEN || 'xxxxxxxxxxxxxxxx',
+  qasa_notify: !_.isUndefined(process.env.QASA_NOTIFY) ? parseBool(process.env.QASA_NOTIFY) : false,
 };
