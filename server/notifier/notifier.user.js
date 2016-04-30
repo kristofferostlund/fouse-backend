@@ -51,11 +51,10 @@ function notify(users, homeItems) {
       .map(function (promise) { return promise.reflect(); })
       .value();
 
-
     // Get promises of emails
     var _email = _.chain(_notifiableUsers)
       // Filter out non emailable
-      .filter(function (notifyObj) { return _.get(notifyObj, 'user.notify.email' && !!_.get(notifyObj, 'user.email')); })
+      .filter(function (notifyObj) { return _.get(notifyObj, 'user.notify.email') && !!_.get(notifyObj, 'user.email'); })
       // Multiply each user by the number of interesting homes there may be
       .map(function (notifyObj) { return _.map(notifyObj.homeItems, function (homeItem) { return { user: notifyObj.user, homeItem: homeItem }; }); })
       // Flatten the arrays to only a single
