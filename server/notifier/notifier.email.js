@@ -170,32 +170,33 @@ function sendSummaryEmail(homeItems) {
  * @return {Promise}
  */
 function _send(receivers, subject, text) {
-  // Ensure array
-  var _receivers = _.isArray(receivers)
-    ? receivers
-    : [receivers];
+  return new Promise(function (resolve, reject) {
+    // Ensure array
+    var _receivers = _.isArray(receivers)
+      ? receivers
+      : [receivers];
 
-  // Log the email
-  console.log(
-    'Sending an email to {recievers} with the following subject:\n{subject}\nAnd the following body:\n{body}\n'
-      .replace('{recievers}', _receivers.join(', '))
-      .replace('{subject}', subject)
-      .replace('{body}', text)
-  );
+    // Log the email
+    console.log(
+      'Sending an email to {recievers} with the following subject:\n{subject}\n'
+        .replace('{recievers}', _receivers.join(', '))
+        .replace('{subject}', subject)
+    );
 
-  sendgrid.send({
-    to: _receivers,
-    from: config.email_from || 'example@email.com',
-    fromname: 'Home Please',
-    subject: subject,
-    text: text,
-  }, function (err, result) {
-    // Handle errors
-    if (err) { return reject(err); }
+    sendgrid.send({
+      to: _receivers,
+      from: config.email_from || 'example@email.com',
+      fromname: 'Home Please',
+      subject: subject,
+      text: text,
+    }, function (err, result) {
+      // Handle errors
+      if (err) { return reject(err); }
 
-    // Resolve the result
-    resolve(result);
-  })
+      // Resolve the result
+      resolve(result);
+    });
+  });
 }
 
 /**
@@ -215,22 +216,39 @@ function send(user, homeItems) {
   var _email = user.email;
 
   // Create the title
-  var _subject = homeItems.length + ' nya bostäder av intresse: ' + moment().format('YYYY-MM-DD, HH:mm');
+  var _subject = '{num} {new} av intresse: {date}'
+    .replace('{num}', homeItems.length)
+    .replace('{new}', homeItems.length === 1 ? 'ny bostad' : 'nya bostäder')
+    .replace('{date}', moment().format('YYYY-MM-DD, HH:mm'));
 
   // Create the message
   var _text = [
-    'Följande bostäder tror vi kan vara intressanta:',
-    _.map(homeItems, function (homeItem) {
-      return [
-        _.chain(homeItem)
-          .pick()
-          .filter(['rooms', 'size', 'rent', 'location', 'adress'])
-          .value()
-          .join(', '),
-        homeItem.body
-      ].join('\n');
-    }).join('\n---\n'),
-    ['Vänligen', 'Home Please'].join('\n'),
+    'Hej{possible_name}, vi på Home Please tror att följande {bo} kan vara {int}'
+      .replace('{bo}', homeItems.length === 1 ? 'bostad' : homeItems.length + ' bostäder')
+      .replace('{int}', homeItems.length === 1 ? 'intressant' : 'intressanta')
+      .replace('{possible_name}', !!user.name ? ' ' + user.name : ''),
+    _.chain(homeItems)
+      // Filter out any undefined items
+      // which somehow got here
+      .filter()
+      .map(function (homeItem) {
+        return [
+          // Make the title uppercase only
+          (homeItem.title || '').toUpperCase(),
+          // Prefer the shortUrl but fall back to the regular url if the short doesn't exist.
+          homeItem.shortUrl || homeItem.url,
+          _.chain(homeItem)
+            // Use only these values
+            .pick(['location', 'rent', 'rooms', 'size', 'adress'])
+            // Filter out undefined properties and create an array of the items
+            .filter(function (e) { return /[^\s]/.test(e) })
+            .value()
+            .join(', '),
+          homeItem.body,
+        ].join('\n\n');
+      })
+      .value()
+      .join('\n\n--------\n\n'),
   ].join('\n\n');
 
   // TODO: Implement SendGrid, actually send the email

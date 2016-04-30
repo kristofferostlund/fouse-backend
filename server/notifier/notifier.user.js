@@ -21,6 +21,11 @@ var config = require('../config');
  */
 function notify(users, homeItems) {
   return new Promise(function (resolve, reject) {
+    // If there are no homeItems, return early
+    if (!homeItems) {
+      return resolve(undefined);
+    }
+
     // Ensure Array
     var _users = _.isArray(users)
       ? users
@@ -55,12 +60,8 @@ function notify(users, homeItems) {
     var _email = _.chain(_notifiableUsers)
       // Filter out non emailable
       .filter(function (notifyObj) { return _.get(notifyObj, 'user.notify.email') && !!_.get(notifyObj, 'user.email'); })
-      // Multiply each user by the number of interesting homes there may be
-      .map(function (notifyObj) { return _.map(notifyObj.homeItems, function (homeItem) { return { user: notifyObj.user, homeItem: homeItem }; }); })
-      // Flatten the arrays to only a single
-      .flatten()
       // Send the emails
-      .map(function (notifyObj) { return email.send(notifyObj.user, notifyObj.homeItem) })
+      .map(function (notifyObj) { return email.send(notifyObj.user, notifyObj.homeItems) })
       // Reflect the promise
       .map(function (promise) { return promise.reflect(); })
       .value();

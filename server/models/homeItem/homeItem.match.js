@@ -12,7 +12,6 @@ var moment = require('moment');
  * @return {Boolean}
  */
 function userMatchHomeItem(user, homeItem) {
-  console.log(user.options);
   return _.every([
     priceInRange(homeItem.price, _.get(user, 'options.maxPrice'), _.get(user, 'options.minPrice')),
     classificationsMatch(homeItem.classification, _.get(user, 'options.classification')),
