@@ -16,7 +16,7 @@ var UserSchema = new Schema({
     type: String
   },
   options: {
-    price: Number, // Translates into { $lte: *price* }
+    maxPrice: Number, // Translates into { $lte: *price* }
     minPrice: Number, // Translates into { $gte: *maxPrice* }
     classification: {
       girls: Boolean, // For girls only
@@ -50,13 +50,13 @@ var UserSchema = new Schema({
 
 UserSchema.pre('save', function (next) {
   this.modified = new Date();
-  
+
   // Ensure proper formatting.
   // only allows Swedish numbers for now
   if (this.tel && !/^46/.test(this.tel)) {
     this.tel = this.tel.replace(/(^\+46|^46|^0046|^0(?!046))/, '46');
   }
-  
+
   next();
 });
 

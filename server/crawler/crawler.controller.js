@@ -12,7 +12,7 @@ var HomeItem = require('../models/homeItem/homeItem.model');
 
 /**
  * Returns a promise of an array of complete items.
- * 
+ *
  * @param {Number|String} pageNum
  * @return {Promise} -> {Array} of complete items
  */
@@ -20,6 +20,7 @@ function getPageAt(pageNum) {
   return indexer.getIndexPage(pageNum)
   .then(itemHandler.getManyItemPages)
   .then(analyser.classify)
+  .then(analyser.shortenUrls)
   .then(function (items) {
     return new Promise(function (resolve, reject) {
       // Save to db
@@ -32,7 +33,7 @@ function getPageAt(pageNum) {
 
 /**
  * Like getPageAt but returns only after the items been saved to db.
- * 
+ *
  * @param {Number|String} pageNum
  * @return {Promise} -> {Array} of complete, saved items
  */
@@ -41,28 +42,29 @@ function getAndSavePageAt(pageNum) {
   .then(filterOutExisting)
   .then(itemHandler.getManyItemPages)
   .then(analyser.classify)
+  .then(analyser.shortenUrls)
   .then(homeItem.createHistorical);
 }
 
 /**
  * Filters out all existing items and only returns new ones.
- * 
+ *
  * @param {Array|Object} indexItems
  * @return {Promise}
  */
 function filterOutExisting(indexItems) {
   return new Promise(function (resolve, reject) {
-    
+
     var _indexItems =
     _.isArray(indexItems)
     ? indexItems
     : [ indexItems ];
-    
+
     HomeItem.find({ disabled: { $ne: true }, url: { $in: _.map(_indexItems, function (item) { return _.isObject(item) ? item.url : item; }) } })
     .exec(function (err, items) {
       // If an error occured, assume everything is fine.
       if (err) { items = []; }
-      
+
       // Resolve all indexItems which are not in the DB already.
       resolve(_.filter(_indexItems, function (indexItem) { return !_.find(items, { url: indexItem.url }) }));
     })
@@ -71,7 +73,7 @@ function filterOutExisting(indexItems) {
 
 /**
  * Returns a promise of the item at *pageNum* and *itemNum*.
- * 
+ *
  * @param {Number|String} pageNum
  * @return {Promise} -> {Array} of complete items
  */
@@ -81,6 +83,7 @@ function getItemPageAt(pageNum, itemNum) {
     return itemHandler.getItemPage(items[itemNum]);
   })
   .then(analyser.classify)
+  .then(analyser.shortenUrls)
   .then(function (items) {
     return new Promise(function (resolve, reject) {
       // Save to db
@@ -92,17 +95,18 @@ function getItemPageAt(pageNum, itemNum) {
 
 /**
  * Returns a promise of all home items.
- * 
+ *
  * @return {Promise} -> {Array} (HomeItem)
  */
 function getAllItems() {
   return indexer.getAllIndexPages()
   .then(itemHandler.getManyItemPages)
   .then(analyser.classify)
+  .then(analyser.shortenUrls)
   .then(function (items) {
     return new Promise(function (resolve, reject) {
       // Save to db
-      ;
+
       resolve(items);
     });
   }); // Insert into db.
@@ -110,13 +114,14 @@ function getAllItems() {
 
 /**
  * Like getAllItems but returns the saved items.
- * 
+ *
  * @return {Promise} -> {Array} (HomeItem)
  */
 function getAndSaveAllItems() {
   return indexer.getAllIndexPages()
   .then(itemHandler.getManyItemPages)
   .then(analyser.classify)
+  .then(analyser.shortenUrls)
   .then(homeItem.createHistorical);
 }
 

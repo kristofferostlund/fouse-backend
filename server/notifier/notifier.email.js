@@ -3,21 +3,17 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 var chalk = require('chalk');
-var fs = require('fs');
-var path = require('path');
-var mandrill  = require('mandrill-api');
 var moment = require('moment');
-var request = require('request');
 
 var utils = require('../utils/general.utils');
 var config = require('../config');
 
-var emailClient = new mandrill.Mandrill(config.mandrill_api_key);
+var sendgrid = require('sendgrid')(config.send_grid_api_key);
 
 /**
  * Returns a filtered array
  * of the various short properties of *homeItem*.
- * 
+ *
  * @param {Object} homeItem
  * @return {Array}
  */
@@ -43,9 +39,9 @@ function createEmailBody(homeItems) {
       console.log('homeItem ...is not?');
       console.log(homeItem);
       return '';
-      
+
     } else {
-      
+
       return homeItem.title + '\n' +
         homeItemSummaryArr(homeItem)
         .join(', ') + '\n' + [
@@ -91,49 +87,47 @@ function createSummaryEmail(homeItems) {
  */
 function abstractEmail(subject, text, options) {
   return new Promise(function (resolve, reject) {
-    emailClient.messages.send({ message: _.assign({}, {
+    sendgrid.send(_.assign({}, {
+      to: config.email || 'example@email.com',
+      toname: config.name || 'John Doe',
+      from: config.email_from || 'example@email.com',
+      fromname: 'Home Please',
       subject: subject,
       text: text,
-      from_email: config.email_from || 'example@email.com',
-      from_name: 'Home Please',
-      to: [{
-        email: config.email || 'example@email.com',
-        name: config.name || 'John Doe',
-        type: 'to'
-      }]
-      }, options)
-    }, function (result) {
+    }, options), function (err, result) {
+      // Something went wrong with sending the email
+      if (err) { return reject(err); }
+
+      // Resolve the result
       resolve(result);
-    }, function (err) {
-      reject(err);
-    })
+    });
   });
 }
 
 /**
  * Sends a detailed email of *homeItem*.
- * 
+ *
  * @param {Object} homeItem (HomeItem)
  * @return {Promise} -> {Object}
  */
 function sendEmail(homeItems) {
   return new Promise(function (resolve, reject) {
-    
+
     if (_.isEqual({}, config)) {
       console.log('Can\'t send email as there\'s no config file.');
       return resolve(); // early
     }
-    
+
     // Return early if emails shouldn't be sent.
     if (!config.sendEmail) { return resolve(); }
-    
+
     console.log(chalk.green([
       'Sendingn email for',
       _.map(homeItems, function (item) { return item.title }).join(', '),
       'at',
       moment().format('YYYY-MM-DD, HH:mm') + '.'
       ].join(' ')));
-    
+
     abstractEmail(
       'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
       createEmailBody(homeItems)
@@ -145,18 +139,18 @@ function sendEmail(homeItems) {
 
 /**
  * Sends a summary email of *homeItems*.
- * 
+ *
  * @param {Array} homeItems (HomeItem)
  * @return {Promise} -> {Object}
  */
 function sendSummaryEmail(homeItems) {
   return new Promise(function (resolve, reject) {
-    
+
     if (_.isEqual({}, config)) {
       console.log('Can\'t send email as there\'s no config file.');
       return resolve(); // early
     }
-    
+
     abstractEmail(
       'Summering av intressanta bostäder',
       createSummaryEmail(homeItems)
@@ -166,6 +160,103 @@ function sendSummaryEmail(homeItems) {
   });
 }
 
+/**
+ * Sends an email to *receivers* with the subject of *subject*
+ * and the text body of *text*.
+ *
+ * @param {Array|String} receivers Array or string of reciever email addresses
+ * @param {String} subject The subject of the email
+ * @param {String} text The content of the email
+ * @return {Promise}
+ */
+function _send(receivers, subject, text) {
+  return new Promise(function (resolve, reject) {
+    // Ensure array
+    var _receivers = _.isArray(receivers)
+      ? receivers
+      : [receivers];
+
+    // Log the email
+    console.log(
+      'Sending an email to {recievers} with the following subject:\n{subject}\n'
+        .replace('{recievers}', _receivers.join(', '))
+        .replace('{subject}', subject)
+    );
+
+    sendgrid.send({
+      to: _receivers,
+      from: config.email_from || 'example@email.com',
+      fromname: 'Home Please',
+      subject: subject,
+      text: text,
+    }, function (err, result) {
+      // Handle errors
+      if (err) { return reject(err); }
+
+      // Resolve the result
+      resolve(result);
+    });
+  });
+}
+
+/**
+ * Sends an email to a single user and returns a promise of it.
+ *
+ * @param {Object} user The user to notify
+ * @param {Array} homeItems Array of HomeItems the user may find interesting
+ * @return {Promise}
+ */
+function send(user, homeItems) {
+  // Don't send emails to users not asking for it
+  if (!user || !_.get(user, 'notify.email') || !user.email) {
+    return Promise.resolve();
+  }
+
+  // Get the email address
+  var _email = user.email;
+
+  // Create the title
+  var _subject = '{num} {new} av intresse: {date}'
+    .replace('{num}', homeItems.length)
+    .replace('{new}', homeItems.length === 1 ? 'ny bostad' : 'nya bostäder')
+    .replace('{date}', moment().format('YYYY-MM-DD, HH:mm'));
+
+  // Create the message
+  var _text = [
+    'Hej{possible_name}, vi på Home Please tror att följande {bo} kan vara {int}'
+      .replace('{bo}', homeItems.length === 1 ? 'bostad' : homeItems.length + ' bostäder')
+      .replace('{int}', homeItems.length === 1 ? 'intressant' : 'intressanta')
+      .replace('{possible_name}', !!user.name ? ' ' + user.name : ''),
+    _.chain(homeItems)
+      // Filter out any undefined items
+      // which somehow got here
+      .filter()
+      .map(function (homeItem) {
+        return [
+          // Make the title uppercase only
+          (homeItem.title || '').toUpperCase(),
+          // Prefer the shortUrl but fall back to the regular url if the short doesn't exist.
+          homeItem.shortUrl || homeItem.url,
+          _.chain(homeItem)
+            // Use only these values
+            .pick(['location', 'rent', 'rooms', 'size', 'adress'])
+            // Filter out undefined properties and create an array of the items
+            .filter(function (e) { return /[^\s]/.test(e) })
+            .value()
+            .join(', '),
+          homeItem.body,
+        ].join('\n\n');
+      })
+      .value()
+      .join('\n\n--------\n\n'),
+  ].join('\n\n');
+
+  // TODO: Implement SendGrid, actually send the email
+  return _send(_email, _subject, _text);
+}
+
 module.exports = {
-  sendEmail: sendEmail
+  sendEmail: sendEmail,
+  send: send,
+  plainSend: _send,
 }

@@ -17,19 +17,24 @@ var notifier = require('../notifier/notifier.controller');
 function getFrontPage() {
   console.log('Getting front page at', moment().format('YYYY-MM-DD, HH:mm'));
   crawler.getAndSavePageAt(1)
+  .then(notifier.notifyUsers)
   .then(homeItemController.getItemsOfInterest)
   .then(function (items) {
     console.log('Front page gotten at', moment().format('YYYY-MM-DD, HH:mm'));
-    
+
     // Notify if there are any items of interest.
-    notifier.notify(items)
-    .then(function (items) {
-      if (items && items.length)
+    return notifier.notify(items)
+  })
+  .then(function (items) {
+    if (items && items.length) {
       console.log('All notifications sent.');
-    });
-    
+    }
   })
   .catch(function (err) {
+    console.log(
+      '\nThe following error occured when getting the front page at {time}:'
+        .replace('{time}', moment().format('YYYY-MM-DD, HH:mm'))
+      );
     console.log(err);
   });
 }
