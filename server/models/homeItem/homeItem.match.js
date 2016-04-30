@@ -32,8 +32,8 @@ function userMatchHomeItem(user, homeItem) {
  * @return {Boolean}
  */
 function priceInRange(price, maxPrice, minPrice) {
-  // Handle missing prices
-  if (_.isUndefined(price)) { return true; }
+  // If there is no price, assume it's not of interest
+  if (_.isUndefined(price)) { return false; }
 
   return _.every([
     // Either *maxPrice* is falsy, or maxPrice is <= price
