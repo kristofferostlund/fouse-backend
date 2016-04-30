@@ -74,10 +74,10 @@
     "moment/moment-node.d.ts": {
       "commit": "08ed4e9f1869e37e29514d862e0158b40e550232"
     },
-    "mandrill-api/mandrill-api.d.ts": {
+    "express-serve-static-core/express-serve-static-core.d.ts": {
       "commit": "08ed4e9f1869e37e29514d862e0158b40e550232"
     },
-    "express-serve-static-core/express-serve-static-core.d.ts": {
+    "sendgrid/sendgrid.d.ts": {
       "commit": "08ed4e9f1869e37e29514d862e0158b40e550232"
     }
   }

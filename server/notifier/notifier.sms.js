@@ -5,7 +5,6 @@ var Promise = require('bluebird');
 var chalk = require('chalk');
 var fs = require('fs');
 var path = require('path');
-var mandrill  = require('mandrill-api');
 var moment = require('moment');
 var request = require('request');
 

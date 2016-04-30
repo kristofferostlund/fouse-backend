@@ -11,7 +11,7 @@ catch (error) { userConfig = {}; }
 
 /**
  * Converts somewhat boolean values and strings such as 'false'.
- * 
+ *
  * @param {Any} input
  * @return {Boolean}
  */
@@ -19,7 +19,7 @@ function parseBool(input) {
   if (_.isUndefined(input)) { return undefined; }
   if (_.isBoolean(input)) { return input; }
   if (_.isString(input)) { return input != 'false'; }
-  
+
   return !!input;
 }
 
@@ -39,7 +39,6 @@ module.exports = {
   cellsynt_pass: process.env.CELLSYNT_PASS || 'password',
   cellsynt_username: process.env.CELLSYNT_USERNAME || 'user_name',
   cellsynt_originator: process.env.CELLSYNT_ORIGINATOR || '46700000000',
-  mandrill_api_key: process.env.MANDRILL_API_KEY || 'xxxxxxxxxxxxxx-xxxxxxx',
   geo_api_key: process.env.GEO_API_KEY || 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
   asana_token: process.env.ASANA_TOKEN || 'xxxxxxxxxxxxx',
   asana_workspace: process.env.ASANA_WORKSPACE || 'xxxxxxxxxxxxx',
@@ -50,5 +49,6 @@ module.exports = {
     .thru(function (items) { return _.zipObject(_.first(items), _.last(items)); })
     .value(),
   interval: !_.isUndefined(process.env.INTERVAL) ? parseInt(process.env.INTERVAL) : 15,
-  wait: !_.isUndefined(process.env.WAIT) ? parseInt(process.env.WAIT) : 5
+  wait: !_.isUndefined(process.env.WAIT) ? parseInt(process.env.WAIT) : 5,
+  send_grid_api_key: process.env.SEND_GRID_API_KEY || 'XXXXXXXXXXXX.xxxxxxxxxxxxxxxxxxxx',
 };
