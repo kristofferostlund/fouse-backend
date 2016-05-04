@@ -11,6 +11,7 @@ var request = require('request');
 var utils = require('../utils/general.utils');
 var config = require('../config');
 
+var qasaNotifier = require('./notifier.qasa');
 
 /**
  * Returns all matching project IDs.
@@ -41,9 +42,14 @@ function getProjects(homeItem) {
           : undefined;
       }
 
-      // TODO: Test this, and create this project.
       if (/apartmentTel/i.test(key)) {
         return (/[0-9]/.test(homeItem.tel) && !_.get(homeItem, 'classification.shared'))
+          ? projectId
+          : undefined;
+      }
+
+      if (/qasaNotified/i.test(key)) {
+        return qasaNotifier.shouldNotify(homeItem)
           ? projectId
           : undefined;
       }
