@@ -9,11 +9,16 @@ var UserSchema = new Schema({
   name: String,
   email: {
     type: String,
-    unique: true
+    unique: true,
+    required: true,
   },
   tel: {
     unique: true,
     type: String
+  },
+  password: {
+    type: String,
+    required: true,
   },
   options: {
     maxPrice: Number, // Translates into { $lte: *price* }
@@ -31,7 +36,8 @@ var UserSchema = new Schema({
         max: Number // Translates into { $lte: *max* }
       },
       isLongTerm: Boolean
-    }
+    },
+    region: String, // The region of interest
   },
   notify: {
     email: Boolean,
