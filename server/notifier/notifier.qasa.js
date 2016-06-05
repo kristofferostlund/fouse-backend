@@ -19,11 +19,13 @@ function _notify(homeItem) {
   return new Promise(function (resolve, reject) {
     // Create the notify object
     var _notifyObject = {
+      url: homeItem.url,
       phoneNumber: homeItem.tel,
       rent: homeItem.price,
       roomCount: parseInt(homeItem.rooms) || undefined,
       squareMeters: parseInt(homeItem.size) || undefined,
-      address: homeItem.address || homeItem.adress,
+      address: _.filter([homeItem.address || homeItem.adress, homeItem.location]).join(', '),
+      location: homeItem.location,
       description: (homeItem.body || '').replace(/\n\n/g, '\n'),
       shared: _.get(homeItem, 'classification.shared'),
       homeType: homeItem.homeType,
