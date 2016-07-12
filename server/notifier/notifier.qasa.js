@@ -21,6 +21,7 @@ function _notify(homeItem) {
     var _notifyObject = {
       url: homeItem.url,
       phoneNumber: homeItem.tel,
+      name: homeItem.owner,
       rent: homeItem.price,
       roomCount: parseInt(homeItem.rooms) || undefined,
       squareMeters: parseInt(homeItem.size) || undefined,
@@ -68,8 +69,8 @@ function shouldNotify(homeItem) {
     !homeItem.homeType || !/fritidsboende/i.test(homeItem.homeType),
     // Don't notify about items where the owner is either Renthia or Samtrygg
     !/samtrygg|renthia/i.test(homeItem.owner),
-    // Filter out non-mobile numbers
-    /^(\+46|0|46)7/.test(homeItem.tel),
+    // Filter out non-mobile numbers, or homeItems where there is no tel
+    /^(\+46|0|46)7/.test(homeItem.tel) || !homeItem.tel,
   ]);
 }
 
