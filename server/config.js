@@ -53,4 +53,6 @@ module.exports = {
   send_grid_api_key: process.env.SEND_GRID_API_KEY || 'XXXXXXXXXXXX.xxxxxxxxxxxxxxxxxxxx',
   qasa_sms_api_token: process.env.QASA_SMS_API_TOKEN || 'xxxxxxxxxxxxxxxx',
   qasa_notify: !_.isUndefined(process.env.QASA_NOTIFY) ? parseBool(process.env.QASA_NOTIFY) : false,
+  app_secret: 'sssshhh',
+  skip_schedules: parseBool(process.env.SKIP_SCHEDULES)
 };

@@ -317,7 +317,7 @@ function getDaySummary(_options) {
     }
 
     options = _.assign({}, {
-      dateCreated: { $gte: moment().subtract('days', 1).startOf('day').add(6, 'hours').toDate() },
+      dateCreated: { $gte: moment().subtract(1, 'days').startOf('day').add(6, 'hours').toDate() },
       price: { $lte: 8000 },
       'classification.noKitchen': { $ne: true },
       'classification.swap': { $ne: true },

@@ -10,6 +10,7 @@ var config = require('./config');
 var logger = require('./utils/logger.util');
 
 mongoose.connect(config.dbString);
+mongoose.Promise = require('bluebird');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

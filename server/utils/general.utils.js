@@ -472,6 +472,15 @@ function chunkSequence(promiseFunctions, chunkSize, finished) {
   .catch(Promise.reject);
 }
 
+/**
+ * @param {Object} res Express response object
+ * @param {Error} err
+ */
+function handleError(res, err) {
+  res.status(500).send('Internal error');
+  console.log('The following error occured: ' + err.toString());
+}
+
 module.exports = {
   getPage: getPage,
   getManyPages: getManyPages,
@@ -486,4 +495,5 @@ module.exports = {
   querify: querify,
   getShortUrl: getShortUrl,
   chunkSequence: chunkSequence,
+  handleError: handleError,
 };

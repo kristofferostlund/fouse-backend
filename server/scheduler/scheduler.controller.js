@@ -40,36 +40,18 @@ function getFrontPage() {
   });
 }
 
-/**
- * Gets every page.
- */
-function getEveryPage() {
-  console.log('Getting all pages at', moment().format('YYYY-MM-DD, HH:mm'));
-  crawler.getAndSaveAllItems()
-  .then(homeItemController.getDaySummary)
-  .then(function (items) {
-    console.log('All pages gotten at', moment().format('YYYY-MM-DD, HH:mm'));
-    // Send an email if any are of interest
-    if (items && items.length) {
-      notifier.sendSummaryEmail(items);
-    }
-  })
-  .catch(function (err) {
-    console.log(err);
-  });
-}
 
 /**
  * Simply gets all items from yesterday instead of fetching first.
  */
 function getDaySummary() {
-  console.log('Summarizing ' + moment().subtract('days', 1).format('YYYY-MM-DD'));
+  console.log('Summarizing ' + moment().subtract(1, 'days').format('YYYY-MM-DD'));
   homeItemController.getDaySummary()
   .then(function (items) {
     if (items && items.length) {
       notifier.sendSummaryEmail(items);
     } else {
-      console.log('No items were deemed interesting yesterday, ' + moment().subtract('days', 1).format('YYYY-MM-DD'));
+      console.log('No items were deemed interesting yesterday, ' + moment().subtract(1, 'days').format('YYYY-MM-DD'));
       return;
     }
   })
@@ -85,9 +67,13 @@ var scheduleOn6 = later.parse.recur()
   .on(6).hour();
 
 // Starts schedules in 5 minutes
-console.log('Schedule starts in :wait minutes.'.replace(':wait', config.wait));
-setTimeout(function() {
-  console.log('Schedule for every :interval minute started.'.replace(':interval', config.interval));
-  later.setInterval(getFrontPage, scheduleEveryInterval);
-  later.setInterval(getDaySummary, scheduleOn6);
-}, config.wait * 60000);
+if (!config.skip_schedules) {
+  console.log('Schedule starts in :wait minutes.'.replace(':wait', config.wait));
+  setTimeout(function() {
+    console.log('Schedule for every :interval minute started.'.replace(':interval', config.interval));
+    later.setInterval(getFrontPage, scheduleEveryInterval);
+    later.setInterval(getDaySummary, scheduleOn6);
+  }, config.wait * 60000);
+} else {
+  console.log('Not running schedules because it is turned off in the environment file.');
+}
