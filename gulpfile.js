@@ -12,10 +12,10 @@ var mongod;
 gulp.task('server', function () {
   // Kill node if it's running already.
   if (node) { node.kill() };
-  
+
   // Run a node client on server/app.js
   node = spawn('node', ['server/app.js'], { stdio: 'inherit' });
-  
+
   // If it closes with the error code 8, something crashed
   node.on('close', function (code) {
     if (code === 8) {
@@ -28,7 +28,7 @@ gulp.task('mongod', function () {
   if (mongod) { mongod.kill(); }
   // Run mongod in quiet mode
   mongod = spawn('mongod', ['--quiet'], { stdio: 'inherit' });
-  
+
   mongod.on('close', function (code) {
     console.log(code);
   });
@@ -39,9 +39,11 @@ gulp.task('watch', function () {
 })
 
 // Default task
-gulp.task('default', ['mongod', 'server', 'watch']);
+gulp.task('default', ['server', 'watch']);
 
 gulp.task('app', ['server', 'watch']);
+
+gulp.task('standalone', ['mongod', 'server', 'watch']);
 
 // On process close, clean up.
 process.on('exit', function () {

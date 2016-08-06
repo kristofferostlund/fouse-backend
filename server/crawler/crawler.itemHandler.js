@@ -89,14 +89,11 @@ function processManyItemPages(contents) {
 
   if (!_.isArray(contents)) { contents = [ contents ]; }
 
-  return new Promise(function (resolve, reject) {
-    Promise.settle(_.map(contents, processItemPage))
-    .then(function (vals) {
-      resolve(_.map(vals, function (val) { return val.value(); }));
-    })
-    .catch(resolve);
-  });
+  var _promFuncs = _.map(contents, function (content) {
+    return function () { return processItemPage(content); }
+  })
 
+  return utils.chunkSequence(_promFuncs, 10);
 }
 
 /**

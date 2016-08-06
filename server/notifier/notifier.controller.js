@@ -27,7 +27,6 @@ var qasaNotifier = require('./notifier.qasa');
  */
 function notify(homeItems) {
   return new Promise(function (resolve, reject) {
-
     if (homeItems && homeItems.length) {
 
       var promises = _.chain([
@@ -44,7 +43,7 @@ function notify(homeItems) {
         resolve(_.map(data, function (val, i) { return val.isRejected() ? val.reason() : val.value() }))
       })
       .catch(function (err) {
-        console.log(err);
+        utils.log(err, 'error');
         resolve(homeItems);
       });
     } else {

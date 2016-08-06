@@ -1,6 +1,9 @@
 {
   "compilerOptions": {
-    "module": "system",
-    "locale": "sv"
-  }
+    "module": "system"
+  },
+  "exclude": [
+    "node_modules",
+    ".logs"
+  ]
 }

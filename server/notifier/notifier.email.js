@@ -36,12 +36,9 @@ function createEmailBody(homeItems) {
     'Hej, här kommer de senaste bostäderna.'
   ].concat(_.chain(homeItems).filter().map(function (homeItem) {
     if (!homeItem) {
-      console.log('homeItem ...is not?');
-      console.log(homeItem);
+      utils.log('homeItem ...is not?', 'info', { homeItem: homeItem });
       return '';
-
     } else {
-
       return homeItem.title + '\n' +
         homeItemSummaryArr(homeItem)
         .join(', ') + '\n' + [
@@ -64,8 +61,7 @@ function createSummaryEmail(homeItems) {
     'Hej, här kommer gårdagens bostäder.'
   ].concat(_.chain(homeItems).filter().map(function (homeItem) {
     if (!homeItem) {
-      console.log('homeItem ...is not?');
-      console.log(homeItem);
+      utils.log('homeItem ...is not?', 'info', { homeItem: homeItem });
       return '';
     } else {
       return homeItem.title + '\n' +
@@ -114,19 +110,14 @@ function sendEmail(homeItems) {
   return new Promise(function (resolve, reject) {
 
     if (_.isEqual({}, config)) {
-      console.log('Can\'t send email as there\'s no config file.');
+      utils.log('Can\'t send email as there\'s no config file.');
       return resolve(); // early
     }
 
     // Return early if emails shouldn't be sent.
     if (!config.sendEmail) { return resolve(); }
 
-    console.log(chalk.green([
-      'Sendingn email for',
-      _.map(homeItems, function (item) { return item.title }).join(', '),
-      'at',
-      moment().format('YYYY-MM-DD, HH:mm') + '.'
-      ].join(' ')));
+    utils.log('Sending email to config receiver.', 'info', { homeItems: _.map(homeItems, 'title') });
 
     abstractEmail(
       'Senaste bostäderna, ' + moment().format('YYYY-MM-DD, HH:mm'),
@@ -147,7 +138,7 @@ function sendSummaryEmail(homeItems) {
   return new Promise(function (resolve, reject) {
 
     if (_.isEqual({}, config)) {
-      console.log('Can\'t send email as there\'s no config file.');
+      utils.log('Can\'t send email as there\'s no config file.');
       return resolve(); // early
     }
 
@@ -177,11 +168,7 @@ function _send(receivers, subject, text) {
       : [receivers];
 
     // Log the email
-    console.log(
-      'Sending an email to {recievers} with the following subject:\n{subject}\n'
-        .replace('{recievers}', _receivers.join(', '))
-        .replace('{subject}', subject)
-    );
+    utils.log('Sending email.', 'info', { subject: subject, receivers: _receivers.join(', ') });
 
     sendgrid.send({
       to: _receivers,
@@ -191,7 +178,11 @@ function _send(receivers, subject, text) {
       text: text,
     }, function (err, result) {
       // Handle errors
-      if (err) { return reject(err); }
+      if (err) {
+        return utils.logReject(err, 'Failed to send email.', 'info', { error: err.toString(), subject: subject, receivers: _receivers.join(', ') }, reject);
+      }
+
+      utils.log('Sucessfully sent email.', 'info', { subject: subject, receivers: _receivers.join(', ') });
 
       // Resolve the result
       resolve(result);

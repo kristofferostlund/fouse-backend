@@ -33,11 +33,13 @@ function cellsyntUrl(receiver, message, sender) {
     'https://se-1.cellsynt.net/sms.php',
     '?username=' + config.cellsynt_username,
     '&password=' + config.cellsynt_pass,
+    '&type=' + 'text',
     '&destination=' + _receiver,
     '&originatortype=alpha',
     '&originator=' + encodeURIComponent(_sender),
-    '&charset=UTF-8',
-    '&text=' + encodeURIComponent(message)
+    '&charset=UTF8',
+    '&text=' + encodeURIComponent(message),
+    '&allowconcat=6'
   ].join('');
 }
 
@@ -51,7 +53,7 @@ function cellsyntUrl(receiver, message, sender) {
 function _send(receiver, message, sender) {
   // Don't go further if no SMS should be sent out
   if (!config.sendSms) {
-    console.log('Not sending sms to ' +  receiver + ' as SMS is turned off.');
+    utils.log('Not sending sms to ' +  receiver + ' as SMS is turned off.');
 
     // Return early
     return Promise.resolve();
@@ -63,7 +65,15 @@ function _send(receiver, message, sender) {
   // Get the url to send sms request to
   var _url = cellsyntUrl(receiver, message, sender);
 
+  utils.log('Sending SMS.', 'info', { receiver: receiver, message: message, sender: sender });
+
   return utils.getPage(_url)
+  .then(function (data) {
+    return utils.logResolve('Successfully sent SMS.', 'info', { receiver: receiver, message: message, sender: sender, response: data });
+  })
+  .catch(function (err) {
+    return utils.logReject('Failed to send SMS.', 'info', { error: err.toString(), receiver: receiver, message: message, sender: sender })
+  });
 }
 
 /**
@@ -108,17 +118,14 @@ function getShortUrl(bitlyUrl) {
  * @param {String} shortUrl
  * @return {String}
  */
-function createSmsBody(content, shortUrl, encode) {
-  encode = _.isUndefined(encode) ? true : encode;
+function createSmsBody(content, shortUrl) {
   var padding = shortUrl.length + 4;
 
-  var body = [
+  return [
     content.slice(0, 160 - padding),
     '\n\n',
     shortUrl
   ].join('');
-
-  return encode ? encodeURIComponent(body) : body;
 }
 
 /**
@@ -133,37 +140,44 @@ function sendSms(homeItem) {
   return new Promise(function (resolve, reject) {
 
     if (_.isEqual({}, config)) {
-      console.log('Can\'t send sms as there\'s no config file.');
+      utils.log('Can\'t send sms as there\'s no config file.');
       return resolve(); // early
     }
 
     getShortUrl(getBitlyUrl(homeItem.url))
     .then(function (shortUrl) {
       if (!shortUrl) {
-        console.log('No url received.');
+        utils.log('No url received.');
         return resolve();
       } else {
-        var smsBody = createSmsBody(homeItem.title, shortUrl);
+        var smsBody = createSmsBody(homeItem.title, shortUrl, false);
 
         // Only send if somewhere set to true
         if (!config.sendSms) { return resolve(); }
 
-        console.log(chalk.green([
-          'Sending SMS to ',
-          config.tel,
-          ' with the body:\n',
-          createSmsBody(homeItem.title, shortUrl, false)
-          ].join('')));
+        utils.log('Sending SMS to config receiver.', 'info', { receiver: config.tel, body: createSmsBody(homeItem.title, shortUrl, false) });
 
         // Send the SMS
-        utils.getPage(cellsyntUrl(smsBody))
-        .then(resolve)
-        .catch(reject);
+        utils.getPage(cellsyntUrl(undefined, smsBody))
+        .then(function (data) {
+          if (_.isError(data)) {
+            return Promise.reject(data);
+          } else if (/^error\: /i.test(data)) {
+            return Promise.reject(new Error(('' + data).replace(/^error\:\ /i, '')));
+          }
+
+          utils.log('Successfully sent SMS to config receiver.', 'info', { receiver: config.tel, data: data, body: createSmsBody(homeItem.title, shortUrl, false) });
+          resolve(data);
+        })
+        .catch(function (err) {
+          utils.log('Failed to send SMS to config receiver.', 'error', { error: err.toString(), receiver: config.tel });
+          reject(err);
+        });
       }
     })
     .catch(function (err) {
       // Couldn't get the url
-      console.log(err);
+      utils.log(err);
       reject(err);
     })
   });

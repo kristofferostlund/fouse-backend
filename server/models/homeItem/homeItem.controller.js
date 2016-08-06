@@ -20,7 +20,7 @@ function create(_home) {
   return new Promise(function (resolve, reject) {
     HomeItem.create(_home, function (err, home) {
       if (err) {
-        console.log(err);
+        utils.log(err, 'error');
         reject(err);
       } else {
         resolve(home);
@@ -80,17 +80,20 @@ function createHistorical(_homeItem) {
 
           vals = _.map(vals, function (val) { return val.value(); });
 
-          console.log(vals.length + ' homeItems disabled.');
+          utils.log(vals.length + ' homeItems disabled.');
         })
         .catch(function (err) {
-          console.log(err);
+          utils.log(err, 'error');
         });
 
         // Insert new and updated
         create(toInsert)
         .then(function (homeItems) {
-          console.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
+          utils.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
           resolve(homeItems);
+        }).catch(function (err) {
+          utils.log(err, 'error');
+          reject(err);
         });
       }
     });
@@ -267,11 +270,7 @@ function getItemsOfInterest(_options) {
         reject(err);
       } else {
         if (items && items.length) {
-          console.log(chalk.blue([
-            'Found',
-            items.length,
-            'ineresting items!'
-          ].join(' ')))
+          utils.log('Found items of intereset.', 'info', { homeItemsLength: items.length });
         }
 
         Promise.settle(_.map(items, function (item) { return setNotified(item); }))
@@ -280,7 +279,7 @@ function getItemsOfInterest(_options) {
         })
         .catch(function (err) {
 
-          console.log(err);
+          utils.log(err, 'error');
           resolve(items);
         });
       }

@@ -17,10 +17,7 @@ function listUsers(req, res) {
   User.find({ isDisabled: { $ne: true } })
   .select('-password')
   .exec(function (err, users) {
-    if (err) {
-      console.log(err);
-      return res.status(400).send(err);
-    }
+    if (err) { utils.handleError(res, err); }
 
     res.status(200).json(users);
   });

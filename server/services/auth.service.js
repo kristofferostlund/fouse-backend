@@ -104,18 +104,22 @@ function isAuthenticated (req, res, next) {
  */
 function login(email, password) {
   return new Promise(function (resolve, reject) {
+    var _err;
     if (!email) {
-      console.log('Could not log in user as there is no email provided');
-      return reject(new Error('Email is required'));
+      _err = new Error('Email is required');
     } else if (!password) {
-      console.log('Could not log in user as there is no password provided {email}'.replace('{email}', email.toLowerCase()));
-      return reject(new Error('Password is required'));
+      _err = new Error('Password is required');
+    }
+
+    if (_err) {
+      utils.log('Could not log in user.', 'info', { error: _err.toString(), email: !!email ? email : 'Email not provided' })
+      return reject(_err);
     }
 
     // Cast it to lowerCase
     var _email = email.toLowerCase();
 
-    console.log('Trying to log in user {email}'.replace('{email}', _email));
+    utils.log('Trying to log in user {email}', 'info', { email: _email });
 
     User.findOne({ email: _email })
     .select('-password')
@@ -129,32 +133,18 @@ function login(email, password) {
       }
 
       if (err) {
-        console.log(
-          'Could not log in user {email} due to {err}'
-            .replace('{email}', _email)
-            .replace('{err}', err.toString())
-        );
-
+        utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
         return reject(err);
       }
 
       var _token = signToken({ _id: user._id });
 
-      console.log(
-        'Sucessfully logged in user {email} {token}'
-          .replace('{email}', _email)
-          .replace('{token}', _token)
-      );
+      utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
 
       resolve({ user: user, token: _token });
     })
     .catch(function (err) {
-      console.log(
-        'Could not log in user {email} due to {err}'
-          .replace('{email}', _email)
-          .replace('{err}', err.toString())
-      );
-
+      utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
       reject(err);
     });
   });

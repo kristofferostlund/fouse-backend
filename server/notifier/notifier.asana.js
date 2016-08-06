@@ -97,18 +97,15 @@ function createOneAsanaTask(homeItem) {
       ].join('\n')
     };
 
-    var logMessage = chalk.green('\nCreating task: ' + task.workspace + ', ' + task.name + ' at ' + moment().format('YYYY-MM-DD, HH:mm') + '\n');
-
     // Check to see if the Asana stuff has any other alphanumeric characters than only 'x',
     // to ensure calls can be made to a working endpoint.
     if (!/[a-vy-ä0-9]+/.test(config.asana_token) || !/[a-vy-ä0-9]+/.test(config.asana_workspace)) {
-      console.log('No valid Asana token, or workspace found.\nWould have sent the following task:');
-      console.log(logMessage);
+      utils.log('No valid Asana token, or no workspace found.', 'info', { task: _.omit(task, ['notes']) });
       return resolve();
     }
 
     // Log what's going on
-    console.log(logMessage);
+    utils.log('Creating Asana task.', 'info', { task: task });
 
     request.post({
       uri: 'https://app.asana.com/api/1.0/tasks',
@@ -123,16 +120,13 @@ function createOneAsanaTask(homeItem) {
 
       // Whoops, something went wrong here
       if (err) {
-        console.log(chalk.red('The following error occurred when trying to create a task to Asana:'));
-        console.log(err);
+        utils.log('Could not create Asana task.', 'info', { error: err.toString(), task: task });
         reject(err);
       } else {
-        console.log('\n' + chalk.green('Task created: ' + task.name) + '\n');
+        utils.log('Task created.', 'info', { task: task });
         resolve(homeItem);
       }
-
     });
-
   });
 }
 
@@ -160,7 +154,7 @@ function createAsanaTasks(homeItems) {
       resolve(_.map(data, function (val, i) { return val.isRejected() ? _homeItems[i] : val.value() }))
     })
     .catch(function (err) {
-      console.log(err);
+      utils.log(err, 'error');
       resolve(homeItems);
     });
   });

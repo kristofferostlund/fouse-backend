@@ -7,7 +7,6 @@ var moment = require('moment');
 var User = require('./user.model');
 
 var utils = require('../../utils/utils');
-var notifier = require('../../notifier/notifier.controller');
 var homeController = require('../homeItem/homeItem.controller');
 var auth = require('./../../services/auth.service');
 
@@ -57,44 +56,38 @@ function create(user) {
     }
 
     // Hash the password
-    var _user = _.assign({}, user, { password: auth.encryptPassword(user.password) });
+    var _user = _.assign({}, user, { password: auth.encryptPassword(user.password), email: user.email.toLowerCase() });
 
-    console.log('Creating a new user. {email}'.replace('{email}', _user.email));
+    var _meta = { email: _user.email };
+
+    utils.log('Creating a new user.', 'info', _meta);
 
     User.findOne({ email: _user.email }, { email: true })
     .exec()
     .then(function (emailUser) {
       if (!!emailUser) {
-        console.log('Cannot create user, email already exists. {email}'.replace('{email}', _user.email));
-
+        utils.log('Cannot create user, email already exists', 'info', _meta);
         return reject(new Error('Email already exists'));
       }
 
       // Create the user, wrapped in a promise
-        return new Promise(function (resolve, reject) {
-          User.create(_user, function (err, createdUser) {
-            return !err ? resolve(createdUser): reject(err);
-          });
+      return new Promise(function (resolve, reject) {
+        User.create(_user, function (err, createdUser) {
+          return !err ? resolve(createdUser) : reject(err);
         });
+      });
     })
     .then(function (createdUser) {
-      var _createdUser = _.omit(createdUser._doc, ['password']);
+      // Omit user password
+      var _createdUser = _.omit(createdUser._doc, ['password'])
 
-      console.log('Successfully created new user. {email}'.replace('{email}', _createdUser.email));
-
-      // Resolve the user with the password omitted
+      utils.log('Successfully created new user.', 'info', _meta);
       resolve(_createdUser);
     })
     .catch(function (err) {
-      console.log(
-        'Failed to create new user: {email}, {err}'
-          .replace('{email}', _user.email)
-          .replace('{err}', err.toString())
-      );
-
+      utils.log('Failed to create new user', 'info', _.assign({}, _meta, { error: err.toString() }));
       return reject(err);
     });
-
   });
 }
 
@@ -106,6 +99,13 @@ function create(user) {
  */
 function update(user) {
   return new Promise(function (resolve, reject) {
+    if (!user) {
+      return reject(new Error('No user to update'));
+    }
+
+    var _meta = { _id : user._id, email: user.email };
+    utils.log('Updating user.', 'info', _meta);
+
     User.findById(user._id)
     .exec(function (oldUser) {
       // Merge them together
@@ -113,7 +113,12 @@ function update(user) {
 
       // Save the updated version
       updated.save(function (err, _user) {
-        if (err) { return reject(err); }
+        if (err) {
+          utils.log('Failed to update user.', 'error', _.assign({}, _meta, { error: err.toString() }));
+          return reject(err);
+        }
+
+        utils.log('Successfully updated user.', 'info', _meta);
 
         resolve(_user);
       })
