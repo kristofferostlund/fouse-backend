@@ -9,7 +9,7 @@ var User = require('./user.model');
 var utils = require('../../utils/general.utils');
 var notifier = require('../../notifier/notifier.controller');
 var homeController = require('../homeItem/homeItem.controller');
-var auth = require('./../../services/auth');
+var auth = require('./../../services/auth.service');
 
 /**
  * Finds all users which somehow should be notified.

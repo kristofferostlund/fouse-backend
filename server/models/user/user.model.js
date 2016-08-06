@@ -63,6 +63,8 @@ UserSchema.pre('save', function (next) {
     this.tel = this.tel.replace(/(^\+46|^46|^0046|^0(?!046))/, '46');
   }
 
+  this.email = this.email.toLowerCase();
+
   next();
 });
 

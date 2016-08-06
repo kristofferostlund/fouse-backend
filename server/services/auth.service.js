@@ -4,6 +4,7 @@ var _ = require('lodash');
 var compose = require('composable-middleware');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
+var Promise = require('bluebird');
 
 var User = require('./../models/user/user.model');
 var config = require('./../config');
@@ -95,6 +96,71 @@ function isAuthenticated (req, res, next) {
 }
 
 /**
+ * Attempts to log user in.
+ *
+ * @param {String} email Email address matching user to log in
+ * @param {String} password Password to use for authentication
+ * @return {Promise<{ user: Object, token: String }>}
+ */
+function login(email, password) {
+  return new Promise(function (resolve, reject) {
+    if (!email) {
+      console.log('Could not log in user as there is no email provided');
+      return reject(new Error('Email is required'));
+    } else if (!password) {
+      console.log('Could not log in user as there is no password provided {email}'.replace('{email}', email.toLowerCase()));
+      return reject(new Error('Password is required'));
+    }
+
+    // Cast it to lowerCase
+    var _email = email.toLowerCase();
+
+    console.log('Trying to log in user {email}'.replace('{email}', _email));
+
+    User.findOne({ email: _email })
+    .select('-password')
+    .exec()
+    .then(function (user) {
+      var err;
+      if (!user) {
+        err = new Error('User does not exist');
+      } else if (!validatePassword(user.password, password)) {
+        err = new Error('Incorrect password');
+      }
+
+      if (err) {
+        console.log(
+          'Could not log in user {email} due to {err}'
+            .replace('{email}', _email)
+            .replace('{err}', err.toString())
+        );
+
+        return reject(err);
+      }
+
+      var _token = signToken({ _id: user._id });
+
+      console.log(
+        'Sucessfully logged in user {email} {token}'
+          .replace('{email}', _email)
+          .replace('{token}', _token)
+      );
+
+      resolve({ user: user, token: _token });
+    })
+    .catch(function (err) {
+      console.log(
+        'Could not log in user {email} due to {err}'
+          .replace('{email}', _email)
+          .replace('{err}', err.toString())
+      );
+
+      reject(err);
+    });
+  });
+}
+
+/**
  * Signs a token and returns it.
  *
  * @param {Data} data Data to sign into the token
@@ -143,5 +209,6 @@ module.exports = {
   decodeToken: decodeToken,
   encryptPassword: encryptPassword,
   validatePassword: validatePassword,
+  login: login,
 }
 
