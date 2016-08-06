@@ -6,7 +6,7 @@ var request = require('request');
 var moment = require('moment');
 var request = require('request');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 /**

@@ -6,7 +6,7 @@ var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 // The URL for every rentable blocket ad. ish.
@@ -14,9 +14,9 @@ var __baseURL = config.base_url;
 
 /**
  * Returns the __baseUrl to the page for *num*.
- * 
+ *
  * Page num is decided by the query 'o=1' (or whatever page it is).
- * 
+ *
  * @param {String|Number} num
  * @return {String} - the base url + the page number
  */
@@ -27,13 +27,13 @@ function urlByNum(num) {
 /**
  * Processes the ads list page and returns an array of items.
  * If the last page is hit, it returns an object with only one property of info.
- * 
+ *
  * @param {String} content - HTML content as string
  * @return {Promise} -> {Array} of list items
- */ 
+ */
 function processIndexPage(content) {
   return new Promise(function (resolve, reject) {
-    
+
     // Resolve this if no content no ads was found.
     if (~content.indexOf('ads-not-found-container')) {
       return resolve({ info: 'Non content page.' })
@@ -69,7 +69,7 @@ function processIndexPage(content) {
 function processListItem(e) {
   var anchor = $(e).find('a')[0];
   var rent = $(e).find('.monthly_rent').text();
-  
+
   // Get image and check if it exists.
   var thumbnail = _.attempt(function () { return anchor.attribs.style.match(/\(.*?\)/g).toString().replace(/[()]/g, ''); });
   if (_.isError(thumbnail)) { thumbnail = undefined; }
@@ -90,9 +90,9 @@ function processListItem(e) {
 
 /**
  * Returns a promise of the index page at *pageNum*.
- * 
+ *
  * Serves as a shorthand for utils.getPage(urlByNum(*pageNum*)).then(processIndexPage)
- * 
+ *
  * @param {Number|String} pageNum
  * @return {Promise} -> {Object} - single index page
  */
@@ -103,7 +103,7 @@ function getIndexPage(pageNum) {
 
 /**
  * Recursively gets all index pages.
- * 
+ *
  * @param {Array} _items - set recursively
  * @param {Number} pageNum - set recursively
  * @param {Boolean} isDone - set recursively
@@ -120,11 +120,11 @@ function getAllIndexPages(_items, pageNum, isDone) {
       resolve(_items);
     });
   }
-  
+
   return getIndexPage(pageNum)
     .then(function (items) {
       pageNum++;
-    
+
       // After cleaning the page, this is returned: { info: 'Non content page.' }
       if (items && items.info) {
         return getAllIndexPages(_items, pageNum, true);

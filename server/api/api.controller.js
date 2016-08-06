@@ -7,7 +7,7 @@ var express = require('express');
 var HomeItem = require('./../models/homeItem/homeItem.model');
 var User = require('./../models/user/user.model');
 var UserController = require('./../models/user/user.controller');
-var utils = require('./../utils/general.utils');
+var utils = require('./../utils/utils');
 var auth = require('./../services/auth.service');
 
 /**
@@ -62,8 +62,42 @@ function login(req, res) {
   })
 }
 
+/**
+ * Route GET '/api/home-items'
+ */
+function listHomes(req, res) {
+  // Get the page number from the query params
+  var page = _.get(req, 'query.page') || 1;
+
+  // *page* must be creater than zero, otherwise defaults to 1
+  page = page >= 1 ? page : 1;
+
+  // Get the page size/limit from the query params
+  var limit = _.get(req, 'query.limit') || 20;
+
+  //  Limut must be greater than zero, otherwise defaults to 20
+  limit = limit >= 1 ? limit : 20 ;
+
+  // Get the number of items to skip
+  var _skip = (page - 1 ) * limit;
+
+  HomeItem.find({ isDisabled: { $ne: true } })
+  .skip(_skip)
+  .limit(limit)
+  .sort({ $natural: -1 })
+  .exec()
+  .then(function (homeItems) {
+    res.status(200).json(homeItems);
+  })
+  .catch(function (err) {
+    utils.handleError(res, err);
+  });
+}
+
 module.exports = {
   listUsers: listUsers,
   createUser: createUser,
   login: login,
+  listHomes: listHomes,
 }
+

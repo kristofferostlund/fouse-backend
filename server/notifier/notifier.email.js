@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var chalk = require('chalk');
 var moment = require('moment');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 var sendgrid = require('sendgrid')(config.send_grid_api_key);

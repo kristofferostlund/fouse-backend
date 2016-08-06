@@ -12,5 +12,6 @@ router.use(cors());
 router.post('/authenticate', controller.login);
 router.get('/users', auth.isAuthenticated(), controller.listUsers)
 router.post('/users', controller.createUser);
+router.get('/home-items', auth.isAuthenticated(), controller.listHomes)
 
 module.exports = router;

@@ -8,7 +8,7 @@ var path = require('path');
 var moment = require('moment');
 var request = require('request');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 var qasaNotifier = require('./notifier.qasa');

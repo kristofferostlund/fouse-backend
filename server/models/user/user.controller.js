@@ -6,7 +6,7 @@ var moment = require('moment');
 
 var User = require('./user.model');
 
-var utils = require('../../utils/general.utils');
+var utils = require('../../utils/utils');
 var notifier = require('../../notifier/notifier.controller');
 var homeController = require('../homeItem/homeItem.controller');
 var auth = require('./../../services/auth.service');
@@ -108,12 +108,8 @@ function update(user) {
   return new Promise(function (resolve, reject) {
     User.findById(user._id)
     .exec(function (oldUser) {
-      // Delete the _id and version of the user, just in case
-      delete user._id
-      delete user.__v
-
       // Merge them together
-      var updated = _.assign(oldUser, user);
+      var updated = _.assign(oldUser, _.omit(user, ['_id', '__v', 'password']));
 
       // Save the updated version
       updated.save(function (err, _user) {

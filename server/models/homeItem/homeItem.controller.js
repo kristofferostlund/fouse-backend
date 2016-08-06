@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var moment = require('moment');
 var chalk = require('chalk');
 
-var utils = require('../../utils/general.utils');
+var utils = require('../../utils/utils');
 var config = require('../../config');
 var HomeItem = require('./homeItem.model');
 var homeMatch = require('./homeItem.match');

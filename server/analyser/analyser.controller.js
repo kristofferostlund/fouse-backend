@@ -8,7 +8,7 @@ var moment = require('moment');
 var timeAnalyser = require('./analyser.time');
 var locationAnalyser = require('./analyser.location');
 var HomeItem = require('../models/homeItem/homeItem.model');
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 
 /**
  * @param {String} body

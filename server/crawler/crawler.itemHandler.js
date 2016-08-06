@@ -5,7 +5,7 @@ var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 
 /**
  * Processes the html to get the images, body and owner.

@@ -8,7 +8,7 @@ var Promise = require('bluebird');
 
 var User = require('./../models/user/user.model');
 var config = require('./../config');
-var utils = require('./../utils/general.utils');
+var utils = require('./../utils/utils');
 
 /**
  * Validates *email* address format and returns a Boolean value.
