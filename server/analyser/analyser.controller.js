@@ -104,7 +104,7 @@ function classify(homeItems) {
       resolve(_.map(data, function (val, i) { return val.isRejected() ? homeItems[i] : val.value() }))
     })
     .catch(function (err) {
-      utils.log(err, 'error');
+      utils.log('Something went wrong when classifying home items.', 'error', { error: err.toString(), homeItemsLength: homeItems.length });
       resolve(homeItems);
     });
   });
@@ -134,8 +134,7 @@ function shortenUrls(homeItems) {
         })
         .catch(function (err) {
           // Log the error
-          utils.log('Could not get shortened url', 'info', { url: homeItem.url });
-          utils.log(err, 'error');
+          utils.log('Could not get shortened url', 'error', { error: err.toString(), url: homeItem.url });
 
           // Still resolve though
           resolve(homeItem);
@@ -148,7 +147,7 @@ function shortenUrls(homeItems) {
       resolve(_.map(data, function (val, i) { return val.isRejected() ? homeItems[i] : val.value(); }));
     })
     .catch(function (err) {
-      utils.log(err, 'error');
+      utils.log('Something went wrong when shortening URLs.', 'error', { errror: err.toString() });
       resolve(homeItems);
     });
   });

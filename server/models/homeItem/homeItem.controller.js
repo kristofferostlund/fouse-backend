@@ -20,7 +20,7 @@ function create(_home) {
   return new Promise(function (resolve, reject) {
     HomeItem.create(_home, function (err, home) {
       if (err) {
-        utils.log(err, 'error');
+        utils.log('Something wen wrong when creating HomeItem(s).', 'error', { error: err.toString(), homeItemsLength: _.isArray(_home) ? _home.length : 1 });
         reject(err);
       } else {
         resolve(home);
@@ -83,7 +83,7 @@ function createHistorical(_homeItem) {
           utils.log(vals.length + ' homeItems disabled.');
         })
         .catch(function (err) {
-          utils.log(err, 'error');
+          utils.log('Something went wrong when disabling historical HomeItem(s)', 'error', { error: err.toString() });
         });
 
         // Insert new and updated
@@ -92,7 +92,7 @@ function createHistorical(_homeItem) {
           utils.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
           resolve(homeItems);
         }).catch(function (err) {
-          utils.log(err, 'error');
+          utils.log('Something went wrong when creating historical HomeItem(s)', 'error', { error: err.toString() });
           reject(err);
         });
       }
@@ -278,8 +278,7 @@ function getItemsOfInterest(_options) {
           resolve(items);
         })
         .catch(function (err) {
-
-          utils.log(err, 'error');
+          utils.log('Something went wrong when finding items of intereset.', 'error', { erro: err.toString() });
           resolve(items);
         });
       }

@@ -154,7 +154,7 @@ function createAsanaTasks(homeItems) {
       resolve(_.map(data, function (val, i) { return val.isRejected() ? _homeItems[i] : val.value() }))
     })
     .catch(function (err) {
-      utils.log(err, 'error');
+      utils.log('Something went wrong when creating Assan tasks', 'error', { error: err.toString() });
       resolve(homeItems);
     });
   });

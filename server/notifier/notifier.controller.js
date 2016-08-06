@@ -43,7 +43,7 @@ function notify(homeItems) {
         resolve(_.map(data, function (val, i) { return val.isRejected() ? val.reason() : val.value() }))
       })
       .catch(function (err) {
-        utils.log(err, 'error');
+        utils.log('Something went wrong when sending notifications.', 'error', { error: err.toString() });
         resolve(homeItems);
       });
     } else {
