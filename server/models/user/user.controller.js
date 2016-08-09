@@ -28,6 +28,7 @@ function find() {
     }
 
     User.find(options)
+    .select('-password -__v')
     .exec(function (err, users) {
       if (err) {
         reject(err);
@@ -36,6 +37,30 @@ function find() {
       }
     });
 
+  });
+}
+
+/**
+ * Finds a user by _id and returns a promise of it.
+ *
+ * Note: __v and password are omitted.
+ *
+ * @param {String} userId
+ * @return {Promise<Object>}
+ */
+function findById(userId) {
+  return new Promise(function (resolve, reject) {
+    if (!userId) {
+      return reject(new Error('Missing userId'));
+    } else if (!/^[0-9a-f]{24}$/.test(userId)) {
+      return reject(new Error('Invalid userId'));
+    }
+
+    User.findById(userId)
+    .select('-password -__v')
+    .exec()
+    .then(resolve)
+    .catch(reject);
   });
 }
 
@@ -79,7 +104,7 @@ function create(user) {
     })
     .then(function (createdUser) {
       // Omit user password
-      var _createdUser = _.omit(createdUser._doc, ['password'])
+      var _createdUser = _.omit(createdUser._doc, ['password', '__v'])
 
       utils.log('Successfully created new user.', 'info', _meta);
       resolve(_createdUser);
@@ -122,7 +147,7 @@ function update(userId, user) {
 
         utils.log('Successfully updated user.', 'info', _meta);
 
-        resolve(_user);
+        resolve(_.omit(_user, ['password', '__v']));
       });
     });
   });
@@ -184,6 +209,7 @@ function updatePassword(userId, password, currentPassword) {
 
 module.exports = {
   find: find,
+  findById: findById,
   create: create,
   update: update,
   updatePassword: updatePassword,

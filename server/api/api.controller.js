@@ -33,11 +33,45 @@ function listUsers(req, res) {
   .skip(_skip)
   .limit(limit)
   .sort({ $natural: -1 })
-  .select('-password')
+  .select('-password -__v')
   .exec(function (err, users) {
     if (err) { utils.handleError(res, err); }
 
     res.status(200).json(users);
+  });
+}
+
+/**
+ * Route GET '/api/users/:id'
+ */
+function getUser(req, res) {
+  var userId = req.params.id;
+
+  UserController.findById(userId)
+  .then(function (user) {
+    res.status(200).json(user);
+  })
+  .catch(function (err) {
+    if (/missing userid|invalid userid/i.test(err.message)) {
+      res.status(400).send(err.message);
+    } else {
+      utils.handleError(res, err);
+    }
+  });
+}
+
+/**
+ * Route GET '/api/users/me'
+ */
+function me(req, res) {
+  var userId = req.user._id;
+
+  UserController.findById(userId)
+  .then(function (user) {
+    res.status(200).json(user);
+  })
+  .catch(function (err) {
+    utils.handleError(res, err);
   });
 }
 
@@ -107,7 +141,7 @@ function login(req, res) {
     } else {
       utils.handleError(res, err);
     }
-  })
+  });
 }
 
 /**
@@ -129,7 +163,7 @@ function listHomes(req, res) {
   // Get the number of items to skip
   var _skip = (page - 1 ) * limit;
 
-  HomeItem.find({ isDisabled: { $ne: true } })
+  HomeItem.find({ isDisabled: { $ne: true }, active: true })
   .skip(_skip)
   .limit(limit)
   .sort({ $natural: -1 })
@@ -144,6 +178,8 @@ function listHomes(req, res) {
 
 module.exports = {
   listUsers: listUsers,
+  getUser: getUser,
+  me: me,
   createUser: createUser,
   updateUser: updateUser,
   updateUserPassword: updateUserPassword,

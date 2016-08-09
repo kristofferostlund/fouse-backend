@@ -13,6 +13,8 @@ router.post('/authenticate', controller.login);
 
 router.post('/users', controller.createUser);
 router.get('/users', auth.isAuthenticated(), controller.listUsers);
+router.get('/users/me', auth.isAuthenticated(), controller.me);
+router.get('/users/:id', auth.isAuthenticated(), controller.getUser);
 router.put('/users/:id', auth.isAuthenticated(), controller.updateUser);
 router.put('/users/:id/password', auth.isAuthenticated(), controller.updateUserPassword);
 
