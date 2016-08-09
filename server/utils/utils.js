@@ -277,8 +277,6 @@ function hasTel(content) {
  * Returns the phone number from an item page
  * by visiting its mobile page using Zombie, a headless browser.
  *
- * TODO: Add retries.
- *
  * @param {String} url
  * @return {Promise} -> {String}
  */
@@ -476,6 +474,51 @@ function handleError(res, err) {
   log('The following error occured: ' + err.toString());
 }
 
+/**
+ * @param {Promise[]|Promise} items
+ * @return {Promise[]|Promise}
+ */
+function reflect(items) {
+  return _.isArray(items)
+    ? _.map(items, function (item) { return _.isFunction(item.reflect) ? item.reflect() : Promise.resolve(item).reflect() })
+    : _.isFunction(items.reflect) ? items.reflect() : Promise.resolve(items).reflect();
+}
+
+/**
+ * @param {Promise[]} promises
+ * @return {Promise<[]>}
+ */
+function settle(promises) {
+  return Promise.all(_.map(promises, reflect))
+  .then(function (vals) {
+    return Promise.resolve(_.map(vals, function (val) { return val.isRejected() ? val.reason() : val.value(); }))
+  });
+}
+
+/**
+ * @param {Any} message The message to print
+ * @param {Number} verticalPadding Vertical padding as number of '\n', if 0 then none.
+ * @param {Boolean} asIs Should *message* be printed as is? Defaults to false
+ */
+function print (message, verticalPadding, asIs) {
+  // Use default values if undefined
+  verticalPadding = !_.isUndefined(verticalPadding) ? verticalPadding : 0;
+  asIs = !_.isUndefined(asIs) ? asIs : false;
+
+  if (!!verticalPadding) { console.log(_.times(verticalPadding, function () { return '\n' }).join('')); }
+  if (_.some([
+    _.isError(message),
+    _.isString(message),
+    _.isNumber(message),
+    _.isUndefined(message),
+  ])) { asIs = true; }
+  log(
+    !!asIs ? message : JSON.stringify(message, null, 4)
+  );
+  if (!!verticalPadding) { console.log(_.times(verticalPadding, function () { return '\n' }).join('')); }
+}
+
+
 module.exports = {
   log: log,
   logResolve: logResolve,
@@ -493,4 +536,7 @@ module.exports = {
   chunkSequence: chunkSequence,
   sequence: sequence,
   handleError: handleError,
+  reflect: reflect,
+  settle: settle,
+  print: print,
 };

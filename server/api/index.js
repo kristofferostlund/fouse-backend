@@ -10,8 +10,12 @@ var auth = require('./../services/auth.service');
 router.use(cors());
 
 router.post('/authenticate', controller.login);
-router.get('/users', auth.isAuthenticated(), controller.listUsers)
+
 router.post('/users', controller.createUser);
-router.get('/home-items', auth.isAuthenticated(), controller.listHomes)
+router.get('/users', auth.isAuthenticated(), controller.listUsers);
+router.put('/users/:id', auth.isAuthenticated(), controller.updateUser);
+router.put('/users/:id/password', auth.isAuthenticated(), controller.updateUserPassword);
+
+router.get('/home-items', auth.isAuthenticated(), controller.listHomes);
 
 module.exports = router;

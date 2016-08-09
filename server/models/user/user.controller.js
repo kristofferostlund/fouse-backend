@@ -94,20 +94,22 @@ function create(user) {
 /**
  * Updates a user and returns a promise the updated version.
  *
+ * @param {String} userId The _id of the user to update
  * @param {Object} user User object to update
  * @return {Promise} -> {Object} The new user
  */
-function update(user) {
+function update(userId, user) {
   return new Promise(function (resolve, reject) {
-    if (!user) {
+    if (!user || !userId) {
       return reject(new Error('No user to update'));
     }
 
-    var _meta = { _id : user._id, email: user.email };
+    var _meta = { _id : userId, email: user.email };
     utils.log('Updating user.', 'info', _meta);
 
-    User.findById(user._id)
-    .exec(function (oldUser) {
+    User.findById(userId)
+    .exec(function (err, oldUser) {
+
       // Merge them together
       var updated = _.assign(oldUser, _.omit(user, ['_id', '__v', 'password']));
 
@@ -121,9 +123,62 @@ function update(user) {
         utils.log('Successfully updated user.', 'info', _meta);
 
         resolve(_user);
-      })
-    })
+      });
+    });
+  });
+}
 
+/**
+ * @param {String} userId The _id of the user to set password for
+ * @param {String} password New password to set
+ * @param {String} currentPassword Current password to use for safety
+ * @return {Promise<{ successful: Boolean, message: String, error: Error }>}
+ */
+function updatePassword(userId, password, currentPassword) {
+  return new Promise(function (resolve, reject) {
+    utils.log('Updating user password.', 'info', { userId: userId })
+
+    var _err;
+
+    if (!userId) {
+      _err = new Error('Incorrect or missing userId.');
+    } else if (!password) {
+      _err = new Error('Missing new password.');
+    } else if (!currentPassword) {
+      _err = new Error('Missing current password.');
+    }
+
+    if (_err) {
+      utils.log('Failed to update user password.', 'error', { error: _err.toString(), userId: userId });
+      return resolve({ successful: false, message: _err.message, error: _err });
+    }
+
+    User.findById(userId).exec()
+    .then(function (user) {
+      if (!user) {
+        _err = new Error('User does not exist.');
+      } else if (!auth.validatePassword(user.password, currentPassword)) {
+        _err = new Error('Incorrect password.');
+      }
+
+      if (_err) {
+        utils.log('Failed to update user password.', 'error', { error: _err.toString(), userId: userId });
+        return resolve({ successful: false, message: _err.message, error: _err });
+      }
+
+      // Set the new password
+      user.password = auth.encryptPassword(password);
+
+      return user.save();
+    })
+    .then(function (user) {
+      utils.log('Password updated!', 'info', { userId: userId })
+      resolve({ successful: true, message: 'Password successfully updated.', error: null });
+    })
+    .catch(function (err) {
+      utils.log('Failed to update user password.', 'error', { error: err.toString(), userId: userId });
+      reject(err);
+    });
   });
 }
 
@@ -131,4 +186,5 @@ module.exports = {
   find: find,
   create: create,
   update: update,
+  updatePassword: updatePassword,
 }

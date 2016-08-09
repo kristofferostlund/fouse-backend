@@ -242,7 +242,6 @@ function send(user, homeItems) {
       .join('\n\n--------\n\n'),
   ].join('\n\n');
 
-  // TODO: Implement SendGrid, actually send the email
   return _send(_email, _subject, _text);
 }
 

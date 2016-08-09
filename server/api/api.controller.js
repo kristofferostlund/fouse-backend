@@ -14,7 +14,25 @@ var auth = require('./../services/auth.service');
  * Route GET '/api/users'
  */
 function listUsers(req, res) {
+  // Get the page number from the query params
+  var page = _.get(req, 'query.page') || 1;
+
+  // *page* must be creater than zero, otherwise defaults to 1
+  page = page >= 1 ? page : 1;
+
+  // Get the page size/limit from the query params
+  var limit = _.get(req, 'query.limit') || 20;
+
+  //  Limut must be greater than zero, otherwise defaults to 20
+  limit = limit >= 1 ? limit : 20 ;
+
+  // Get the number of items to skip
+  var _skip = (page - 1 ) * limit;
+
   User.find({ isDisabled: { $ne: true } })
+  .skip(_skip)
+  .limit(limit)
+  .sort({ $natural: -1 })
   .select('-password')
   .exec(function (err, users) {
     if (err) { utils.handleError(res, err); }
@@ -39,6 +57,39 @@ function createUser(req, res) {
     } else {
       utils.handleError(res, err);
     }
+  });
+}
+
+/**
+ * Route PUT '/api/users/:id'
+ */
+function updateUser(req, res) {
+  var _user = req.body;
+  var _userId = req.params.id;
+
+  UserController.update(_userId, _user)
+  .then(function (user) {
+    res.status(200).json(user);
+  })
+  .catch(function (err) {
+    utils.handleError(res, err);
+  });
+}
+
+/**
+ * Route PUT '/api/users/:id/password'
+ */
+function updateUserPassword(req, res) {
+  var userId = req.params.id;
+  var password = req.body.password;
+  var currentPassword = req.body.currentPassword;
+
+  UserController.updatePassword(userId, password, currentPassword)
+  .then(function (data) {
+    res.status(200).json(data);
+  })
+  .catch(function (err) {
+    utils.handleError(res, err);
   });
 }
 
@@ -94,6 +145,8 @@ function listHomes(req, res) {
 module.exports = {
   listUsers: listUsers,
   createUser: createUser,
+  updateUser: updateUser,
+  updateUserPassword: updateUserPassword,
   login: login,
   listHomes: listHomes,
 }

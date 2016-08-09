@@ -273,10 +273,11 @@ function getItemsOfInterest(_options) {
           utils.log('Found items of intereset.', 'info', { homeItemsLength: items.length });
         }
 
-        Promise.settle(_.map(items, function (item) { return setNotified(item); }))
-        .then(function (_items) {
-          resolve(items);
-        })
+        /**
+         * This one is allowed to fail
+         */
+        Promise.all(_.map(items, setNotified))
+        .then(resolve)
         .catch(function (err) {
           utils.log('Something went wrong when finding items of intereset.', 'error', { erro: err.toString() });
           resolve(items);
