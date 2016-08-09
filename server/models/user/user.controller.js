@@ -7,7 +7,6 @@ var moment = require('moment');
 var User = require('./user.model');
 
 var utils = require('../../utils/general.utils');
-var notifier = require('../../notifier/notifier.controller');
 var homeController = require('../homeItem/homeItem.controller');
 var auth = require('./../../services/auth');
 
