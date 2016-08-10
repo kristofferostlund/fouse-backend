@@ -119,10 +119,9 @@ function login(email, password) {
     // Cast it to lowerCase
     var _email = email.toLowerCase();
 
-    utils.log('Trying to log in user {email}', 'info', { email: _email });
+    utils.log('Trying to log in user', 'info', { email: _email });
 
     User.findOne({ email: _email })
-    .select('-password')
     .exec()
     .then(function (user) {
       var err;
@@ -141,7 +140,7 @@ function login(email, password) {
 
       utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
 
-      resolve({ user: user, token: _token });
+      resolve({ user: _.omit(user, ['password']), token: _token });
     })
     .catch(function (err) {
       utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });

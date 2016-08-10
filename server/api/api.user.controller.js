@@ -134,7 +134,7 @@ function login(req, res) {
     res.status(200).send(data);
   })
   .catch(function (err) {
-    if (/does not exist|incorrect password|is required/.test(err.mesage)) {
+    if (/does not exist|incorrect password|is required/i.test(err.message)) {
       res.status(401).send(err);
     } else {
       utils.handleError(res, err);
