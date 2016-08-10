@@ -19,5 +19,6 @@ router.put('/users/:id', auth.isAuthenticated(), controller.user.updateUser);
 router.put('/users/:id/password', auth.isAuthenticated(), controller.user.updateUserPassword);
 
 router.get('/home-items', auth.isAuthenticated(), controller.homeItems.listHomes);
+router.get('/home-items/:id', auth.isAuthenticated(), controller.homeItems.getHome);
 
 module.exports = router;

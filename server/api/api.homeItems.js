@@ -30,6 +30,7 @@ function listHomes(req, res) {
   .skip(_skip)
   .limit(limit)
   .sort({ $natural: -1 })
+  .select('-__v')
   .exec()
   .then(function (homeItems) {
     res.status(200).json(homeItems);
@@ -39,6 +40,24 @@ function listHomes(req, res) {
   });
 }
 
+/**
+ * Route GET '/api/home-items'
+ */
+function getHome(req, res) {
+  var homeItemId = req.params.id;
+
+  HomeItem.findById(homeItemId)
+  .select('-__v')
+  .exec()
+  .then(function (homeItem) {
+    res.status(200).json(homeItem);
+  })
+  .catch(function (err) {
+    utils.handleError(res, err);
+  });
+}
+
 module.exports = {
   listHomes: listHomes,
+  getHome: getHome,
 }
