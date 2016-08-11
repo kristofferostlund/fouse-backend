@@ -80,7 +80,7 @@ function isAuthenticated (req, res, next) {
     return User.findById(_userId)
     .then(function (user) {
       // Add the user to the response
-      req.user = user;
+      req.user = (_.get(user, '_doc') || user);
 
       // If there is no registered user, return a 401 unauthorized
       if (!_.get(user, '_id')) {

@@ -62,10 +62,16 @@ function _send(receiver, message, sender) {
   // Set default value
   sender = !!sender ? sender : 'HomePlease';
 
-  // Get the url to send sms request to
-  var _url = cellsyntUrl(receiver, message, sender);
+  var _receivers = _.chain(receiver)
+    .thru(function (rec) { return _.isArray(rec) ? rec : [ rec ] })
+    .map(function (rec) { return /^00/.test(rec) ? rec : '00' + rec.replace(/^(\+467|07)/, '467') })
+    .thru(function (recs) { return recs.join(','); })
+    .value();
 
-  utils.log('Sending SMS.', 'info', { receiver: receiver, message: message, sender: sender });
+  // Get the url to send sms request to
+  var _url = cellsyntUrl(_receivers, message, sender);
+
+  utils.log('Sending SMS.', 'info', { receivers: _receivers, message: message, sender: sender });
 
   return utils.getPage(_url)
   .then(function (data) {

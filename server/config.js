@@ -55,4 +55,7 @@ module.exports = {
   qasa_notify: !_.isUndefined(process.env.QASA_NOTIFY) ? parseBool(process.env.QASA_NOTIFY) : false,
   app_secret: 'sssshhh',
   skip_schedules: parseBool(process.env.SKIP_SCHEDULES),
+  get app_url(){
+    return process.env.APP_URL || 'http://127.0.0.1:' + this.port;
+  },
 };
