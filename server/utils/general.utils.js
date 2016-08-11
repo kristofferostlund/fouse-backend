@@ -227,6 +227,7 @@ function hasTel(content) {
  * @param {String} url
  * @return {Promise} -> {String}
  */
+
 function getTel(url) {
   return new Promise(function (resolve, reject) {
 
@@ -241,7 +242,10 @@ function getTel(url) {
       var phoneLink = _.attempt(function () { return browser.document.querySelector('#show-phonenumber'); });
 
       // If no phonelink can be found, return an empty string
-      if (!phoneLink || _.isError(phoneLink)) { return resolve(); /* No tel found. */ }
+      if (!phoneLink || _.isError(phoneLink)) {
+        browser = null;
+        return resolve(); /* No tel found. */
+      }
 
       console.log('Found phone number at {url}, clicking button to get it.'.replace('{url}', _url));
 
@@ -253,14 +257,18 @@ function getTel(url) {
 
         if (_.isError(phoneNumber)) {
           console.log('Couldn\'t get the phone number.');
+          browser = null;
           return resolve();
         }
 
         console.log('Found phone number: ' + phoneNumber);
 
+        browser = null;
+
         resolve(phoneNumber);
       })
       .catch(function (err) {
+        browser = null;
         if (/phone\-number\.json./i.test(err)) {
           // Can't bother with the error.
           console.log('Something went wrong with getting the the \'phone-number.json\'.');
