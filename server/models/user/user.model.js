@@ -55,7 +55,7 @@ var UserSchema = new Schema({
 });
 
 UserSchema.pre('save', function (next) {
-  this.modified = new Date();
+  this.dateModified = new Date();
 
   // Ensure proper formatting.
   // only allows Swedish numbers for now
