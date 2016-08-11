@@ -167,6 +167,11 @@ function _send(receivers, subject, text) {
       ? receivers
       : [receivers];
 
+    if (!config.sendEmail) {
+      utils.log('Not sendin email(s) as email is turned off.', 'info', { subject: subject, receivers: _receivers.join(', ') })
+      return resolve();
+    }
+
     // Log the email
     utils.log('Sending email.', 'info', { subject: subject, receivers: _receivers.join(', ') });
 

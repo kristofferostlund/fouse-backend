@@ -37,31 +37,10 @@ function getFrontPage() {
   });
 }
 
-
-/**
- * Simply gets all items from yesterday instead of fetching first.
- */
-function getDaySummary() {
-  utils.log('Summarizing yesterday.', 'info', { readableDate: moment().subtract(1, 'days').format('YYYY-MM-DD'), date: moment().subtract(1, 'days').toDate() });
-  homeItemController.getDaySummary()
-  .then(function (items) {
-    if (items && items.length) {
-      notifier.sendSummaryEmail(items);
-    } else {
-      utils.log('No items were deemed interesting yesterday.', 'info', { readableDate: moment().subtract(1, 'days').format('YYYY-MM-DD'), date: moment().subtract(1, 'days').toDate() });
-      return;
-    }
-  })
-}
-
 // Schedule to get the first index page
 var scheduleEveryInterval = later.parse.recur()
   .every(config.interval).minute()
   .except().every().hour().between(0,6);
-
-// Schedule to get every index page
-var scheduleOn6 = later.parse.recur()
-  .on(6).hour();
 
 // Starts schedules in 5 minutes
 if (!config.skip_schedules) {
@@ -69,7 +48,6 @@ if (!config.skip_schedules) {
   setTimeout(function() {
     utils.log('Schedule for every :interval minute started.'.replace(':interval', config.interval));
     later.setInterval(getFrontPage, scheduleEveryInterval);
-    later.setInterval(getDaySummary, scheduleOn6);
   }, config.wait * 60000);
 } else {
   utils.log('Not running schedules because it is turned off in the environment file.');

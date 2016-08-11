@@ -39,7 +39,7 @@ function processItemPage(content) {
       .replace(/\n+/g, '\n\n'); // Replace multiple newlines by double newlines
 
     // Get the adress if it exists, which is an h3 tag with the class h5
-    var _adress = _.attempt(function () {
+    var _address = _.attempt(function () {
       var addrContent = _.find(html('h3.h5').contents(), function (data) {
         // return find
         return !/(hyra|handla) tryggt/gi.test(data.data);
@@ -50,7 +50,7 @@ function processItemPage(content) {
     });
 
     // If an error was caught, there's no adress
-    if (_.isError(_adress)) { _adress = undefined; }
+    if (_.isError(_address)) { _address = undefined; }
 
     // Get the homeType and set the first character to upper case
     var _homeType = _.upperFirst(html('.subject-param.category').text())
@@ -58,9 +58,9 @@ function processItemPage(content) {
 
     // Get tel if exists
     (function () {
-      if (utils.hasTel(content)) {
+      if (utils.phone.hasTel(content)) {
         var url = _.first(html('link[rel="canonical"]')).attribs.href;
-        return utils.getTel(url);
+        return utils.phone.getTel(url);
       } else {
         return Promise.resolve();
       }
@@ -68,7 +68,7 @@ function processItemPage(content) {
       resolve({
         owner: _owner,
         body: _body,
-        adress: _adress,
+        adress: _address,
         images: _images,
         tel: tel,
         homeType: _homeType,
@@ -93,7 +93,14 @@ function processManyItemPages(contents) {
     return function () { return processItemPage(content); }
   })
 
-  return utils.chunkSequence(_promFuncs, 10);
+  return utils.sequence(_promFuncs)
+  .then(function (data) {
+    console.log('\n\n\n');
+    console.log('Well here????');
+    console.log('\n\n\n');
+
+    return Promise.resolve(data);
+  })
 }
 
 /**

@@ -10,6 +10,8 @@ var config = require('../config');
 
 var logger = require('./logger.utils');
 
+var phone = require('./phone.utils');
+
 /**
  * @param {String} message
  * @param {String} [level='info']
@@ -263,71 +265,6 @@ function getClosestDate(month, day, baseDate) {
 }
 
 /**
- * Checks whether *content* contains either phonenumber-btn or show-phonenumber,
- * which indicates there's a phone number in the ad.
- *
- * @param {String} content
- * @return {Boolean}
- */
-function hasTel(content) {
-  return /phonenumber\-btn|show\-phonenumber/i.test(content);
-}
-
-/**
- * Returns the phone number from an item page
- * by visiting its mobile page using Zombie, a headless browser.
- *
- * @param {String} url
- * @return {Promise} -> {String}
- */
-function getTel(url) {
-  return new Promise(function (resolve, reject) {
-
-    var browser = new Browser({ debug: true });
-
-    // replace 'www' with 'm' to get the mobile page
-    var _url = url.replace(/www(?=\.blocket\.se)/, 'm');
-
-    // Navigate to the page
-    browser.visit(_url, function () {
-
-      var phoneLink = _.attempt(function () { return browser.document.querySelector('#show-phonenumber'); });
-
-      // If no phonelink can be found, return an empty string
-      if (!phoneLink || _.isError(phoneLink)) { return resolve(); /* No tel found. */ }
-
-      log('Found phone number, clicking button to get it.', 'info', { url: url });
-
-      // Click the link
-      browser.clickLink('#show-phonenumber')
-      .then(function () {
-
-        var phoneNumber = _.attempt(function () { return browser.document.querySelector('#show-phonenumber .button-label').textContent; });
-
-        if (_.isError(phoneNumber)) {
-          log('Failed to get the phone number.', 'info', { error: phoneNumber.toString() });
-          return resolve();
-        }
-
-        log('Successfully got the phone number', 'info', { url: url, phoneNumber: phoneNumber });
-
-        resolve(phoneNumber);
-      })
-      .catch(function (err) {
-        if (/phone\-number\.json./i.test(err)) {
-          // Can't bother with the error.
-          log('Something went wrong with getting the the \'phone-number.json\'.', 'info', { error: err.toString() });
-          resolve();
-        } else {
-          log('Something went wrong when getting the phone number.', 'info', { error: err.toString() });
-          resolve();
-        }
-      });
-    });
-  });
-}
-
-/**
  * Returns a shortened BitLy URL for *homeItem* (either string or URL).
  *
  * @param {Object|String} homeItem HomeItem or URL to shorten URL for
@@ -530,8 +467,7 @@ module.exports = {
   literalRegExp: literalRegExp,
   nextMonth: nextMonth,
   getClosestDate: getClosestDate,
-  hasTel: hasTel,
-  getTel: getTel,
+  phone: phone,
   getShortUrl: getShortUrl,
   chunkSequence: chunkSequence,
   sequence: sequence,

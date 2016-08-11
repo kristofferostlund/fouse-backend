@@ -10,6 +10,8 @@ var analyser = require('../analyser/analyser.controller');
 var homeItem = require('../models/homeItem/homeItem.controller');
 var HomeItem = require('../models/homeItem/homeItem.model');
 
+var utils = require('./../utils/utils');
+
 /**
  * Returns a promise of an array of complete items.
  *
