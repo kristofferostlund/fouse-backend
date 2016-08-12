@@ -7,6 +7,7 @@ var moment = require('moment');
 
 var emailNotifier = require('./../../notifier/notifier.email');
 var Invitation = require('./invitation.model');
+var User = require('./../user/user.model');
 var utils = require('./../../utils/utils');
 var auth = require('./../../services/auth.service');
 var config = require('./../../config');
@@ -34,6 +35,7 @@ function createInvitation(context) {
     var email = context.email;
 
     var _err;
+    var __invitation;
 
     if (!_.get(fromUser, '_id')) {
       _err = new Error('Missing user.');
@@ -41,38 +43,56 @@ function createInvitation(context) {
       _err = new Error('Missing or invalid email.');
     }
 
+    var _meta = {
+      'fromUser._id': _.get(fromUser, '_id'),
+      email: email,
+    }
+
     if (_err) {
-      utils.log('Cannot create inivation.', { error: _err.toString(), fromUser: fromUser, email: email })
+      utils.log('Cannot create invitation.', 'info', _.assign({}, { error: _err.toString(), _meta }));
       return reject(_err);
     }
 
-    utils.log('Creating invitation.', 'info', { fromUser: fromUser, email: email });
+    utils.log('Creating invitation.', 'info', _meta);
 
-    Invitation.create({ email: email, fromUser: fromUser }, function (err, invitation) {
-      if (err) {
-        utils.log('Failed to create invitation.', 'error', { fromUser: fromUser, email: email });
+    User.findOne({ email: email.toLowerCase() })
+    .select('_id')
+    .exec()
+    .then(function (user) {
+      if (user) {
+        var _err = new Error('User already exists');
+        utils.log('Cannot create invitation.', 'info', _.assign({}, { error: _err.toString(), _meta }));
+        return Promise.reject(_err);
+      }
+
+      return Invitation.create({ email: email, fromUser: fromUser })
+    })
+    .then(function (invitation) {
+      __invitation = invitation;
+      utils.log('Invitation created. Sending email.', 'info', _meta);
+      return emailNotifier.plainSend(email, 'Inbjudan att använda Fouse', getInvitationBody(invitation.token, fromUser))
+    })
+    .then(function (data) {
+      utils.log('Invitation successfully sent.', 'info', _meta);
+      resolve(__invitation);
+    })
+    .catch(function (err) {
+      utils.log('Failed to send invitation.', 'error', _.assign({}, { error: err.toString() }, _meta));
+
+      if (!__invitation) {
+        utils.log('No invitation to set as failed.', 'info', _meta);
         return reject(err);
       }
 
-      utils.log('Invitation created. Sending email.', 'info', { fromUser: fromUser, email: email });
-      emailNotifier.plainSend(email, 'Inbjudan att använda Fouse', getInvitationBody(invitation.token, fromUser))
-      .then(function (data) {
-        console.log(data);
+      var _inviteId = __invitation._id;
 
-        resolve(invitation);
-      })
-      .catch(function (err) {
-        utils.log('Failed to send invitation.', 'error', { error: err.toString(), fromUser: fromUser, email: email });
-
-
-        // Set the invitation to failed
-        invitation.failedSending = true;
-        invitation.save(function (_err, _invitation) {
-          utils.log('Setting invitation to failed.', 'info', { fromUser: fromUser, email: email })
-
-          // Reject the error
-          reject(err);
-        });
+      // Set the invitation to failed
+      __invitation.failedSending = true;
+        utils.log('Setting invitation to failed.', 'info', _.assign({}, { invitation_Id: _inviteId }, _meta))
+      __invitation.save(function (_err, _invitation) {
+        utils.log('Successfully set invitation to failed.', 'info', _.assign({}, { invitation_Id: _inviteId }, _meta))
+        // Reject the error
+        reject(err);
       });
     });
   });
