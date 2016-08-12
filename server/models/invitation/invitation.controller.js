@@ -70,10 +70,8 @@ function createInvitation(context) {
     .then(function (_invitation) {
       if (_invitation) {
         var _err = _.isUndefined(_invitation.toUser)
-          ? 'Valid invitation already exists.'
-          : 'Invitation already accepted.';
-
-        utils.print(_invitation, 10);
+          ? new Error('Valid invitation already exists.')
+          : new Error('Invitation already accepted.');
 
         utils.log('Cannot create invitation.', 'info', _.assign({}, { error: _err.toString() }, _meta));
 
@@ -95,7 +93,7 @@ function createInvitation(context) {
       utils.log('Failed to send invitation.', 'error', _.assign({}, { error: err.toString() }, _meta));
 
       if (!__invitation) {
-        utils.log('No invitation to set as failed.', 'info', _meta);
+        utils.log('No invitation to set as failed.', 'info', _.assign({}, { error: err.toString() }, _meta));
         return reject(err);
       }
 
