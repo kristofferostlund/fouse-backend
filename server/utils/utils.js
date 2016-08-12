@@ -4,7 +4,6 @@ var _ = require('lodash');
 var request = require('request');
 var Promise = require('bluebird');
 var moment = require('moment');
-var Browser = require('zombie');
 
 var config = require('../config');
 

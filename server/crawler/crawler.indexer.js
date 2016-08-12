@@ -9,7 +9,6 @@ var $ = require('cheerio');
 var utils = require('../utils/utils');
 var config = require('../config');
 
-// The URL for every rentable blocket ad. ish.
 var __baseURL = config.base_url;
 
 /**
