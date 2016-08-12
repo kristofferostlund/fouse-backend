@@ -17,7 +17,9 @@ router.get('/users/me', auth.isAuthenticated(), controller.user.me);
 router.get('/users/:id', auth.isAuthenticated(), controller.user.getUser);
 router.put('/users/:id', auth.isAuthenticated(), controller.user.updateUser);
 router.put('/users/:id/password', auth.isAuthenticated(), controller.user.updateUserPassword);
-router.post('/users/invite', auth.isAuthenticated(), controller.user.invite);
+
+router.post('/invitation/invite', auth.isAuthenticated(), controller.invitation.invite);
+router.post('/invitation/token/:token', auth.isInvited(), controller.invitation.handleInvitation);
 
 router.get('/home-items', auth.isAuthenticated(), controller.homeItems.listHomes);
 router.get('/home-items/:id', auth.isAuthenticated(), controller.homeItems.getHome);

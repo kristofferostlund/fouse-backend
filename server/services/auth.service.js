@@ -5,10 +5,18 @@ var compose = require('composable-middleware');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
 var Promise = require('bluebird');
+var moment = require('moment');
 
 var User = require('./../models/user/user.model');
+var Invitation = require('./../models/invitation/invitation.model');
 var config = require('./../config');
 var utils = require('./../utils/utils');
+
+/**
+ * TODO:
+ * - Create base of user upon clicking invitation link and let the user
+ *   set up their account.
+ */
 
 /**
  * Validates *email* address format and returns a Boolean value.
@@ -92,6 +100,48 @@ function isAuthenticated (req, res, next) {
     .catch(function (err) {
       return utils.handleError(res, err);
     });
+  });
+}
+
+/**
+ * Middlewhare for ensuring an invitation is present.
+ *
+ * @param {Object} req Express request object
+ * @param {Object} res Express response object
+ * @param {Function} next Express next function
+ */
+function isInvited (req, res, next) {
+  var _token;
+
+  return compose().use(function (req, res, next) {
+    _token = req.params.token;
+
+    var _opts = {
+      token: _token,
+      // We don't want any answered invitations
+      isAnswered: { $ne: true, },
+      // nor can they be disabled
+      disabled: { $ne: true },
+      // they must be valid as well
+      dateValidTo: { $gt: new Date() },
+      dateValidFrom: { $lte: new Date() },
+    };
+
+    return Invitation.findOne(_opts)
+    .exec()
+    .then(function (invitation) {
+      req.invitation = invitation;
+
+      if (!invitation) {
+        return res.status(400).send('Invalid invitation token');
+      }
+
+      next();
+    })
+    .catch(function (err) {
+      utils.handleError(res, err);
+    });
+
   });
 }
 
@@ -193,6 +243,7 @@ function validatePassword (hashedPassword, plainPassword) {
 
 module.exports = {
   isAuthenticated: isAuthenticated,
+  isInvited: isInvited,
   validateEmail: validateEmail,
   signToken: signToken,
   decodeToken: decodeToken,

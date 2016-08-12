@@ -144,34 +144,6 @@ function login(req, res) {
   });
 }
 
-/**
- * Route POST 'api/users/invite'
- */
-function invite(req, res) {
-  var user = {
-    _id: req.user._id.toString(),
-    name: req.user.name,
-    email: req.user.email,
-  };
-
-  var email = _.get(req, 'body.email');
-
-  InvitationController.createInvitation({
-    email: email,
-    fromUser: user,
-  })
-  .then(function (data) {
-    res.status(200).send(data);
-  })
-  .catch(function (err) {
-    if (/missing user|invalid email|already exists|invitation already/i.test(err.message)) {
-      res.status(400).send(err.message);
-    } else {
-      utils.handleError(res, err);
-    }
-  })
-}
-
 module.exports = {
   listUsers: listUsers,
   getUser: getUser,
@@ -180,5 +152,4 @@ module.exports = {
   updateUser: updateUser,
   updateUserPassword: updateUserPassword,
   login: login,
-  invite: invite,
 }
