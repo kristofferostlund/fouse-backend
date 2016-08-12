@@ -6,10 +6,18 @@ var Promise = require('bluebird');
 var moment = require('moment');
 var cheerio = require('cheerio');
 var later = require('later');
+var Browser = require('zombie');
 
 var config = require('../config');
 
 var logger = require('./logger.utils');
+
+
+/**************************************************************
+ * TODO:
+ * - Authenticate against the website to get all phone numbers
+ *   maybe using Zombie or even PhantomJS.
+ **************************************************************/
 
 /**
  * Information about
@@ -22,11 +30,6 @@ var __thirdPartyScriptInfo = { body: '', _version: '2.1.1', _baseUrl: 'http://m.
 var fetchThirdPartySchedule = later.parse.recur()
   .every(5).hour()
   .on(1).dayOfWeek();
-
-/**
- * TODO:
- * - Authenticate against the website to get all phone numbers
- */
 
 /**
  * @param {String} message
