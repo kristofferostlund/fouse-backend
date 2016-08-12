@@ -164,7 +164,7 @@ function invite(req, res) {
     res.status(200).send(data);
   })
   .catch(function (err) {
-    if (/missing user|invalid email|already exists/i.test(err.message)) {
+    if (/missing user|invalid email|already (exists|accepted)/i.test(err.message)) {
       res.status(400).send(err.message);
     } else {
       utils.handleError(res, err);

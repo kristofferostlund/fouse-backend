@@ -65,6 +65,21 @@ function createInvitation(context) {
         return Promise.reject(_err);
       }
 
+      return Invitation.findOne({ email: email, $or: [ { dateValidTo: { $gt: new Date() } }, { toUser: { $exists: true } } ] })
+    })
+    .then(function (_invitation) {
+      if (_invitation) {
+        var _err = _.isUndefined(_invitation.toUser)
+          ? 'Valid invitation already exists.'
+          : 'Invitation already accepted.';
+
+        utils.print(_invitation, 10);
+
+        utils.log('Cannot create invitation.', 'info', _.assign({}, { error: _err.toString() }, _meta));
+
+        return Promise.reject(_err)
+      }
+
       return Invitation.create({ email: email, fromUser: fromUser })
     })
     .then(function (invitation) {
