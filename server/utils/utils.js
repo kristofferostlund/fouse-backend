@@ -305,7 +305,7 @@ function getShortUrl(homeItem) {
 
       var shortUrl = data.url;
 
-      log('Successfully got shortened url', 'info', { url: _url, shortUrl: shortUrl, data: data });
+      log('Successfully got shortened url', 'info', { url: _url, shortUrl: shortUrl });
 
       // Resolve the shortened url
       resolve(shortUrl);

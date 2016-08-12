@@ -80,7 +80,7 @@ function getTel(url) {
       return Promise.resolve(phoneNumber);
     })
     .then(function (data) {
-      // Kill the browser
+      // Null the browser reference
       browser = null;
 
       // Resolve the value
@@ -88,6 +88,9 @@ function getTel(url) {
     })
   })
   .catch(function (err) {
+    // Null the browser reference
+    browser = null;
+
     if (/phone\-number\.json./i.test(err)) {
       // Can't bother with the error.
       log('Something went wrong with getting the the \'phone-number.json\'.', 'info', { error: err.toString() });
