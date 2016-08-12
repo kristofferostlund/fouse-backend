@@ -41,11 +41,31 @@ function getPageAt(pageNum) {
  */
 function getAndSavePageAt(pageNum) {
   return indexer.getIndexPage(pageNum)
+  .then(cleanUrls)
   .then(filterOutExisting)
   .then(itemHandler.getManyItemPages)
   .then(analyser.classify)
   .then(analyser.shortenUrls)
   .then(homeItem.createHistorical);
+}
+
+/**
+ * Cleans the URLs of all *indexItems* by removing the query params
+ * and returns a promise of the result.
+ *
+ * @param {Array|Object} indexItems
+ * @return {Promise}
+ */
+function cleanUrls(indexItems) {
+  var _indexItems = _.isArray(indexItems)
+    ? indexItems
+    : [ indexItems ];
+
+  return Promise.resolve(
+    _.map(_indexItems, function (item) {
+      return _.assign({}, item, { url: (item.url || '').replace(/(\?.+)$/, '') })
+     })
+  );
 }
 
 /**
@@ -56,13 +76,11 @@ function getAndSavePageAt(pageNum) {
  */
 function filterOutExisting(indexItems) {
   return new Promise(function (resolve, reject) {
+    var _indexItems = _.isArray(indexItems)
+      ? indexItems
+      : [ indexItems ];
 
-    var _indexItems =
-    _.isArray(indexItems)
-    ? indexItems
-    : [ indexItems ];
-
-    HomeItem.find({ disabled: { $ne: true }, url: { $in: _.map(_indexItems, function (item) { return _.isObject(item) ? item.url : item; }) } })
+    HomeItem.find({ disabled: { $ne: true }, url: { $in: _.map(_indexItems, 'url') } })
     .exec(function (err, items) {
       // If an error occured, assume everything is fine.
       if (err) { items = []; }

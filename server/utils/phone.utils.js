@@ -12,7 +12,6 @@ var logger = require('./logger.utils');
 
 /**
  * TODO:
- * - Validate getTel actually works
  * - Authenticate against the website to get all phone numbers
  */
 
@@ -80,7 +79,7 @@ function getTel(url) {
 
       return Promise.resolve(phoneNumber);
     })
-    .then(function () {
+    .then(function (data) {
       // Kill the browser
       browser = null;
 

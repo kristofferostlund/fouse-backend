@@ -93,14 +93,7 @@ function processManyItemPages(contents) {
     return function () { return processItemPage(content); }
   })
 
-  return utils.sequence(_promFuncs)
-  .then(function (data) {
-    console.log('\n\n\n');
-    console.log('Well here????');
-    console.log('\n\n\n');
-
-    return Promise.resolve(data);
-  })
+  return utils.chunkSequence(_promFuncs, 10);
 }
 
 /**
