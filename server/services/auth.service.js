@@ -29,6 +29,16 @@ function validateEmail(email) {
 }
 
 /**
+ * Validates the token to ensure it's of correct format.
+ *
+ * @param {String} token
+ * @return {Boolean}
+ */
+function validateGuidToken(token) {
+  return /^[0-9a-f]{10}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{15}$/.test(token);
+}
+
+/**
  * Finds the token from either query params, headers or cookies
  * and return it token.
  *
@@ -245,6 +255,7 @@ module.exports = {
   isAuthenticated: isAuthenticated,
   isInvited: isInvited,
   validateEmail: validateEmail,
+  validateGuidToken: validateGuidToken,
   signToken: signToken,
   decodeToken: decodeToken,
   encryptPassword: encryptPassword,

@@ -7,10 +7,15 @@ var _ = require('lodash');
 var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
-var InvitationSchema = new Schema({
-  email: {
-    type: String,
+var ResetTokenSchema = new Schema({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
+  },
+  token: {
+    type: String,
+    default: guid(),
   },
   dateValidFrom: {
     type: Date,
@@ -18,34 +23,9 @@ var InvitationSchema = new Schema({
   },
   dateValidTo: {
     type: Date,
-    default:  moment().add(1, 'week').toDate().getTime(),
+    default:  moment().add(1, 'hour').toDate().getTime(),
   },
-  dateInvited: {
-    type: Date,
-    default: Date.now,
-  },
-  fromUser: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  toUser: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  token: {
-    type: String,
-    default: guid(),
-  },
-  dateAccepted: Date,
-  /**
-   * If isAnswered is true and toUser is populated
-   * the invitation was successful.
-   */
-  isAnswered: Boolean,
-  failedSending: {
-    type: Boolean,
-    default: false,
-  },
+  isUsed: Boolean,
   dateCreated: {
     type: Date,
     default: Date.now,
@@ -57,15 +37,12 @@ var InvitationSchema = new Schema({
   disabled: Boolean,
 });
 
-InvitationSchema.pre('save', function (next) {
+ResetTokenSchema.pre('save', function (next) {
   this.dateModified = new Date();
-
-  this.email = this.email.toLowerCase();
-
   next();
 });
 
-module.exports = mongoose.model('Invitation', InvitationSchema);
+module.exports = mongoose.model('ResetToken', ResetTokenSchema);
 
 /**
  * Returns a GUID string.

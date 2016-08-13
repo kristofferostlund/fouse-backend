@@ -2,7 +2,6 @@
 
 var _ = require('lodash');
 var Promise = require('bluebird');
-var chalk = require('chalk');
 var moment = require('moment');
 
 var emailNotifier = require('./../../notifier/notifier.email');

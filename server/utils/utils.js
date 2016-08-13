@@ -454,6 +454,20 @@ function print (message, verticalPadding, asIs) {
   if (!!verticalPadding) { console.log(_.times(verticalPadding, function () { return '\n' }).join('')); }
 }
 
+/**
+ * Wraps the Mongoose save function in a promise.
+ *
+ * @param {Object} model Mongoose model to be saved
+ * @return {Promise<Object>}
+ */
+function savePromise(model) {
+  return new Promise(function (resolve, reject) {
+    model.save(function (err, _model) {
+      if (err) { return reject(err); }
+      resolve(_model);
+    });
+  });
+}
 
 module.exports = {
   log: log,
@@ -474,4 +488,5 @@ module.exports = {
   reflect: reflect,
   settle: settle,
   print: print,
+  savePromise: savePromise,
 };

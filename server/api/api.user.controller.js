@@ -7,6 +7,7 @@ var User = require('./../models/user/user.model');
 var UserController = require('./../models/user/user.controller');
 var Invitation = require('./../models/invitation/invitation.model');
 var InvitationController = require('./../models/invitation/invitation.controller');
+var ResetTokenController = require('./../models/resetToken/resetToken.controller');
 var utils = require('./../utils/utils');
 var auth = require('./../services/auth.service');
 
@@ -142,6 +143,26 @@ function login(req, res) {
       utils.handleError(res, err);
     }
   });
+}
+
+/**
+ * Route PUT '/api/users/reset-password'
+ */
+function resetPassword(req, res) {
+  var _token = req.body.token;
+  var _password = req.body.password;
+
+  ResetTokenController.resetPassword(_token, _password)
+  .then(function (token) {
+    res.status(204).send('Password updated');
+  })
+  .catch(function (err) {
+    if (/missing|invalid|not found/i.test(err.message)) {
+      res.status(400).send(err.message);
+    } else {
+      utils.handleError(res, err);
+    }
+  })
 }
 
 module.exports = {
