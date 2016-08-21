@@ -1,8 +1,5 @@
-# Home Please
+# Fouse backend
 
-### lol
-A home service used for notifying me about interesting homes found lying around the internet.
+_Note: Major update in progress on the branch: [api](https://github.com/kristofferostlund/home_please/tree/api)_
 
-lol
-
----
+Backend service for Fouse, a service to get an up to date and tailored experience of second hand letting in Sweden.
