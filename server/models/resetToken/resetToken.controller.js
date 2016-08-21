@@ -60,6 +60,7 @@ function resetPassword(token, password) {
       return Promise.reject(_err);
     }
 
+    // Set the user password and store it
     user.password = auth.encryptPassword(password);
     return utils.savePromise(user);
   })
