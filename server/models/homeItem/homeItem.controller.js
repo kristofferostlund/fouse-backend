@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 var moment = require('moment');
 var chalk = require('chalk');
 
-var utils = require('../../utils/general.utils');
+var utils = require('../../utils/utils');
 var config = require('../../config');
 var HomeItem = require('./homeItem.model');
 var homeMatch = require('./homeItem.match');
@@ -20,7 +20,7 @@ function create(_home) {
   return new Promise(function (resolve, reject) {
     HomeItem.create(_home, function (err, home) {
       if (err) {
-        console.log(err);
+        utils.log('Something wen wrong when creating HomeItem(s).', 'error', { error: err.toString(), homeItemsLength: _.isArray(_home) ? _home.length : 1 });
         reject(err);
       } else {
         resolve(home);
@@ -80,17 +80,20 @@ function createHistorical(_homeItem) {
 
           vals = _.map(vals, function (val) { return val.value(); });
 
-          console.log(vals.length + ' homeItems disabled.');
+          utils.log(vals.length + ' homeItems disabled.');
         })
         .catch(function (err) {
-          console.log(err);
+          utils.log('Something went wrong when disabling historical HomeItem(s)', 'error', { error: err.toString() });
         });
 
         // Insert new and updated
         create(toInsert)
         .then(function (homeItems) {
-          console.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
+          utils.log((homeItems ? homeItems.length : '0') + ' homeItems created.');
           resolve(homeItems);
+        }).catch(function (err) {
+          utils.log('Something went wrong when creating historical HomeItem(s)', 'error', { error: err.toString() });
+          reject(err);
         });
       }
     });
@@ -267,20 +270,16 @@ function getItemsOfInterest(_options) {
         reject(err);
       } else {
         if (items && items.length) {
-          console.log(chalk.blue([
-            'Found',
-            items.length,
-            'ineresting items!'
-          ].join(' ')))
+          utils.log('Found items of intereset.', 'info', { homeItemsLength: items.length });
         }
 
-        Promise.settle(_.map(items, function (item) { return setNotified(item); }))
-        .then(function (_items) {
-          resolve(items);
-        })
+        /**
+         * This one is allowed to fail
+         */
+        Promise.all(_.map(items, setNotified))
+        .then(resolve)
         .catch(function (err) {
-
-          console.log(err);
+          utils.log('Something went wrong when finding items of intereset.', 'error', { erro: err.toString() });
           resolve(items);
         });
       }

@@ -8,7 +8,7 @@ var path = require('path');
 var moment = require('moment');
 var request = require('request');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 var userController = require('../models/user/user.controller');
@@ -27,13 +27,10 @@ var qasaNotifier = require('./notifier.qasa');
  */
 function notify(homeItems) {
   return new Promise(function (resolve, reject) {
-
     if (homeItems && homeItems.length) {
 
       var promises = _.chain([
-        emailNotifier.sendEmail(homeItems),
         asanaNotifier.createAsanaTasks(homeItems),
-        _.map(homeItems, smsNotifier.sendSms)
       ])
       .flatten()
       .filter()
@@ -44,7 +41,7 @@ function notify(homeItems) {
         resolve(_.map(data, function (val, i) { return val.isRejected() ? val.reason() : val.value() }))
       })
       .catch(function (err) {
-        console.log(err);
+        utils.log('Something went wrong when sending notifications.', 'error', { error: err.toString() });
         resolve(homeItems);
       });
     } else {

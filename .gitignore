@@ -5,3 +5,4 @@ typings
 null
 .env
 .logs
+*.log

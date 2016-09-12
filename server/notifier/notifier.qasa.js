@@ -6,7 +6,7 @@ var request = require('request');
 var moment = require('moment');
 var request = require('request');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 /**
@@ -101,22 +101,12 @@ function notify(homeItems, resolveResults) {
 
     // Don't notify if it's not specifically true
     if (!(config.qasa_notify === true)) {
-      console.log(
-        'Would have notified Qasa about {num} HomeItem(s) at {time}'
-          .replace('{num}', _toNotify.length)
-          .replace('{time}', moment().format('YYYY-MM-DD, HH:mm'))
-      );
+      utils.log('No notifications to Qasa are sent out.', 'info', { homeItemLength: _toNotify.length });
       // Return early and resolve
       return resolve(resolveResults === true ? [] : homeItems);
     }
 
-    // Log the homeItems
-    console.log(
-      'Notifying Qasa about {num} HomeItem(s) at {time}\n{items}\n'
-        .replace('{num}', _toNotify.length)
-        .replace('{time}', moment().format('YYYY-MM-DD, HH:mm'))
-        .replace('{items}', _.map(_toNotify, '_id').join('\n'))
-    );
+    utils.log('Notifying Qasa.', 'info', { homeItemLength: _toNotify.length, homeItems: _.map(_toNotify, '_id') });
 
     // Get all the notify promises
     var _promises = _.chain(_toNotify)
@@ -126,13 +116,19 @@ function notify(homeItems, resolveResults) {
 
     Promise.all(_promises)
     .then(function (vals) {
+
+    utils.log('Successfully notified Qasa.', 'info', { homeItemLength: _toNotify.length, homeItems: _.map(_toNotify, '_id') });
+
       resolve(
         resolveResults === true
           ? _.map(vals, function (val) { return val.isRejected() ? val.reason() : val.value(); })
           : homeItems
       );
     })
-    .catch(reject);
+    .catch(function (err) {
+      utils.log('Failed to notify Qasa', 'error', { error: err.toString() });
+      reject(err);
+    });
   });
 }
 

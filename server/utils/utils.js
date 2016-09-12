@@ -4,11 +4,58 @@ var _ = require('lodash');
 var request = require('request');
 var Promise = require('bluebird');
 var moment = require('moment');
-var Browser = require('zombie');
-var DataObjectParser = require('dataobject-parser')
 
 var config = require('../config');
 
+var logger = require('./logger.utils');
+
+var phone = require('./phone.utils');
+
+/**
+ * @param {String} message
+ * @param {String} [level='info']
+ * @param {Object} [meta]
+ */
+function log(message, level, meta) {
+  // Set default value of level
+  level = _.isString(level) ? level : 'info';
+
+  return !_.isUndefined(meta)
+    ? logger.log(level, message, meta)
+    : logger.log(level, message);
+}
+
+/**
+ * @param {String} message
+ * @param {String} [level='info']
+ * @param {Object} [meta]
+ * @param {Function} [resolve=Promise.resolve]
+ */
+function logResolve(data, message, level, meta, resolve) {
+  // Set default value of resolve
+  resolve = _.isFunction(resolve) ? resolve : Promise.resolve;
+
+  // Log it
+  log(message, level, meta);
+
+  return resolve(data);
+}
+
+/**
+ * @param {String} message
+ * @param {String} [level='info']
+ * @param {Object} [meta]
+ * @param {Function} [reject=Promise.reject]
+ */
+function logReject(data, message, level, meta, reject) {
+  // Set default value of reject
+  reject = _.isFunction(reject) ? reject : Promise.reject;
+
+  // Log it
+  log(message, level, meta);
+
+  return reject(data);
+}
 /**
  * Returns true or false for all properties of *target* matches those of *source*.
  * Any property names matching an elemtn in *exclude* won't be checked.
@@ -68,9 +115,9 @@ function lazyCompare(source, target, exclude) {
  * @param {String} url - URI to request
  * @param {Object} options - optional, options object
  * @parma {Boolean} doParse
- * @return {Promie} -> {String|Object}
+ * @return {Promie<String|Object>}
  */
-function getPage(url, options, doParse) {
+function get(url, options, doParse) {
   return new Promise(function (resolve, reject) {
     // *options* must be an object
     if (!_.isObject(options)) { options = {}; }
@@ -117,24 +164,33 @@ function getManyPages(items, options, urls, pages) {
   if (!urls) {
     urls = _.map(items, function (item) { return _.isObject(item) ? item.url : item; });
     pages = [];
-    console.time('Fetching ' + urls.length + ' items')
+    log('Fetching home items.', 'info', { homeItemsLength: urls.length });
   }
 
   if (items.length === pages.length) {
     return new Promise(function (resolve, reject) {
-      console.timeEnd('Fetching ' + urls.length + ' items')
-      console.log('All pages gotten!');
+      log('Completed fetching home items. All pages gotten', 'info', { homeItemsLength: urls.length });
       resolve(pages);
     });
   }
 
-  var toGet = _.map(urls.slice(pages.length, pages.length + 50), function (url) { return getPage(url, options); });
+  var toGet = _.map(urls.slice(pages.length, pages.length + 50), function (url) { return get(url, options); });
 
-  return Promise.settle(toGet)
+  return Promise.all(_.map(toGet, function (prom) { return _.isFunction(prom.reflect) ? prom.reflect() : Promise.resolve(prom).reflect() }))
   .then(function (_pages) {
-    var res = _.map(_pages, function (val) { return val.value(); });
-    console.log(res.length + ' pages fetched.', new Date().toISOString());
-    return getManyPages(items, options, urls, pages.concat(res));
+    var res = _.map(_pages, function (val) { return val.isRejected() ? val.reason() : val.value(); });
+
+    var _pages = pages.concat(res);
+
+    log(
+      '{part}/{all} pages gotten'
+        .replace('{part}', _pages.length)
+        .replace('{all}', urls.length),
+      'info',
+      { fetchedLength: _pages.length, homeItemsLength: urls.length }
+    );
+
+    return getManyPages(items, options, urls, _pages);
   });
 }
 
@@ -208,197 +264,6 @@ function getClosestDate(month, day, baseDate) {
 }
 
 /**
- * Checks whether *content* contains either phonenumber-btn or show-phonenumber,
- * which indicates there's a phone number in the ad.
- *
- * @param {String} content
- * @return {Boolean}
- */
-function hasTel(content) {
-  return /phonenumber\-btn|show\-phonenumber/i.test(content);
-}
-
-/**
- * Returns the phone number from an item page
- * by visiting its mobile page using Zombie, a headless browser.
- *
- * TODO: Add retries.
- *
- * @param {String} url
- * @return {Promise} -> {String}
- */
-
-function getTel(url) {
-  return new Promise(function (resolve, reject) {
-
-    var browser = new Browser({ debug: true });
-
-    // replace 'www' with 'm' to get the mobile page
-    var _url = url.replace(/www(?=\.blocket\.se)/, 'm');
-
-    // Navigate to the page
-    browser.visit(_url, function () {
-
-      var phoneLink = _.attempt(function () { return browser.document.querySelector('#show-phonenumber'); });
-
-      // If no phonelink can be found, return an empty string
-      if (!phoneLink || _.isError(phoneLink)) {
-        browser = null;
-        return resolve(); /* No tel found. */
-      }
-
-      console.log('Found phone number at {url}, clicking button to get it.'.replace('{url}', _url));
-
-      // Click the link
-      browser.clickLink('#show-phonenumber')
-      .then(function () {
-
-        var phoneNumber = _.attempt(function () { return browser.document.querySelector('#show-phonenumber .button-label').textContent; });
-
-        if (_.isError(phoneNumber)) {
-          console.log('Couldn\'t get the phone number.');
-          browser = null;
-          return resolve();
-        }
-
-        console.log('Found phone number: ' + phoneNumber);
-
-        browser = null;
-
-        resolve(phoneNumber);
-      })
-      .catch(function (err) {
-        browser = null;
-        if (/phone\-number\.json./i.test(err)) {
-          // Can't bother with the error.
-          console.log('Something went wrong with getting the the \'phone-number.json\'.');
-          resolve();
-        } else {
-          console.log('Something went wrong when getting the phone number.');
-          resolve();
-        }
-      });
-    });
-  });
-}
-
-/**
- * Returns a new object where property names
- * with dots are converted into nested objects and arrays.
- *
- * Example: { 'prop.sub': 'value' } -> { prop: { sub: value } }
- *
- * @param {Array|Object} dotArray
- * @return {Array|Object}
- */
-function objectify(dotArray) {
-  // Ensure it's an array
-  var isObj;
-  if (!_.isArray(dotArray)) {
-    dotArray = [ dotArray ];
-    isObj = true;
-  }
-
-  var arr = _.map(dotArray, function (dotObject) {
-    var d = new DataObjectParser();
-
-    // Get all values
-    _.forEach(dotObject, function (value, key) {
-      // If there's an array of dotted objects, recursive value
-
-      if (_.isArray(value) && _.some(value, _.isObject)) {
-        if (key)
-        d.set(key, objectify(value));
-      } else {
-        d.set(key, value);
-      }
-    });
-
-    var output = d.data();
-    var keys = _.map(dotArray, function (v, key) { return key; });
-
-    return d.data();;
-  });
-
-  return isObj ? _.first(arr) : arr;
-}
-
-/**
- * Returns the object ready for querying.
- *
- * @param {Object} _options
- * @return {Object}
- */
-function querify(_options) {
-
-  // Nothing to go about
-  if (!_options) { return {}; }
-
-  // Allow either a user object or onlu its options to be used.
-  var options = !!_options.options
-    ? (_options._doc || _options).options
-    : (_options._doc  || _options);
-
-  var __options = _.assign(
-    {
-      // Default options
-      disabled: { $ne: true },
-      notified: { $ne: true },
-      active: true
-    }
-    , {
-      // User options
-      price: _.isUndefined(options.price)
-        ? undefined
-        : { $lte: options.price },
-      // At least one of these must be met.
-      // Any object without a value will be filtered out
-      $or: _.filter([
-        {
-          // Get time period object, which, if there're any properties of time.period, will be $gte or $lte min or max,
-          // otherwise it'll be undefined.
-          'time.period': _.isUndefined(_.get(options, 'time.period.min') || _.get(options, 'time.period.max'))
-            ? undefined
-            : _.assign(
-              {}
-            , _.isUndefined(_.get(options, 'time.period.min')) ? undefined : { $gte: _.get(options, 'time.period.min') }
-            , _.isUndefined(_.get(options, 'time.period.max')) ? undefined : { $lte: _.get(options, 'time.period.max') }
-            )
-        },
-        {
-          'time.isLongTerm': _.isUndefined(_.get(options, 'time.isLongTerm'))
-            ? undefined
-            : options.time.isLongTerm
-        },
-        {
-          end: _.isUndefined(_.get(options, 'time.period.min') || _.get(options, 'time.period.max'))
-            ? undefined
-            : null
-        }
-      ], function (item) { return !_.all(item, _.isUndefined); })
-    }
-    , _.chain(options.classification)
-      .map(function (val, key) {
-        return [
-          ['classification', key].join('.'),
-          (
-            // If it's undefined, don't bother with it,
-            // if it's truthy, return true, if it's falsy, negate true.
-            _.isUndefined(val)
-              ? undefined
-              : (!!val || { $ne: true })
-          )
-        ]
-      })
-      .filter()
-      .zipObject()
-      .value()
-    );
-
-  return __options;
-}
-
-/**
  * Returns a shortened BitLy URL for *homeItem* (either string or URL).
  *
  * @param {Object|String} homeItem HomeItem or URL to shorten URL for
@@ -417,22 +282,37 @@ function getShortUrl(homeItem) {
       encodeURI(_url.replace('?', '/?'))
     ].join('');
 
-    console.log('Getting shortened URL for : ' + _url);
+    log('Getting shortened URL.', 'info', { url: _url });
 
-    getPage(bitlyUrl)
+    get(bitlyUrl)
     .then(function (bitly) {
-      // Try parse the shortened url
-      var shortUrl = _.attempt(function () { return JSON.parse(bitly).data.url; });
+      // Try to parse and/or get the data
+      var data = _.attempt(function () { return JSON.parse(bitly).data || bitly.data; });
 
-      // Handle errors
-      if (_.isError(shortUrl)) { return reject(shortUrl); }
+      var _err;
 
-      console.log('Successfully got shortened url for : ' + _url + ', which is: ' + shortUrl);
+      if (!data) {
+        _err = new Error('No Bitly data received');
+      } else if (_.isError(data)) {
+        _err = data;
+      }
+
+      if (_err) {
+        log('Failed to shorten url.', 'info', { url: _url, error: _err.toString() });
+        return reject(_err);
+      }
+
+      var shortUrl = data.url;
+
+      log('Successfully got shortened url', 'info', { url: _url, shortUrl: shortUrl });
 
       // Resolve the shortened url
       resolve(shortUrl);
     })
-    .catch(reject);
+    .catch(function (err) {
+      log('Failed to shorten url.', 'info', { url: _url, error: err.toString() });
+      reject(err);
+    });
   });
 }
 
@@ -481,27 +361,132 @@ function chunkSequence(promiseFunctions, chunkSize, finished) {
 }
 
 /**
+ * Recursively calls all *promises* in sequence
+ * and resolve when all promises are finished.
+ *
+ * Takes both pure promises and functions returning promises.
+ *
+ * NOTE: If the array contains functions, these mustn't require parameters,
+ * as *sequence* won't pass in any at the moment.
+ *
+ * @param {Array} promises Array of promises to perform
+ * @param {Array} output The output array, do not set!
+ * @return {Promise<[]>}
+ */
+function sequence(promises, output) {
+    // Make sure output is defined
+    if (_.isUndefined(output)) { output = []; }
+
+    // Make sure promises is difined
+    if (_.isUndefined(promises)) { promises = []; }
+
+    // When finished
+    if (promises.length === output.length) {
+      return Promise.resolve(output);
+    }
+
+    // Allow both promises and functions returning promises be used.
+    var _promise = _.isFunction(promises[output.length])
+        ? promises[output.length]()
+        : promises[output.length];
+
+    // Call the promise and then return recursively
+    return _promise.then(function (result) {
+        // Recursion
+        return sequence(promises, output.concat([result]));
+    })
+    ['catch'](function (err) {
+        // Recursion
+        return sequence(promises, output.concat([err]));
+    });
+}
+
+/**
  * @param {Object} res Express response object
  * @param {Error} err
  */
 function handleError(res, err) {
   res.status(500).send('Internal error');
-  console.log('The following error occured: ' + err.toString());
+  log('The following error occured: ' + err.toString());
+}
+
+/**
+ * @param {Promise[]|Promise} items
+ * @return {Promise[]|Promise}
+ */
+function reflect(items) {
+  return _.isArray(items)
+    ? _.map(items, function (item) { return _.isFunction(item.reflect) ? item.reflect() : Promise.resolve(item).reflect() })
+    : _.isFunction(items.reflect) ? items.reflect() : Promise.resolve(items).reflect();
+}
+
+/**
+ * @param {Promise[]} promises
+ * @return {Promise<[]>}
+ */
+function settle(promises) {
+  return Promise.all(_.map(promises, reflect))
+  .then(function (vals) {
+    return Promise.resolve(_.map(vals, function (val) { return val.isRejected() ? val.reason() : val.value(); }))
+  });
+}
+
+/**
+ * @param {Any} message The message to print
+ * @param {Number} verticalPadding Vertical padding as number of '\n', if 0 then none.
+ * @param {Boolean} asIs Should *message* be printed as is? Defaults to false
+ */
+function print (message, verticalPadding, asIs) {
+  // Use default values if undefined
+  verticalPadding = !_.isUndefined(verticalPadding) ? verticalPadding : 0;
+  asIs = !_.isUndefined(asIs) ? asIs : false;
+
+  if (!!verticalPadding) { console.log(_.times(verticalPadding, function () { return '\n' }).join('')); }
+  if (_.some([
+    _.isError(message),
+    _.isString(message),
+    _.isNumber(message),
+    _.isUndefined(message),
+  ])) { asIs = true; }
+  log(
+    !!asIs ? message : JSON.stringify(message, null, 4)
+  );
+  if (!!verticalPadding) { console.log(_.times(verticalPadding, function () { return '\n' }).join('')); }
+}
+
+/**
+ * Wraps the Mongoose save function in a promise.
+ *
+ * @param {Object} model Mongoose model to be saved
+ * @return {Promise<Object>}
+ */
+function savePromise(model) {
+  return new Promise(function (resolve, reject) {
+    model.save(function (err, _model) {
+      if (err) { return reject(err); }
+      resolve(_model);
+    });
+  });
 }
 
 module.exports = {
-  getPage: getPage,
+  log: log,
+  logResolve: logResolve,
+  logReject: logReject,
+  get: get,
   getManyPages: getManyPages,
   lazyCompare: lazyCompare,
   escapeRegex: escapeRegex,
   literalRegExp: literalRegExp,
   nextMonth: nextMonth,
   getClosestDate: getClosestDate,
-  hasTel: hasTel,
-  getTel: getTel,
-  objectify: objectify,
-  querify: querify,
+  phone: phone,
   getShortUrl: getShortUrl,
   chunkSequence: chunkSequence,
+  sequence: sequence,
   handleError: handleError,
+  reflect: reflect,
+  settle: settle,
+  print: print,
+  savePromise: savePromise,
 };

@@ -8,7 +8,7 @@ var moment = require('moment');
 var timeAnalyser = require('./analyser.time');
 var locationAnalyser = require('./analyser.location');
 var HomeItem = require('../models/homeItem/homeItem.model');
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 
 /**
  * @param {String} body
@@ -74,12 +74,7 @@ function getClassification(homeItem) {
     .then(resolve)
     .catch(function (err) {
 
-      console.log(
-        chalk.red(
-          'Something went wrong with fetchin location data for {url}.\nResolving object without location data.'
-            .replace('{url}', homeItem.url)
-        )
-      );
+      utils.log('Could not get location data', 'info', { url: homeItem.url, error: err.toString() });
 
       // Something went wrong with the location, but keep going.
       resolve(_homeItem);
@@ -109,7 +104,7 @@ function classify(homeItems) {
       resolve(_.map(data, function (val, i) { return val.isRejected() ? homeItems[i] : val.value() }))
     })
     .catch(function (err) {
-      console.log(err);
+      utils.log('Something went wrong when classifying home items.', 'error', { error: err.toString(), homeItemsLength: homeItems.length });
       resolve(homeItems);
     });
   });
@@ -139,8 +134,7 @@ function shortenUrls(homeItems) {
         })
         .catch(function (err) {
           // Log the error
-          console.log('Could not get short url for {url}:'.replace('{url}', homeItem.url));
-          console.log(err);
+          utils.log('Could not get shortened url', 'error', { error: err.toString(), url: homeItem.url });
 
           // Still resolve though
           resolve(homeItem);
@@ -153,7 +147,7 @@ function shortenUrls(homeItems) {
       resolve(_.map(data, function (val, i) { return val.isRejected() ? homeItems[i] : val.value(); }));
     })
     .catch(function (err) {
-      console.log(err);
+      utils.log('Something went wrong when shortening URLs.', 'error', { errror: err.toString() });
       resolve(homeItems);
     });
   });

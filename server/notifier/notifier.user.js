@@ -12,7 +12,7 @@ var homeController = require('../models/homeItem/homeItem.controller');
 
 var sms = require('./notifier.sms');
 var email = require('./notifier.email');
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 /**

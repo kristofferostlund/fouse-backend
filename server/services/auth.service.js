@@ -4,10 +4,19 @@ var _ = require('lodash');
 var compose = require('composable-middleware');
 var jwt = require('jsonwebtoken');
 var bcrypt = require('bcryptjs');
+var Promise = require('bluebird');
+var moment = require('moment');
 
 var User = require('./../models/user/user.model');
+var Invitation = require('./../models/invitation/invitation.model');
 var config = require('./../config');
-var utils = require('./../utils/general.utils');
+var utils = require('./../utils/utils');
+
+/**
+ * TODO:
+ * - Create base of user upon clicking invitation link and let the user
+ *   set up their account.
+ */
 
 /**
  * Validates *email* address format and returns a Boolean value.
@@ -17,6 +26,16 @@ var utils = require('./../utils/general.utils');
  */
 function validateEmail(email) {
   return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email);
+}
+
+/**
+ * Validates the token to ensure it's of correct format.
+ *
+ * @param {String} token
+ * @return {Boolean}
+ */
+function validateGuidToken(token) {
+  return /^[0-9a-f]{10}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{15}$/.test(token);
 }
 
 /**
@@ -79,7 +98,7 @@ function isAuthenticated (req, res, next) {
     return User.findById(_userId)
     .then(function (user) {
       // Add the user to the response
-      req.user = user;
+      req.user = (_.get(user, '_doc') || user);
 
       // If there is no registered user, return a 401 unauthorized
       if (!_.get(user, '_id')) {
@@ -90,6 +109,102 @@ function isAuthenticated (req, res, next) {
     })
     .catch(function (err) {
       return utils.handleError(res, err);
+    });
+  });
+}
+
+/**
+ * Middlewhare for ensuring an invitation is present.
+ *
+ * @param {Object} req Express request object
+ * @param {Object} res Express response object
+ * @param {Function} next Express next function
+ */
+function isInvited (req, res, next) {
+  var _token;
+
+  return compose().use(function (req, res, next) {
+    _token = req.params.token;
+
+    var _opts = {
+      token: _token,
+      // We don't want any answered invitations
+      isAnswered: { $ne: true, },
+      // nor can they be disabled
+      disabled: { $ne: true },
+      // they must be valid as well
+      dateValidTo: { $gt: new Date() },
+      dateValidFrom: { $lte: new Date() },
+    };
+
+    return Invitation.findOne(_opts)
+    .exec()
+    .then(function (invitation) {
+      req.invitation = invitation;
+
+      if (!invitation) {
+        return res.status(400).send('Invalid invitation token');
+      }
+
+      next();
+    })
+    .catch(function (err) {
+      utils.handleError(res, err);
+    });
+
+  });
+}
+
+/**
+ * Attempts to log user in.
+ *
+ * @param {String} email Email address matching user to log in
+ * @param {String} password Password to use for authentication
+ * @return {Promise<{ user: Object, token: String }>}
+ */
+function login(email, password) {
+  return new Promise(function (resolve, reject) {
+    var _err;
+    if (!email) {
+      _err = new Error('Email is required');
+    } else if (!password) {
+      _err = new Error('Password is required');
+    }
+
+    if (_err) {
+      utils.log('Could not log in user.', 'info', { error: _err.toString(), email: !!email ? email : 'Email not provided' })
+      return reject(_err);
+    }
+
+    // Cast it to lowerCase
+    var _email = email.toLowerCase();
+
+    utils.log('Trying to log in user', 'info', { email: _email });
+
+    User.findOne({ email: _email })
+    .exec()
+    .then(function (user) {
+      var err;
+      if (!user) {
+        err = new Error('User does not exist');
+      } else if (!validatePassword(user.password, password)) {
+        err = new Error('Incorrect password');
+      }
+
+      if (err) {
+        utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
+        return reject(err);
+      }
+
+      var _token = signToken({ _id: user._id });
+
+      utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
+
+      resolve({ user: _.omit(user, ['password']), token: _token });
+    })
+    .catch(function (err) {
+      utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
+      reject(err);
     });
   });
 }
@@ -138,10 +253,13 @@ function validatePassword (hashedPassword, plainPassword) {
 
 module.exports = {
   isAuthenticated: isAuthenticated,
+  isInvited: isInvited,
   validateEmail: validateEmail,
+  validateGuidToken: validateGuidToken,
   signToken: signToken,
   decodeToken: decodeToken,
   encryptPassword: encryptPassword,
   validatePassword: validatePassword,
+  login: login,
 }
 

@@ -5,7 +5,7 @@ var request = require('request');
 var Promise = require('bluebird');
 var $ = require('cheerio');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 
 /**
  * Processes the html to get the images, body and owner.
@@ -39,7 +39,7 @@ function processItemPage(content) {
       .replace(/\n+/g, '\n\n'); // Replace multiple newlines by double newlines
 
     // Get the adress if it exists, which is an h3 tag with the class h5
-    var _adress = _.attempt(function () {
+    var _address = _.attempt(function () {
       var addrContent = _.find(html('h3.h5').contents(), function (data) {
         // return find
         return !/(hyra|handla) tryggt/gi.test(data.data);
@@ -50,7 +50,7 @@ function processItemPage(content) {
     });
 
     // If an error was caught, there's no adress
-    if (_.isError(_adress)) { _adress = undefined; }
+    if (_.isError(_address)) { _address = undefined; }
 
     // Get the homeType and set the first character to upper case
     var _homeType = _.upperFirst(html('.subject-param.category').text())
@@ -58,9 +58,9 @@ function processItemPage(content) {
 
     // Get tel if exists
     (function () {
-      if (utils.hasTel(content)) {
+      if (utils.phone.hasTel(content)) {
         var url = _.first(html('link[rel="canonical"]')).attribs.href;
-        return utils.getTel(url);
+        return utils.phone.getTel(url);
       } else {
         return Promise.resolve();
       }
@@ -68,7 +68,7 @@ function processItemPage(content) {
       resolve({
         owner: _owner,
         body: _body,
-        adress: _adress,
+        adress: _address,
         images: _images,
         tel: tel,
         homeType: _homeType,
@@ -89,14 +89,11 @@ function processManyItemPages(contents) {
 
   if (!_.isArray(contents)) { contents = [ contents ]; }
 
-  return new Promise(function (resolve, reject) {
-    Promise.settle(_.map(contents, processItemPage))
-    .then(function (vals) {
-      resolve(_.map(vals, function (val) { return val.value(); }));
-    })
-    .catch(resolve);
-  });
+  var _promFuncs = _.map(contents, function (content) {
+    return function () { return processItemPage(content); }
+  })
 
+  return utils.chunkSequence(_promFuncs, 10);
 }
 
 /**
@@ -107,7 +104,7 @@ function processManyItemPages(contents) {
  */
 function getItemPage(indexItem) {
   return new Promise(function (resolve, reject) {
-    utils.getPage(indexItem.url)
+    utils.get(indexItem.url)
     .then(processItemPage)
     .then(function (itemPage) {
       resolve(_.assign({}, itemPage, indexItem));

@@ -55,13 +55,15 @@ var UserSchema = new Schema({
 });
 
 UserSchema.pre('save', function (next) {
-  this.modified = new Date();
+  this.dateModified = new Date();
 
   // Ensure proper formatting.
   // only allows Swedish numbers for now
   if (this.tel && !/^46/.test(this.tel)) {
     this.tel = this.tel.replace(/(^\+46|^46|^0046|^0(?!046))/, '46');
   }
+
+  this.email = this.email.toLowerCase();
 
   next();
 });

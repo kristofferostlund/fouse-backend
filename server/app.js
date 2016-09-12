@@ -7,10 +7,13 @@ var morgan = require('morgan');
 var mongoose = require('mongoose');
 
 var config = require('./config');
-var logger = require('./utils/logger.util');
+var utils = require('./utils/utils');
+var logger = require('./utils/logger.utils');
 
 mongoose.connect(config.dbString);
 mongoose.Promise = require('bluebird');
+
+utils.log('Connected to mongo database: ' + config.dbString);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -22,5 +25,5 @@ var server = app.listen(config.port, function() {
   var host = server.address().address;
   var port = server.address().port;
 
-  console.log('App listening on port %s', host, port);
+  utils.log('App listening on port ' + port, 'info');
 });

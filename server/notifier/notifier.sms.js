@@ -6,7 +6,7 @@ var chalk = require('chalk');
 var moment = require('moment');
 var request = require('request');
 
-var utils = require('../utils/general.utils');
+var utils = require('../utils/utils');
 var config = require('../config');
 
 /**
@@ -15,29 +15,26 @@ var config = require('../config');
  *
  * @param {String} receiver Defaults to config.tel
  * @param {String} message
- * @param {String} sender Defaults to 'HomePlease'
+ * @param {String} sender Defaults to 'Fouse'
  * @return {String}
  */
-function cellsyntUrl(receiver, message, sender) {
-  // Ensure there's a receiver
-  var _receiver = !!receiver
-    ? receiver
-    : config.tel;
-
+function getCellsyntUrl(receiver, message, sender) {
   // Ensure there's a sender
   var _sender = !!sender
     ? sender
-    : 'HomePlease';
+    : 'Fouse';
 
   return [
     'https://se-1.cellsynt.net/sms.php',
     '?username=' + config.cellsynt_username,
     '&password=' + config.cellsynt_pass,
-    '&destination=' + _receiver,
+    '&type=' + 'text',
+    '&destination=' + receiver,
     '&originatortype=alpha',
     '&originator=' + encodeURIComponent(_sender),
-    '&charset=UTF-8',
-    '&text=' + encodeURIComponent(message)
+    '&charset=UTF8',
+    '&text=' + encodeURIComponent(message),
+    '&allowconcat=6'
   ].join('');
 }
 
@@ -46,126 +43,41 @@ function cellsyntUrl(receiver, message, sender) {
  *
  * @param {String} reciever The receiver of the message
  * @param {String} message The message body
- * @param {String} sender The sender of the message, default will be 'HomePlease'
+ * @param {String} [sender='Fouse'] The sender of the message, default will be 'Fouse'
  */
 function _send(receiver, message, sender) {
   // Don't go further if no SMS should be sent out
   if (!config.sendSms) {
-    console.log('Not sending sms to ' +  receiver + ' as SMS is turned off.');
+    utils.log('Not sending sms to ' +  receiver + ' as SMS is turned off.');
 
     // Return early
     return Promise.resolve();
   }
 
   // Set default value
-  sender = !!sender ? sender : 'HomePlease';
+  sender = !!sender ? sender : 'Fouse';
+
+  var _receivers = _.chain(receiver)
+    .thru(function (rec) { return _.isArray(rec) ? rec : [ rec ] })
+    .map(function (rec) { return /^00/.test(rec) ? rec : '00' + rec.replace(/^(\+467|07)/, '467') })
+    .thru(function (recs) { return recs.join(','); })
+    .value();
 
   // Get the url to send sms request to
-  var _url = cellsyntUrl(receiver, message, sender);
+  var _url = getCellsyntUrl(_receivers, message, sender);
 
-  return utils.getPage(_url)
-}
+  utils.log('Sending SMS.', 'info', { receivers: _receivers, message: message, sender: sender });
 
-/**
- * Gets the url for getting the bitly link.
- *
- * @param {String} url
- * @return  {String}
- */
-function getBitlyUrl(url) {
-  return [
-    'https://api-ssl.bitly.com',
-    '/v3/shorten?access_token=ACCESS_TOKEN&longUrl='.replace('ACCESS_TOKEN', config.bitlyToken),
-    encodeURI(url.replace('?', '/?'))
-  ].join('');
-}
+  if (!(_receivers && _receivers.length)) {
+    return utils.logResolve('No recipients for SMS.', 'info', { receivers: _receivers, message: message, sender: sender });
+  }
 
-/**
- * Gets the bitly link for the homeItem.
- *
- * @param {String} bitlyUrl
- * @return {Promise} -> {String}
- */
-function getShortUrl(bitlyUrl) {
-  return new Promise(function (resolve, reject) {
-    utils.getPage(bitlyUrl)
-    .then(function (bitly) {
-      try {
-        resolve(JSON.parse(bitly).data.url);
-      } catch (error) {
-        reject(new Error('Couldn\'t get the shortened url'));
-      }
-    })
-    .catch(reject);
-  });
-}
-
-/**
- * Returns an encoded URI of the content
- * to send in the sms.
- *
- * @param {String} content
- * @param {String} shortUrl
- * @return {String}
- */
-function createSmsBody(content, shortUrl, encode) {
-  encode = _.isUndefined(encode) ? true : encode;
-  var padding = shortUrl.length + 4;
-
-  var body = [
-    content.slice(0, 160 - padding),
-    '\n\n',
-    shortUrl
-  ].join('');
-
-  return encode ? encodeURIComponent(body) : body;
-}
-
-/**
- * Sends a text message to to tel in config
- * with the title of *homeItem*
- * and a shortened link using the Bitly API.
- *
- * @param {Object} homeItem (HomeItem)
- * @return {Promise} -> {Object}
- */
-function sendSms(homeItem) {
-  return new Promise(function (resolve, reject) {
-
-    if (_.isEqual({}, config)) {
-      console.log('Can\'t send sms as there\'s no config file.');
-      return resolve(); // early
-    }
-
-    getShortUrl(getBitlyUrl(homeItem.url))
-    .then(function (shortUrl) {
-      if (!shortUrl) {
-        console.log('No url received.');
-        return resolve();
-      } else {
-        var smsBody = createSmsBody(homeItem.title, shortUrl);
-
-        // Only send if somewhere set to true
-        if (!config.sendSms) { return resolve(); }
-
-        console.log(chalk.green([
-          'Sending SMS to ',
-          config.tel,
-          ' with the body:\n',
-          createSmsBody(homeItem.title, shortUrl, false)
-          ].join('')));
-
-        // Send the SMS
-        utils.getPage(cellsyntUrl(smsBody))
-        .then(resolve)
-        .catch(reject);
-      }
-    })
-    .catch(function (err) {
-      // Couldn't get the url
-      console.log(err);
-      reject(err);
-    })
+  return utils.get(_url)
+  .then(function (data) {
+    return utils.logResolve('Successfully sent SMS.', 'info', { receivers: _receivers, message: message, sender: sender, response: data });
+  })
+  .catch(function (err) {
+    return utils.logReject('Failed to send SMS.', 'info', { error: err.toString(), receivers: _receivers, message: message, sender: sender })
   });
 }
 
@@ -198,6 +110,5 @@ function send(user, homeItem) {
 }
 
 module.exports =  {
-  sendSms: sendSms,
   send: send,
 }
