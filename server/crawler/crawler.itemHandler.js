@@ -104,7 +104,7 @@ function processManyItemPages(contents) {
  */
 function getItemPage(indexItem) {
   return new Promise(function (resolve, reject) {
-    utils.getPage(indexItem.url)
+    utils.get(indexItem.url)
     .then(processItemPage)
     .then(function (itemPage) {
       resolve(_.assign({}, itemPage, indexItem));

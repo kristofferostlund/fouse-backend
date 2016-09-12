@@ -30,9 +30,7 @@ function notify(homeItems) {
     if (homeItems && homeItems.length) {
 
       var promises = _.chain([
-        emailNotifier.sendEmail(homeItems),
         asanaNotifier.createAsanaTasks(homeItems),
-        _.map(homeItems, smsNotifier.sendSms)
       ])
       .flatten()
       .filter()

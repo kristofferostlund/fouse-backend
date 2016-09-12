@@ -117,7 +117,7 @@ function lazyCompare(source, target, exclude) {
  * @parma {Boolean} doParse
  * @return {Promie<String|Object>}
  */
-function getPage(url, options, doParse) {
+function get(url, options, doParse) {
   return new Promise(function (resolve, reject) {
     // *options* must be an object
     if (!_.isObject(options)) { options = {}; }
@@ -174,7 +174,7 @@ function getManyPages(items, options, urls, pages) {
     });
   }
 
-  var toGet = _.map(urls.slice(pages.length, pages.length + 50), function (url) { return getPage(url, options); });
+  var toGet = _.map(urls.slice(pages.length, pages.length + 50), function (url) { return get(url, options); });
 
   return Promise.all(_.map(toGet, function (prom) { return _.isFunction(prom.reflect) ? prom.reflect() : Promise.resolve(prom).reflect() }))
   .then(function (_pages) {
@@ -284,7 +284,7 @@ function getShortUrl(homeItem) {
 
     log('Getting shortened URL.', 'info', { url: _url });
 
-    getPage(bitlyUrl)
+    get(bitlyUrl)
     .then(function (bitly) {
       // Try to parse and/or get the data
       var data = _.attempt(function () { return JSON.parse(bitly).data || bitly.data; });
@@ -473,7 +473,7 @@ module.exports = {
   log: log,
   logResolve: logResolve,
   logReject: logReject,
-  getPage: getPage,
+  get: get,
   getManyPages: getManyPages,
   lazyCompare: lazyCompare,
   escapeRegex: escapeRegex,

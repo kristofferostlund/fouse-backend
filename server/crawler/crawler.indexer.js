@@ -96,7 +96,7 @@ function processListItem(e) {
  * @return {Promise} -> {Object} - single index page
  */
 function getIndexPage(pageNum) {
-  return utils.getPage(urlByNum(pageNum))
+  return utils.get(urlByNum(pageNum))
     .then(processIndexPage);
 }
 

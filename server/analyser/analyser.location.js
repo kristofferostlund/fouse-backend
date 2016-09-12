@@ -53,7 +53,7 @@ function getRegion(homeItem) {
     ].join('');
 
     // Get the results from google
-    utils.getPage(url, {}, true)
+    utils.get(url, {}, true)
     .then(function (resp) {
 
       // Get the address component of which to find the region.
