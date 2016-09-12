@@ -106,7 +106,7 @@ function notify(homeItems, resolveResults) {
       return resolve(resolveResults === true ? [] : homeItems);
     }
 
-    utils.log('Notifying Qasa.', 'info', { homeItemLength: _toNotify.length, homeItems: _.map(_toNotify, '_id') });
+    utils.log('Notifying Qasa.', 'info', { homeItemLength: _toNotify.length, homeItems: _.map(_toNotify, '_id').map(_.toString) });
 
     // Get all the notify promises
     var _promises = _.chain(_toNotify)
@@ -117,7 +117,7 @@ function notify(homeItems, resolveResults) {
     Promise.all(_promises)
     .then(function (vals) {
 
-    utils.log('Successfully notified Qasa.', 'info', { homeItemLength: _toNotify.length, homeItems: _.map(_toNotify, '_id') });
+    utils.log('Successfully notified Qasa.', 'info', { homeItemLength: _toNotify.length, homeItems: _.map(_toNotify, '_id').map(_.toString) });
 
       resolve(
         resolveResults === true
