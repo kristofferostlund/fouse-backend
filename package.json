@@ -2,9 +2,9 @@
   "name": "home_please",
   "version": "1.0.0",
   "description": "A web app to help me find a new home",
-  "main": "server/app.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/app.js"
+    "start": "node server.js"
   },
   "repository": {
     "type": "git",

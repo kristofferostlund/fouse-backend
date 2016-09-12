@@ -27,3 +27,5 @@ var server = app.listen(config.port, function() {
 
   utils.log('App listening on port ' + port, 'info');
 });
+
+module.exports = {}

@@ -13,8 +13,8 @@ gulp.task('server', function () {
   // Kill node if it's running already.
   if (node) { node.kill() };
 
-  // Run a node client on server/app.js
-  node = spawn('node', ['server/app.js'], { stdio: 'inherit' });
+  // Run a node client on server.js
+  node = spawn('node', ['server.js'], { stdio: 'inherit' });
 
   // If it closes with the error code 8, something crashed
   node.on('close', function (code) {
