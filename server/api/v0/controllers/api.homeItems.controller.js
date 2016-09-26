@@ -3,9 +3,10 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-var utils = require('./../utils/utils');
-var auth = require('./../services/auth.service');
-var HomeItem = require('./../models/homeItem/homeItem.model');
+var utils = require('../../../utils/utils');
+var auth = require('../../../services/auth.service');
+var HomeItem = require('../../../models/homeItem/homeItem.model');
+var response = require('./../api.response.v0');
 
 /**
  * Route GET '/api/home-items'
@@ -33,10 +34,10 @@ function listHomes(req, res) {
   .select('-__v')
   .exec()
   .then(function (homeItems) {
-    res.status(200).json(homeItems);
+    response.send(res, { data: homeItems, meta: { itemCount: homeItems.length } });
   })
   .catch(function (err) {
-    utils.handleError(res, err);
+    response.internalError(res, err);
   });
 }
 
@@ -50,10 +51,10 @@ function getHome(req, res) {
   .select('-__v')
   .exec()
   .then(function (homeItem) {
-    res.status(200).json(homeItem);
+    response.send(res, { data: homeItem });
   })
   .catch(function (err) {
-    utils.handleError(res, err);
+    response.internalError(res, err);
   });
 }
 

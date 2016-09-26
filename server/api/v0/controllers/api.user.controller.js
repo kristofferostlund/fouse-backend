@@ -3,13 +3,14 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-var User = require('./../models/user/user.model');
-var UserController = require('./../models/user/user.controller');
-var Invitation = require('./../models/invitation/invitation.model');
-var InvitationController = require('./../models/invitation/invitation.controller');
-var ResetTokenController = require('./../models/resetToken/resetToken.controller');
-var utils = require('./../utils/utils');
-var auth = require('./../services/auth.service');
+var User = require('../../../models/user/user.model');
+var UserController = require('../../../models/user/user.controller');
+var Invitation = require('../../../models/invitation/invitation.model');
+var InvitationController = require('../../../models/invitation/invitation.controller');
+var ResetTokenController = require('../../../models/resetToken/resetToken.controller');
+var utils = require('../../../utils/utils');
+var auth = require('../../../services/auth.service');
+var response = require('./../api.response.v0');
 
 /**
  * Route GET '/api/users'
@@ -36,9 +37,9 @@ function listUsers(req, res) {
   .sort({ $natural: -1 })
   .select('-password -__v')
   .exec(function (err, users) {
-    if (err) { utils.handleError(res, err); }
+    if (err) { response.internalError(res, err); }
 
-    res.status(200).json(users);
+response.send(res, { data: users });
   });
 }
 
@@ -50,13 +51,13 @@ function getUser(req, res) {
 
   UserController.findById(userId)
   .then(function (user) {
-    res.status(200).json(user);
+    response.send(res, { data: user });
   })
   .catch(function (err) {
     if (/missing userid|invalid userid/i.test(err.message)) {
-      res.status(400).send(err.message);
+      response.sendError(res, err);
     } else {
-      utils.handleError(res, err);
+      response.internalError(res, err);
     }
   });
 }
@@ -69,10 +70,10 @@ function me(req, res) {
 
   UserController.findById(userId)
   .then(function (user) {
-    res.status(200).json(user);
+    response.send(res, { data: user });
   })
   .catch(function (err) {
-    utils.handleError(res, err);
+    response.internalError(res, err);
   });
 }
 
@@ -84,13 +85,13 @@ function createUser(req, res) {
 
   UserController.create(_user)
   .then(function (user) {
-    res.status(200).json(user);
+    response.send(res, { data: user });
   })
   .catch(function (err) {
     if (/is required|already exists/i.test(err.message)) {
-      res.status(400).send(err);
+      response.sendError(res, err);
     } else {
-      utils.handleError(res, err);
+      response.internalError(res, err);
     }
   });
 }
@@ -104,10 +105,10 @@ function updateUser(req, res) {
 
   UserController.update(_userId, _user)
   .then(function (user) {
-    res.status(200).json(user);
+    response.send(res, { data: user });
   })
   .catch(function (err) {
-    utils.handleError(res, err);
+    response.internalError(res, err);
   });
 }
 
@@ -121,10 +122,10 @@ function updateUserPassword(req, res) {
 
   UserController.updatePassword(userId, password, currentPassword)
   .then(function (data) {
-    res.status(200).json(data);
+    response.send(res, { data: data });
   })
   .catch(function (err) {
-    utils.handleError(res, err);
+    response.internalError(res, err);
   });
 }
 
@@ -134,13 +135,14 @@ function updateUserPassword(req, res) {
 function login(req, res) {
   auth.login(_.get(req, 'body.email'), _.get(req, 'body.password'))
   .then(function (data) {
-    res.status(200).send(data);
+    response.send(res, { data: data });
   })
   .catch(function (err) {
     if (/does not exist|incorrect password|is required/i.test(err.message)) {
-      res.status(401).send(err);
+      response.sendError(res, err);
+      // res.status(401).send(err);
     } else {
-      utils.handleError(res, err);
+      response.internalError(res, err);
     }
   });
 }
@@ -154,13 +156,14 @@ function resetPassword(req, res) {
 
   ResetTokenController.resetPassword(_token, _password)
   .then(function (token) {
-    res.status(204).send('Password updated');
+    response.sendError(res, err);
+    // res.status(204).send('Password updated');
   })
   .catch(function (err) {
     if (/missing|invalid|not found/i.test(err.message)) {
-      res.status(400).send(err.message);
+      response.sendError(res, err);
     } else {
-      utils.handleError(res, err);
+      response.internalError(res, err);
     }
   })
 }

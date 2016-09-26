@@ -3,12 +3,13 @@
 var _ = require('lodash');
 var Promise = require('bluebird');
 
-var User = require('./../models/user/user.model');
-var UserController = require('./../models/user/user.controller');
-var Invitation = require('./../models/invitation/invitation.model');
-var InvitationController = require('./../models/invitation/invitation.controller');
-var utils = require('./../utils/utils');
-var auth = require('./../services/auth.service');
+var User = require('../../../models/user/user.model');
+var UserController = require('../../../models/user/user.controller');
+var Invitation = require('../../../models/invitation/invitation.model');
+var InvitationController = require('../../../models/invitation/invitation.controller');
+var utils = require('../../../utils/utils');
+var auth = require('../../../services/auth.service');
+var response = require('./../api.response.v0');
 
 /**
  * Route POST 'api/invitation/invite'
@@ -27,22 +28,22 @@ function invite(req, res) {
     fromUser: user,
   })
   .then(function (data) {
-    res.status(200).send(data);
+    response.send(res, { data: data, message: 'Invitation sent' });
   })
   .catch(function (err) {
     if (/missing user|invalid email|already exists|invitation already/i.test(err.message)) {
-      res.status(400).send(err.message);
+      response.sendError(res, err, err.message);
     } else {
-      utils.handleError(res, err);
+      response.internalError(res, err);
     }
-  })
+  });
 }
 
 /**
  * Route POST 'api/invitation/invite'
  */
 function handleInvitation(req, res) {
-  res.status(200).json(req.invitation);
+  response.send(res, { data: req.invitation });
 }
 
 module.exports = {
