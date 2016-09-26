@@ -21,11 +21,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('combined', { stream: logger.stream }));
 require('./routes')(app, logger);
 
-var server = app.listen(config.port, function() {
-  var host = server.address().address;
-  var port = server.address().port;
+var server;
 
-  utils.log('App listening on port ' + port, 'info');
-});
+logger.log('App starting', 'info');
+
+serve();
+
+function serve() {
+  server = app.listen(config.port, function() {
+    var host = server.address().address;
+    var port = server.address().port;
+
+    utils.log('App listening on port ' + port, 'info');
+  });
+}
 
 module.exports = {}

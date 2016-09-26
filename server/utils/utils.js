@@ -469,6 +469,15 @@ function savePromise(model) {
   });
 }
 
+/**
+ * @param {Array} coll
+ * @param {any} item
+ * @return {Boolean}
+ */
+function contains(coll, item) {
+    return Array.isArray(coll) ? !!~coll.indexOf(item) : false;
+}
+
 module.exports = {
   log: log,
   logResolve: logResolve,
@@ -489,4 +498,5 @@ module.exports = {
   settle: settle,
   print: print,
   savePromise: savePromise,
+  contains: contains,
 };

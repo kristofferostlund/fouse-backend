@@ -54,4 +54,11 @@ module.exports = {
   get app_url(){
     return process.env.APP_URL || ('http://127.0.0.1:' + this.port);
   },
+  rethink: {
+    db: process.env.RETHINK_DB || 'fouse',
+    host: process.env.RETHINK_HOST || '',
+    port: process.env.RETHINK_PORT || 28015,
+    user: process.env.RETHINK_USER || 'admin',
+    password: process.env.RETHINK_PASSWORD || '',
+  },
 };
