@@ -59,7 +59,7 @@ function send(res, context) {
     error: !!context.error ? serializeError(context.error) : undefined,
     message: context.message,
     meta: _.assign({}, {
-      api_version: 'v0',
+      apiVersion: 'v0',
       timestamp: Date.now(),
       status: _status,
     }, context.meta),
