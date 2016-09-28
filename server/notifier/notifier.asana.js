@@ -89,7 +89,7 @@ function createOneAsanaTask(homeItem) {
         'Size: ' + homeItem.size,
         'Region: ' + homeItem.region,
         'Location: ' + homeItem.location,
-        'Address: ' + homeItem.adress,
+        'Address: ' + homeItem.address,
         '',
         '----',
         '',

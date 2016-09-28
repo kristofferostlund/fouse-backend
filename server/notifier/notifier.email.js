@@ -94,7 +94,7 @@ function send(user, homeItems) {
           homeItem.shortUrl || homeItem.url,
           _.chain(homeItem)
             // Use only these values
-            .pick(['location', 'rent', 'rooms', 'size', 'adress'])
+            .pick(['location', 'rent', 'rooms', 'size', 'address'])
             // Filter out undefined properties and create an array of the items
             .filter(function (e) { return /[^\s]/.test(e) })
             .value()

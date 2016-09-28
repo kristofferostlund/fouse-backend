@@ -38,7 +38,7 @@ function processItemPage(content) {
       .replace(/ +/g, ' ') // Replace multiple spaces by single space
       .replace(/\n+/g, '\n\n'); // Replace multiple newlines by double newlines
 
-    // Get the adress if it exists, which is an h3 tag with the class h5
+    // Get the address if it exists, which is an h3 tag with the class h5
     var _address = _.attempt(function () {
       var addrContent = _.find(html('h3.h5').contents(), function (data) {
         // return find
@@ -49,7 +49,7 @@ function processItemPage(content) {
       return addrContent.data;
     });
 
-    // If an error was caught, there's no adress
+    // If an error was caught, there's no address
     if (_.isError(_address)) { _address = undefined; }
 
     // Get the homeType and set the first character to upper case
@@ -68,7 +68,7 @@ function processItemPage(content) {
       resolve({
         owner: _owner,
         body: _body,
-        adress: _address,
+        address: _address,
         images: _images,
         tel: tel,
         homeType: _homeType,

@@ -34,7 +34,7 @@ function listHomes(req, res) {
   .skip(_skip)
   .limit(limit)
   .sort({ $natural: -1 })
-  .select('-__v -notified -rent -body -adress -address -active -owner -images -tel -dateCreated -dateModified')
+  .select('-__v -notified -rent -body -address -active -owner -images -tel -dateCreated -dateModified')
   // .select('title rooms size price location thumbnail url')
   .exec()
   .then(function (homeItems) {

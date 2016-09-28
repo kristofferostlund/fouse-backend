@@ -14,7 +14,7 @@ var HomeItemSchema = new Schema({
   rooms: String,
   size: String,
   location: String,
-  adress: String, // TODO: fix this spelling mistake
+  address: String,
   region: String,
   date: Date,
   url: String,
