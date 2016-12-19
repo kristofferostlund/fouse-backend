@@ -200,7 +200,7 @@ function login(email, password) {
 
       utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
 
-      resolve({ user: _.omit(user, ['password']), token: _token });
+      resolve({ user: _.omit(user._doc, ['password']), token: _token });
     })
     .catch(function (err) {
       utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
