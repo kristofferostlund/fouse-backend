@@ -10,6 +10,8 @@ var config = require('./config');
 var utils = require('./utils/utils');
 var logger = require('./utils/logger.utils');
 
+utils.log('App starting')
+
 mongoose.connect(config.dbString);
 mongoose.Promise = require('bluebird');
 

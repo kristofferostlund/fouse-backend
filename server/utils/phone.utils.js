@@ -6,7 +6,6 @@ var Promise = require('bluebird');
 var moment = require('moment');
 var cheerio = require('cheerio');
 var later = require('later');
-var Browser = require('zombie');
 
 var config = require('../config');
 
