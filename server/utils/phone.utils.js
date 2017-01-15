@@ -238,6 +238,8 @@ function getTel(url) {
 
     // If something went wrong when parsing the response, we're done here.
     if (_.isError(_resp)) {
+      var err = _resp;
+
       log('Failed to parse phone number.', 'error', { error: err.toString(), url: url });
       return Promise.resolve();
     }
