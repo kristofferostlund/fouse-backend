@@ -15,23 +15,20 @@ const response = require('./../api.response.v0')
  * Route POST 'api/invitation/invite'
  */
 function invite(req, res) {
-  const user = {
+  const fromUser = {
     _id: req.user._id.toString(),
     name: req.user.name,
     email: req.user.email,
   }
 
-  const email = _.get(req, 'body.email')
+  const { email, name } = req.body
 
-  InvitationController.createInvitation({
-    email: email,
-    fromUser: user,
-  })
+  InvitationController.createInvitation({ email, fromUser, name })
   .then(function (data) {
     response.send(res, { data: data, message: 'Invitation sent' })
   })
   .catch(function (err) {
-    if (/missing user|invalid email|already exists|invitation already/i.test(err.message)) {
+    if (/missing user|invalid email|already exists|invitation already|missing name/i.test(err.message)) {
       response.sendError(res, err, err.message)
     } else {
       response.internalError(res, err)
@@ -40,10 +37,12 @@ function invite(req, res) {
 }
 
 /**
- * Route POST 'api/invitation/invite'
+ * Note: Must be peceded by the auth.isInvited middleware.
+ *
+ * Route POST 'api/invitation/respond'
  */
-function handleInvitation(req, res) {
-  const { _id, email, tempPassword, name } = req.invitation
+function respond(req, res) {
+  const { _id, email, tempPassword, name } = req.invitation || {}
 
   /**
    * Ensure the email doesn't start with a dot,
@@ -65,5 +64,5 @@ function handleInvitation(req, res) {
 
 module.exports = {
   invite: invite,
-  handleInvitation: handleInvitation,
+  respond: respond,
 }

@@ -4,7 +4,8 @@
   "description": "A web app to help me find a new home",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "watch": "gulp app"
   },
   "repository": {
     "type": "git",

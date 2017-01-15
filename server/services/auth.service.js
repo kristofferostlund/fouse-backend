@@ -1,16 +1,18 @@
-'use strict';
+'use strict'
 
-var _ = require('lodash');
-var compose = require('composable-middleware');
-var jwt = require('jsonwebtoken');
-var bcrypt = require('bcryptjs');
-var Promise = require('bluebird');
-var moment = require('moment');
+const _ = require('lodash')
+const compose = require('composable-middleware')
+const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+const Promise = require('bluebird')
+const moment = require('moment')
 
-var User = require('./../models/user/user.model');
-var Invitation = require('./../models/invitation/invitation.model');
-var config = require('./../config');
-var utils = require('./../utils/utils');
+const User = require('./../models/user/user.model')
+const Invitation = require('./../models/invitation/invitation.model')
+const config = require('./../config')
+const utils = require('./../utils/utils')
+const response = require('../api/v0/api.response.v0')
+
 
 /**
  * TODO:
@@ -25,7 +27,7 @@ var utils = require('./../utils/utils');
  * @return {Boolean}
  */
 function validateEmail(email) {
-  return /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email);
+  return /^(([^<>()\[\]\\.,:\s@"]+(\.[^<>()\[\]\\.,:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/.test(email)
 }
 
 /**
@@ -35,7 +37,7 @@ function validateEmail(email) {
  * @return {Boolean}
  */
 function validateGuidToken(token) {
-  return /^[0-9a-f]{10}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{15}$/.test(token);
+  return /^[0-9a-f]{10}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{5}\-[0-9a-f]{15}$/.test(token)
 }
 
 /**
@@ -59,15 +61,15 @@ function findToken(req) {
     _.get(req, 'cookies.access_token'),
     _.get(req, 'cookies.authorization'),
     _.get(req, 'cookies.Authorization'),
-  ], function (token) { return !!token });
+  ], function (token) { return !!token })
 
   // Remove Bearer from token if it's there
   if (/^Bearer /i.test(_appToken)) {
-    _appToken = _appToken.split(' ')[1];
+    _appToken = _appToken.split(' ')[1]
   }
 
   // Return it
-  return _appToken;
+  return _appToken
 }
 
 /**
@@ -78,39 +80,39 @@ function findToken(req) {
  * @param {Function} next Express next function
  */
 function isAuthenticated(req, res, next) {
-  var _token;
+  var _token
 
   return compose().use(function (req, res, next) {
     // Find the token
-    _token = findToken(req);
+    _token = findToken(req)
 
     // Get the decoded data
-    var _decoded = decodeToken(_token);
+    var _decoded = decodeToken(_token)
 
-    var _userId = !!_decoded ? _decoded._id : null;
+    var _userId = !!_decoded ? _decoded._id : null
 
     // If no userId was found, return a response of 401, Unauthorized.
     if (_userId === null) {
-      return res.status(401).send('Unauthorized');
+      return res.status(401).send('Unauthorized')
     }
 
     // // Find the user and attach it to the response object
     return User.findById(_userId)
       .then(function (user) {
         // Add the user to the response
-        req.user = (_.get(user, '_doc') || user);
+        req.user = (_.get(user, '_doc') || user)
 
         // If there is no registered user, return a 401 unauthorized
         if (!_.get(user, '_id')) {
-          return res.status(401).send('Unauthorized');
+          return res.status(401).send('Unauthorized')
         }
 
-        next();
+        next()
       })
       .catch(function (err) {
-        return utils.handleError(res, err);
-      });
-  });
+        return utils.handleError(res, err)
+      })
+  })
 }
 
 /**
@@ -121,13 +123,9 @@ function isAuthenticated(req, res, next) {
  * @param {Function} next Express next function
  */
 function isInvited(req, res, next) {
-  var _token;
-
   return compose().use(function (req, res, next) {
-    _token = req.params.token;
-
-    var _opts = {
-      token: _token,
+    const invOpts = {
+      token: req.params.token,
       // We don't want any answered invitations
       isAnswered: { $ne: true, },
       // nor can they be disabled
@@ -135,24 +133,24 @@ function isInvited(req, res, next) {
       // they must be valid as well
       dateValidTo: { $gt: new Date() },
       dateValidFrom: { $lte: new Date() },
-    };
+    }
 
-    return Invitation.findOne(_opts)
+    return Invitation.findOne(invOpts)
       .exec()
       .then(function (invitation) {
-        req.invitation = invitation;
+        req.invitation = invitation
 
         if (!invitation) {
-          return res.status(400).send('Invalid invitation token');
+          const err = new Error('Invalid invitation token')
+          return response.sendError(res, err, 'The invitation does either not exist, is invalid or is already responded to')
         }
 
-        next();
+        next()
       })
       .catch(function (err) {
-        utils.handleError(res, err);
-      });
-
-  });
+        response.internalError(res, err)
+      })
+  })
 }
 
 /**
@@ -164,49 +162,49 @@ function isInvited(req, res, next) {
  */
 function login(email, password) {
   return new Promise(function (resolve, reject) {
-    var _err;
+    var _err
     if (!email) {
-      _err = new Error('Email is required');
+      _err = new Error('Email is required')
     } else if (!password) {
-      _err = new Error('Password is required');
+      _err = new Error('Password is required')
     }
 
     if (_err) {
       utils.log('Could not log in user.', 'info', { error: _err.toString(), email: !!email ? email : 'Email not provided' })
-      return reject(_err);
+      return reject(_err)
     }
 
     // Cast it to lowerCase
-    var _email = email.toLowerCase();
+    var _email = email.toLowerCase()
 
-    utils.log('Trying to log in user', 'info', { email: _email });
+    utils.log('Trying to log in user', 'info', { email: _email })
 
     User.findOne({ email: _email })
       .exec()
       .then(function (user) {
-        var err;
+        var err
         if (!user) {
-          err = new Error('User does not exist');
+          err = new Error('User does not exist')
         } else if (!validatePassword(user.password, password)) {
-          err = new Error('Incorrect password');
+          err = new Error('Incorrect password')
         }
 
         if (err) {
-          utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
-          return reject(err);
+          utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email })
+          return reject(err)
         }
 
-        var _token = signToken({ _id: user._id });
+        var _token = signToken({ _id: user._id })
 
-        utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
+        utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token })
 
-        resolve({ user: _.omit(user._doc, ['password']), token: _token });
+        resolve({ user: _.omit(user._doc, ['password']), token: _token })
       })
       .catch(function (err) {
-        utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
-        reject(err);
-      });
-  });
+        utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email })
+        reject(err)
+      })
+  })
 }
 
 /**
@@ -216,7 +214,7 @@ function login(email, password) {
  * @return {String} token
  */
 function signToken(data) {
-  return jwt.sign(data, config.app_secret, { expiresIn: 60 * 60 * 24 * 365 });
+  return jwt.sign(data, config.app_secret, { expiresIn: 60 * 60 * 24 * 365 })
 }
 
 /**
@@ -227,7 +225,7 @@ function signToken(data) {
  */
 function decodeToken(token) {
   // Return the decoded token.
-  return jwt.decode(token, config.app_secret);
+  return jwt.decode(token, config.app_secret)
 }
 
 /**
@@ -237,7 +235,7 @@ function decodeToken(token) {
  * @return {String}
  */
 function encryptPassword(plainPassword) {
-  return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(10));
+  return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(10))
 }
 
 /**
@@ -248,7 +246,7 @@ function encryptPassword(plainPassword) {
  * @return {Boolean}
  */
 function validatePassword(hashedPassword, plainPassword) {
-  return bcrypt.compareSync(plainPassword, hashedPassword);
+  return bcrypt.compareSync(plainPassword, hashedPassword)
 }
 
 module.exports = {

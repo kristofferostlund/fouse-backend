@@ -19,7 +19,7 @@ router.put('/users/:id', auth.isAuthenticated(), controller.user.updateUser)
 router.put('/users/:id/password', auth.isAuthenticated(), controller.user.updateUserPassword)
 
 router.post('/invitation/invite', auth.isAuthenticated(), controller.invitation.invite)
-router.post('/invitation/token/:token', auth.isInvited(), controller.invitation.handleInvitation)
+router.get('/invitation/respond/:token', auth.isInvited(), controller.invitation.respond)
 
 router.get('/home-items', auth.isAuthenticated(), controller.homeItems.listHomes)
 router.get('/home-items/:id', auth.isAuthenticated(), controller.homeItems.getHome)
