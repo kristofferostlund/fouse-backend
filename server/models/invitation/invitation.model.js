@@ -1,14 +1,18 @@
 'use strict'
 
-var mongoose = require('mongoose');
-var moment = require('moment');
-var _ = require('lodash');
+const mongoose = require('mongoose')
+const moment = require('moment')
+const _ = require('lodash')
 
-var Schema = mongoose.Schema;
-var ObjectId = Schema.ObjectId;
+const Schema = mongoose.Schema
+const ObjectId = Schema.ObjectId
 
-var InvitationSchema = new Schema({
+const InvitationSchema = new Schema({
   email: {
+    type: String,
+    required: true,
+  },
+  name: {
     type: String,
     required: true,
   },
@@ -36,6 +40,10 @@ var InvitationSchema = new Schema({
     type: String,
     default: guid(),
   },
+  tempPassword: {
+    type: String,
+    default: guid().replace(/-/g, ''),
+  },
   dateAccepted: Date,
   /**
    * If isAnswered is true and toUser is populated
@@ -55,17 +63,17 @@ var InvitationSchema = new Schema({
     default: Date.now,
   },
   disabled: Boolean,
-});
+})
 
 InvitationSchema.pre('save', function (next) {
-  this.dateModified = new Date();
+  this.dateModified = new Date()
 
-  this.email = this.email.toLowerCase();
+  this.email = this.email.toLowerCase()
 
-  next();
-});
+  next()
+})
 
-module.exports = mongoose.model('Invitation', InvitationSchema);
+module.exports = mongoose.model('Invitation', InvitationSchema)
 
 /**
  * Returns a GUID string.
@@ -77,8 +85,8 @@ module.exports = mongoose.model('Invitation', InvitationSchema);
 function guid () {
   return _.times(5, function (i) {
     // Assign n to 2 if i === 0, 3 if i === 4, otherwise 1
-    var n = [2, 1, 1, 1, 3][i];
+    var n = [2, 1, 1, 1, 3][i]
 
-    return _.times(n, function () { return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(); }).join('');
-  }).join('-');
+    return _.times(n, function () { return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring() }).join('')
+  }).join('-')
 }

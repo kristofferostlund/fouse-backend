@@ -14,7 +14,7 @@ var auth = require('./../../services/auth.service');
  * Finds all users which somehow should be notified.
  * At least one of the two notify properties of the user must be set to true.
  *
- * @return {Promise} -> {Array} (User)
+ * @return {Promise<{ Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }[]>} (User)
  */
 function find() {
   return new Promise(function (resolve, reject) {
@@ -46,7 +46,7 @@ function find() {
  * Note: __v and password are omitted.
  *
  * @param {String} userId
- * @return {Promise<Object>}
+ * @return {Promise<{ user: { Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean } >>}
  */
 function findById(userId) {
   return new Promise(function (resolve, reject) {
@@ -68,7 +68,7 @@ function findById(userId) {
  * Creates a new or multiple new users to the db.
  *
  * @param {{ email: String, tel: String, password: String, passwordRepeat: String, notifyOptions: { email: Boolean, sms: Boolean, }, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean, }, time: { period: { min: Number,  max: Number, }, isLongTerm: Boolean, }, region: String }}} user
- * @return {Promise} -> {Object|Array} (User)
+ * @return {Promise<{ Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }|{ Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }[]>} (User)
  */
 function create(user) {
   return new Promise(function (resolve, reject) {
@@ -121,7 +121,7 @@ function create(user) {
  *
  * @param {String} userId The _id of the user to update
  * @param {Object} user User object to update
- * @return {Promise} -> {Object} The new user
+ * @return {Promise<{ Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }>} The new user
  */
 function update(userId, user) {
   return new Promise(function (resolve, reject) {

@@ -77,7 +77,7 @@ function findToken(req) {
  * @param {Object} res Express response object
  * @param {Function} next Express next function
  */
-function isAuthenticated (req, res, next) {
+function isAuthenticated(req, res, next) {
   var _token;
 
   return compose().use(function (req, res, next) {
@@ -96,20 +96,20 @@ function isAuthenticated (req, res, next) {
 
     // // Find the user and attach it to the response object
     return User.findById(_userId)
-    .then(function (user) {
-      // Add the user to the response
-      req.user = (_.get(user, '_doc') || user);
+      .then(function (user) {
+        // Add the user to the response
+        req.user = (_.get(user, '_doc') || user);
 
-      // If there is no registered user, return a 401 unauthorized
-      if (!_.get(user, '_id')) {
-        return res.status(401).send('Unauthorized');
-      }
+        // If there is no registered user, return a 401 unauthorized
+        if (!_.get(user, '_id')) {
+          return res.status(401).send('Unauthorized');
+        }
 
-      next();
-    })
-    .catch(function (err) {
-      return utils.handleError(res, err);
-    });
+        next();
+      })
+      .catch(function (err) {
+        return utils.handleError(res, err);
+      });
   });
 }
 
@@ -120,7 +120,7 @@ function isAuthenticated (req, res, next) {
  * @param {Object} res Express response object
  * @param {Function} next Express next function
  */
-function isInvited (req, res, next) {
+function isInvited(req, res, next) {
   var _token;
 
   return compose().use(function (req, res, next) {
@@ -138,19 +138,19 @@ function isInvited (req, res, next) {
     };
 
     return Invitation.findOne(_opts)
-    .exec()
-    .then(function (invitation) {
-      req.invitation = invitation;
+      .exec()
+      .then(function (invitation) {
+        req.invitation = invitation;
 
-      if (!invitation) {
-        return res.status(400).send('Invalid invitation token');
-      }
+        if (!invitation) {
+          return res.status(400).send('Invalid invitation token');
+        }
 
-      next();
-    })
-    .catch(function (err) {
-      utils.handleError(res, err);
-    });
+        next();
+      })
+      .catch(function (err) {
+        utils.handleError(res, err);
+      });
 
   });
 }
@@ -182,30 +182,30 @@ function login(email, password) {
     utils.log('Trying to log in user', 'info', { email: _email });
 
     User.findOne({ email: _email })
-    .exec()
-    .then(function (user) {
-      var err;
-      if (!user) {
-        err = new Error('User does not exist');
-      } else if (!validatePassword(user.password, password)) {
-        err = new Error('Incorrect password');
-      }
+      .exec()
+      .then(function (user) {
+        var err;
+        if (!user) {
+          err = new Error('User does not exist');
+        } else if (!validatePassword(user.password, password)) {
+          err = new Error('Incorrect password');
+        }
 
-      if (err) {
+        if (err) {
+          utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
+          return reject(err);
+        }
+
+        var _token = signToken({ _id: user._id });
+
+        utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
+
+        resolve({ user: _.omit(user._doc, ['password']), token: _token });
+      })
+      .catch(function (err) {
         utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
-        return reject(err);
-      }
-
-      var _token = signToken({ _id: user._id });
-
-      utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token });
-
-      resolve({ user: _.omit(user._doc, ['password']), token: _token });
-    })
-    .catch(function (err) {
-      utils.log('Could not log in user.', 'info', { error: err.toString(), email: _email });
-      reject(err);
-    });
+        reject(err);
+      });
   });
 }
 
@@ -225,7 +225,7 @@ function signToken(data) {
  * @param {Stirng} token
  * @return {String} token
  */
-function decodeToken (token) {
+function decodeToken(token) {
   // Return the decoded token.
   return jwt.decode(token, config.app_secret);
 }
@@ -236,7 +236,7 @@ function decodeToken (token) {
  * @param {String} plainPassword The password to encrypt
  * @return {String}
  */
-function encryptPassword (plainPassword) {
+function encryptPassword(plainPassword) {
   return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(10));
 }
 
@@ -247,7 +247,7 @@ function encryptPassword (plainPassword) {
  * @param {String} plainPassword The plain password to compare against *hashedPassword*
  * @return {Boolean}
  */
-function validatePassword (hashedPassword, plainPassword) {
+function validatePassword(hashedPassword, plainPassword) {
   return bcrypt.compareSync(plainPassword, hashedPassword);
 }
 

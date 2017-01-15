@@ -1,15 +1,16 @@
 'use strict'
 
-var _ = require('lodash');
-var Promise = require('bluebird');
-var moment = require('moment');
+const _ = require('lodash')
+const Promise = require('bluebird')
+const moment = require('moment')
 
-var emailNotifier = require('./../../notifier/notifier.email');
-var Invitation = require('./invitation.model');
-var User = require('./../user/user.model');
-var utils = require('./../../utils/utils');
-var auth = require('./../../services/auth.service');
-var config = require('./../../config');
+const emailNotifier = require('./../../notifier/notifier.email')
+const Invitation = require('./invitation.model')
+const User = require('./../user/user.model')
+const userController = require('./../user/user.controller')
+const utils = require('./../../utils/utils')
+const auth = require('./../../services/auth.service')
+const config = require('./../../config')
 
 /**
  * @param {String} token
@@ -110,6 +111,57 @@ function createInvitation(context) {
   });
 }
 
+/**
+ * @param {{ _id: String, email: String, tempPassword: String, name: String }} opts
+ * @returns {Promise<{ user: { Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean } >}
+ */
+function completeInvitation(opts) {
+  /**
+   * Steps:
+   * 1. Check if a user already exists (someone might've changed their
+   *    email address to the stored one and this should make the signup fail)
+   * 2. Create user based on email attached to the the invite
+   * 3. Update the invitation in the database with a refernce
+   *    to the user and set it to accepted
+   * 4. Respond with the created user
+   */
+
+  if (!auth.validateEmail(opts.email)) {
+    const err = new Error('Missing or incorrect email address')
+    return Promise.reject(err)
+  }
+
+  // Finally returned user
+  let user
+
+  const _user = {
+    email: opts.email.toLowerCase(),
+    name: opts.name,
+    password: opts.tempPassword,
+  }
+
+  // First create the user
+  return userController.create(_user)
+    .then(newUser => {
+      user = newUser
+
+      // Then find the invitation
+      return Invitation.findById(opts._id).exec()
+    })
+    .then(invitation => {
+      // The update it with the new values
+      invitation.dateAccepted = new Date()
+      invitation.isAnswered = true
+      invitation.toUser = user._id
+
+      // save it
+      return invitation.save()
+    })
+    // resolve the values
+    .then(invitation => Promise.resolve({ user, invitation: _.omit(invitation, ['tempPassword', '__v']) }))
+}
+
 module.exports = {
   createInvitation: createInvitation,
+  completeInvitation: completeInvitation,
 }
