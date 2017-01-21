@@ -18,11 +18,18 @@ const config = require('./../../config')
  * @return {String}
  */
 function getInvitationBody(token, user) {
-  return [
-    'Hej!',
-    'Du har blivit inbjuden att börja Fouse. För att komma igång är det bara att klicka på länken har nedan.',
-    config.app_url + '/api/v0/invitation/respond/' + encodeURIComponent(token),
-  ].join('\n\n')
+  return `Hi!
+
+You've been invited to use Fouse by ${user.name}.
+
+To get started and create your account, click the link below!
+
+${config.app_url}/api/v0/redirects/invitation-response/'${encodeURIComponent(token)}
+
+Best wishes,
+
+The Fouse team
+`
 }
 
 /**
@@ -82,7 +89,7 @@ function createInvitation(context) {
     .then(function (invitation) {
       __invitation = invitation
       utils.log('Invitation created. Sending email.', 'info', _meta)
-      return emailNotifier.plainSend(email, 'Inbjudan att använda Fouse', getInvitationBody(invitation.token, fromUser))
+      return emailNotifier.plainSend(email, 'Invitation to ue Fouse', getInvitationBody(invitation.token, fromUser))
     })
     .then(function (data) {
       utils.log('Invitation successfully sent.', 'info', _meta)

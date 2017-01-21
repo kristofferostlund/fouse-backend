@@ -1,15 +1,14 @@
 'use strict'
 
-var _ = require('lodash');
-var Promise = require('bluebird');
-
-var ApiUser = require('./controllers/api.user.controller');
-var ApiHomeItems = require('./controllers/api.homeItems.controller');
-var ApiInvitation = require('./controllers/api.invitation.controller');
+const ApiUser = require('./controllers/api.user.controller')
+const ApiHomeItems = require('./controllers/api.homeItems.controller')
+const ApiInvitation = require('./controllers/api.invitation.controller')
+const ApiRedirects = require('./controllers/api.redirects.controller')
 
 module.exports = {
   user: ApiUser,
   homeItems: ApiHomeItems,
   invitation: ApiInvitation,
+  redirects: ApiRedirects,
 }
 

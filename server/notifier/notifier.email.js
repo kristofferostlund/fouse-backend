@@ -1,14 +1,14 @@
 'use strict'
 
-var _ = require('lodash');
-var Promise = require('bluebird');
-var chalk = require('chalk');
-var moment = require('moment');
+var _ = require('lodash')
+var Promise = require('bluebird')
+var chalk = require('chalk')
+var moment = require('moment')
 
-var utils = require('../utils/utils');
-var config = require('../config');
+var utils = require('../utils/utils')
+var config = require('../config')
 
-var sendgrid = require('sendgrid')(config.send_grid_api_key);
+var sendgrid = require('sendgrid')(config.send_grid_api_key)
 
 /**
  * Sends an email to *receivers* with the subject of *subject*
@@ -22,36 +22,36 @@ var sendgrid = require('sendgrid')(config.send_grid_api_key);
 function _send(receivers, subject, text) {
   return new Promise(function (resolve, reject) {
     // Ensure array
-    var _receivers = _.isArray(receivers)
+    const to = _.isArray(receivers)
       ? receivers
-      : [receivers];
+      : [receivers]
 
     if (!config.sendEmail) {
-      utils.log('Not sendin email(s) as email is turned off.', 'info', { subject: subject, receivers: _receivers.join(', ') })
-      return resolve();
+      utils.log('Not sending email(s) as email is turned off.', 'info', { subject, to, text })
+      return resolve()
     }
 
     // Log the email
-    utils.log('Sending email.', 'info', { subject: subject, receivers: _receivers.join(', ') });
+    utils.log('Sending email.', 'info', { subject, to, text })
 
     sendgrid.send({
-      to: _receivers,
-      from: config.email_from || 'example@email.com',
-      fromname: 'Home Please',
-      subject: subject,
-      text: text,
+      to,
+      text,
+      subject,
+      from: config.email_from || 'info@fouse.io',
+      fromname: 'Fouse',
     }, function (err, result) {
       // Handle errors
       if (err) {
-        return utils.logReject(err, 'Failed to send email.', 'info', { error: err.toString(), subject: subject, receivers: _receivers.join(', ') }, reject);
+        return utils.logReject(err, 'Failed to send email.', 'info', { error: err.toString(), subject, to }, reject)
       }
 
-      utils.log('Sucessfully sent email.', 'info', { subject: subject, receivers: _receivers.join(', ') });
+      utils.log('Sucessfully sent email.', 'info', { subject, to })
 
       // Resolve the result
-      resolve(result);
-    });
-  });
+      resolve(result)
+    })
+  })
 }
 
 /**
@@ -64,24 +64,17 @@ function _send(receivers, subject, text) {
 function send(user, homeItems) {
   // Don't send emails to users not asking for it
   if (!user || !_.get(user, 'notify.email') || !user.email) {
-    return Promise.resolve();
+    return Promise.resolve()
   }
 
   // Get the email address
-  var _email = user.email;
+  const { email } = user
 
-  // Create the title
-  var _subject = '{num} {new} av intresse: {date}'
-    .replace('{num}', homeItems.length)
-    .replace('{new}', homeItems.length === 1 ? 'ny bostad' : 'nya bostäder')
-    .replace('{date}', moment().format('YYYY-MM-DD, HH:mm'));
+  const subject = `Fouse: ${homeItem.length} ${homeItems.length === 1 ? 'ny bostad' : 'nya bostäder'} av intresse`
 
   // Create the message
-  var _text = [
-    'Hej{possible_name}, vi på Fouse tror att följande {bo} kan vara {int}'
-      .replace('{bo}', homeItems.length === 1 ? 'bostad' : homeItems.length + ' bostäder')
-      .replace('{int}', homeItems.length === 1 ? 'intressant' : 'intressanta')
-      .replace('{possible_name}', !!user.name ? ' ' + user.name : ''),
+  const text = [
+    `Hej${!!user.name ? ' ' + user.name : ''}, vi på Fouse tror att följande ${homeItems.length === 1 ? 'bostad' : homeItems.length + ' bostäder'} kan vara ${homeItems.length === 1 ? 'intressant' : 'intressanta'}`,
     _.chain(homeItems)
       // Filter out any undefined items
       // which somehow got here
@@ -100,13 +93,13 @@ function send(user, homeItems) {
             .value()
             .join(', '),
           homeItem.body,
-        ].join('\n\n');
+        ].join('\n\n')
       })
       .value()
       .join('\n\n--------\n\n'),
-  ].join('\n\n');
+  ].join('\n\n')
 
-  return _send(_email, _subject, _text);
+  return _send(email, subject, text)
 }
 
 module.exports = {

@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const Promise = require('bluebird')
+const url = require('url')
 
 const User = require('../../../models/user/user.model')
 const UserController = require('../../../models/user/user.controller')
@@ -11,9 +12,10 @@ const ResetTokenController = require('../../../models/resetToken/resetToken.cont
 const utils = require('../../../utils/utils')
 const auth = require('../../../services/auth.service')
 const response = require('./../api.response.v0')
+const config = require('../../../config')
 
 /**
- * Route GET '/api/users'
+ * Route GET '/api/v0/users'
  */
 function listUsers(req, res) {
   // Get the page number from the query params
@@ -46,7 +48,7 @@ function listUsers(req, res) {
 }
 
 /**
- * Route GET '/api/users/:id'
+ * Route GET '/api/v0/users/:id'
  */
 function getUser(req, res) {
   const userId = req.params.id
@@ -65,7 +67,7 @@ function getUser(req, res) {
 }
 
 /**
- * Route GET '/api/users/me'
+ * Route GET '/api/v0/users/me'
  */
 function me(req, res) {
   return UserController.findById(req.user._id)
@@ -74,7 +76,7 @@ function me(req, res) {
 }
 
 /**
- * Route POST '/api/users'
+ * Route POST '/api/v0/users'
  */
 function createUser(req, res) {
   const _user = req.body || {}
@@ -91,7 +93,7 @@ function createUser(req, res) {
 }
 
 /**
- * Route PUT '/api/users/:id'
+ * Route PUT '/api/v0/users/:id'
  */
 function updateUser(req, res) {
   UserController.update(req.params.id, req.body)
@@ -100,14 +102,12 @@ function updateUser(req, res) {
 }
 
 /**
- * Route PUT '/api/users/:id/password'
+ * Route PUT '/api/v0/users/:id/password'
  */
 function updateUserPassword(req, res) {
   const userId = req.params.id === 'me'
     ? req.user._id.toString()
     : req.params.id
-
-  utils.print({ userId, params: req.params }, 10)
 
   const { password, currentPassword } = req.body
 
@@ -117,7 +117,7 @@ function updateUserPassword(req, res) {
 }
 
 /**
- * Route POST '/api/authenticate'
+ * Route POST '/api/v0/authenticate'
  */
 function login(req, res) {
   const { email, password } = req.body
@@ -134,21 +134,39 @@ function login(req, res) {
 }
 
 /**
- * Route PUT '/api/users/reset-password'
+ * Route PUT '/api/v0/users/reset-password/:token'
  */
 function resetPassword(req, res) {
-  const { token, password } = req.body
+  const { password } = req.body
+  const { token } = req.params
 
   ResetTokenController
     .resetPassword(token, password)
     .then(function (token) {
-      response.send(res, {  }, 'Password updated')
+      response.send(res, { message: 'Password updated', data: { redirectUrl: url.resolve(config.frontend_url, '/#/login') } })
     })
     .catch(function (err) {
       if (/missing|invalid|not found/i.test(err.message)) {
         response.sendError(res, err)
       } else {
         response.internalError(res, err)
+      }
+    })
+}
+
+/**
+ * Route: POST '/api/v0/users/request-password-reset'
+ */
+function requestPasswordReset(req, res) {
+  const { email } = req.body
+
+  ResetTokenController.requestReset(email)
+    .then(({ message }) => response.send(res, { message }))
+    .catch(err => {
+      if (/email is required|malformed or invalid|user doesn/i.test(err.message)) {
+        return response.sendError(res, err, err.message)
+      } else {
+        return response.internalError(res, err)
       }
     })
 }
@@ -161,4 +179,6 @@ module.exports = {
   updateUser: updateUser,
   updateUserPassword: updateUserPassword,
   login: login,
+  resetPassword: resetPassword,
+  requestPasswordReset: requestPasswordReset,
 }

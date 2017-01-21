@@ -25,7 +25,10 @@ var ResetTokenSchema = new Schema({
     type: Date,
     default:  moment().add(1, 'hour').toDate().getTime(),
   },
-  isUsed: Boolean,
+  isUsed: {
+    type: Boolean,
+    default: false,
+  },
   dateCreated: {
     type: Date,
     default: Date.now,

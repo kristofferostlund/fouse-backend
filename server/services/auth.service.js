@@ -9,6 +9,7 @@ const moment = require('moment')
 
 const User = require('./../models/user/user.model')
 const Invitation = require('./../models/invitation/invitation.model')
+const ResetToken = require('./../models/resetToken/resetToken.model')
 const config = require('./../config')
 const utils = require('./../utils/utils')
 const response = require('../api/v0/api.response.v0')
@@ -165,6 +166,43 @@ function isInvitedMiddleware(req, res, next) {
       .catch(function (err) {
         response.internalError(res, err)
       })
+  })
+}
+
+/**
+ * Middlewhare for ensuring a password reset token is preset
+ * and valid.
+ *
+ * @param {Object} req Express request object
+ * @param {Object} res Express response object
+ * @param {Function} next Express next function
+ */
+function hasPasswordResetMiddleware(req, res, next) {
+  return compose().use((req, res, next) => {
+    const opts = {
+      token: req.params.token,
+      // We don't want any used reset tokens
+      isUsed: { $ne: true },
+      // nor can they be disabled
+      disabled: { $ne: true },
+      // they must be valid as well
+      dateValidTo: { $gt: new Date() },
+      dateValidFrom: { $lte: new Date() },
+    }
+
+    return ResetToken.findOne(opts)
+      .exec()
+      .then(resetToken => {
+        if (!resetToken) {
+          const err = new Error('Invalid password reset token')
+          return response.sendError(res, err, 'The password reset token does either not exist, is invalid or is already used')
+        }
+
+        req.resetToken = resetToken
+
+        next()
+      })
+      .catch(err => response.internalError(res, err))
   })
 }
 
@@ -338,6 +376,7 @@ module.exports = {
   roles: roles,
   isAuthenticatedMiddleware: isAuthenticatedMiddleware,
   isInvitedMiddleware: isInvitedMiddleware,
+  hasPasswordResetMiddleware: hasPasswordResetMiddleware,
   isAdminEnoughMiddleware: isAdminEnoughMiddleware,
   isAdminOrMeMiddleware: isAdminOrMeMiddleware,
   validateEmail: validateEmail,

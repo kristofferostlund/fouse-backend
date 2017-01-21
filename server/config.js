@@ -54,4 +54,5 @@ module.exports = {
   get app_url(){
     return process.env.APP_URL || ('http://127.0.0.1:' + this.port);
   },
+  frontend_url: process.env.FRONTEND_APP_URL || 'http://127.0.0.1:9000',
 };
