@@ -62,7 +62,7 @@ function notify(homeItems) {
 function notifyUsers(homeItems, resolveResults) {
   return new Promise(function (resolve, reject) {
     // Find all notifiable users
-    userController.find()
+    userController.findNotifiable()
     .then(function (users) {
 
       // This handles all matching _and_ actual notifications

@@ -43,6 +43,10 @@ var UserSchema = new Schema({
     email: Boolean,
     sms: Boolean
   },
+  role: {
+    type: Number,
+    default: 1,
+  },
   dateCreated: {
     type: Date,
     default: Date.now

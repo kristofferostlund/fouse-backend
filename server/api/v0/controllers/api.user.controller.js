@@ -1,171 +1,156 @@
 'use strict'
 
-var _ = require('lodash');
-var Promise = require('bluebird');
+const _ = require('lodash')
+const Promise = require('bluebird')
 
-var User = require('../../../models/user/user.model');
-var UserController = require('../../../models/user/user.controller');
-var Invitation = require('../../../models/invitation/invitation.model');
-var InvitationController = require('../../../models/invitation/invitation.controller');
-var ResetTokenController = require('../../../models/resetToken/resetToken.controller');
-var utils = require('../../../utils/utils');
-var auth = require('../../../services/auth.service');
-var response = require('./../api.response.v0');
+const User = require('../../../models/user/user.model')
+const UserController = require('../../../models/user/user.controller')
+const Invitation = require('../../../models/invitation/invitation.model')
+const InvitationController = require('../../../models/invitation/invitation.controller')
+const ResetTokenController = require('../../../models/resetToken/resetToken.controller')
+const utils = require('../../../utils/utils')
+const auth = require('../../../services/auth.service')
+const response = require('./../api.response.v0')
 
 /**
  * Route GET '/api/users'
  */
 function listUsers(req, res) {
   // Get the page number from the query params
-  var page = _.get(req, 'query.page') || 1;
+  let page = _.get(req, 'query.page') || 1
 
   // *page* must be creater than zero, otherwise defaults to 1
-  page = page >= 1 ? page : 1;
+  page = page >= 1 ? page : 1
 
   // Get the page size/limit from the query params
-  var limit = _.get(req, 'query.limit') || 20;
+  let limit = _.get(req, 'query.limit') || 20
 
   //  Limut must be greater than zero, otherwise defaults to 20
-  limit = limit >= 1 ? limit : 20 ;
+  limit = limit >= 1 ? limit : 20
 
   // Get the number of items to skip
-  var _skip = (page - 1 ) * limit;
+  const skip = (page - 1) * limit
 
   User.find({ isDisabled: { $ne: true } })
-  .skip(_skip)
-  .limit(limit)
-  .sort({ $natural: -1 })
-  .select('-password -__v')
-  .exec(function (err, users) {
-    if (err) { response.internalError(res, err); }
+    .skip(skip)
+    .limit(limit)
+    .sort({ $natural: -1 })
+    .select('-password -__v')
+    .exec((err, users) => {
+      if (err) {
+        return response.internalError(res, err)
+      }
 
-response.send(res, { data: users });
-  });
+      return response.send(res, { data: users })
+    })
 }
 
 /**
  * Route GET '/api/users/:id'
  */
 function getUser(req, res) {
-  var userId = req.params.id;
+  const userId = req.params.id
 
   UserController.findById(userId)
-  .then(function (user) {
-    response.send(res, { data: user });
-  })
-  .catch(function (err) {
-    if (/missing userid|invalid userid/i.test(err.message)) {
-      response.sendError(res, err);
-    } else {
-      response.internalError(res, err);
-    }
-  });
+    .then(user => {
+      response.send(res, { data: user })
+    })
+    .catch(err => {
+      if (/missing userid|invalid userid/i.test(err.message)) {
+        response.sendError(res, err)
+      } else {
+        response.internalError(res, err)
+      }
+    })
 }
 
 /**
  * Route GET '/api/users/me'
  */
 function me(req, res) {
-  var userId = req.user._id;
-
-  UserController.findById(userId)
-  .then(function (user) {
-    response.send(res, { data: user });
-  })
-  .catch(function (err) {
-    response.internalError(res, err);
-  });
+  return UserController.findById(req.user._id)
+    .then(user => response.send(res, { data: user }))
+    .catch(err => response.internalError(res, err))
 }
 
 /**
  * Route POST '/api/users'
  */
 function createUser(req, res) {
-  var _user = req.body || {};
+  const _user = req.body || {}
 
   UserController.create(_user)
-  .then(function (user) {
-    response.send(res, { data: user });
-  })
-  .catch(function (err) {
-    if (/is required|already exists/i.test(err.message)) {
-      response.sendError(res, err);
-    } else {
-      response.internalError(res, err);
-    }
-  });
+    .then(user => response.send(res, { data: user }))
+    .catch(err => {
+      if (/is required|already exists/i.test(err.message)) {
+        response.sendError(res, err)
+      } else {
+        response.internalError(res, err)
+      }
+    })
 }
 
 /**
  * Route PUT '/api/users/:id'
  */
 function updateUser(req, res) {
-  var _user = req.body;
-  var _userId = req.params.id;
-
-  UserController.update(_userId, _user)
-  .then(function (user) {
-    response.send(res, { data: user });
-  })
-  .catch(function (err) {
-    response.internalError(res, err);
-  });
+  UserController.update(req.params.id, req.body)
+    .then(user => response.send(res, { data: user }))
+    .catch(err => response.internalError(res, err))
 }
 
 /**
  * Route PUT '/api/users/:id/password'
  */
 function updateUserPassword(req, res) {
-  var userId = req.params.id;
-  var password = req.body.password;
-  var currentPassword = req.body.currentPassword;
+  const userId = req.params.id === 'me'
+    ? req.user._id.toString()
+    : req.params.id
+
+  utils.print({ userId, params: req.params }, 10)
+
+  const { password, currentPassword } = req.body
 
   UserController.updatePassword(userId, password, currentPassword)
-  .then(function (data) {
-    response.send(res, { data: data });
-  })
-  .catch(function (err) {
-    response.internalError(res, err);
-  });
+    .then(data => response.send(res, { data: data }))
+    .catch(err => response.internalError(res, err))
 }
 
 /**
  * Route POST '/api/authenticate'
  */
 function login(req, res) {
-  auth.login(_.get(req, 'body.email'), _.get(req, 'body.password'))
-  .then(function (data) {
-    response.send(res, { data: data });
-  })
-  .catch(function (err) {
-    if (/does not exist|incorrect password|is required/i.test(err.message)) {
-      response.sendError(res, err);
-      // res.status(401).send(err);
-    } else {
-      response.internalError(res, err);
-    }
-  });
+  const { email, password } = req.body
+
+  auth.login(email, password)
+    .then(data => response.send(res, { data }))
+    .catch(err => {
+      if (/does not exist|incorrect password|is required/i.test(err.message)) {
+        response.sendError(res, err)
+      } else {
+        response.internalError(res, err)
+      }
+    })
 }
 
 /**
  * Route PUT '/api/users/reset-password'
  */
 function resetPassword(req, res) {
-  var _token = req.body.token;
-  var _password = req.body.password;
+  const { token, password } = req.body
 
-  ResetTokenController.resetPassword(_token, _password)
-  .then(function (token) {
-    response.sendError(res, err);
-    // res.status(204).send('Password updated');
-  })
-  .catch(function (err) {
-    if (/missing|invalid|not found/i.test(err.message)) {
-      response.sendError(res, err);
-    } else {
-      response.internalError(res, err);
-    }
-  })
+  ResetTokenController
+    .resetPassword(token, password)
+    .then(function (token) {
+      response.send(res, {  }, 'Password updated')
+    })
+    .catch(function (err) {
+      if (/missing|invalid|not found/i.test(err.message)) {
+        response.sendError(res, err)
+      } else {
+        response.internalError(res, err)
+      }
+    })
 }
 
 module.exports = {

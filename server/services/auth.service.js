@@ -13,12 +13,11 @@ const config = require('./../config')
 const utils = require('./../utils/utils')
 const response = require('../api/v0/api.response.v0')
 
-
-/**
- * TODO:
- * - Create base of user upon clicking invitation link and let the user
- *   set up their account.
- */
+const roles = {
+  USER: 1,
+  ADMIN: 10,
+  GOD: 100,
+}
 
 /**
  * Validates *email* address format and returns a Boolean value.
@@ -73,44 +72,60 @@ function findToken(req) {
 }
 
 /**
+ * Finds the corresponding user stored in the token
+ * and returns a promise of it.
+ *
+ * @param {String} token
+ * @returns {Promise<{ _id: String, name: String, email: String, tel: String, role: Number, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }>}
+ */
+function getUserByToken(token) {
+  // Get the decoded data
+  /** @type {{ _id: String }} */
+  const decoded = decodeToken(token)
+
+  const _userId = !!decoded ? decoded._id : null
+
+  // If no userId was found, return a response of 401, Unauthorized.
+  if (_userId === null) {
+    return Promise.reject(new Error('Unauthorized'))
+  }
+
+  // Find the user and if it exists, resolve it
+  return User.findById(_userId)
+    .then(user => {
+      // If there is no registered user, reject an Unauthorized error
+      if (!user || !user._id) {
+        return Promise.reject(new Error('Unauthorized'))
+      }
+
+      return Promise.resolve(user)
+    })
+}
+
+/**
  * Middlewhare for ensuring authentication.
  *
  * @param {Object} req Express request object
  * @param {Object} res Express response object
  * @param {Function} next Express next function
  */
-function isAuthenticated(req, res, next) {
-  var _token
-
+function isAuthenticatedMiddleware(req, res, next) {
   return compose().use(function (req, res, next) {
     // Find the token
-    _token = findToken(req)
+    const token = findToken(req)
 
-    // Get the decoded data
-    var _decoded = decodeToken(_token)
+    return getUserByToken(token)
+      .then(user => {
+        req.user = user._doc
 
-    var _userId = !!_decoded ? _decoded._id : null
-
-    // If no userId was found, return a response of 401, Unauthorized.
-    if (_userId === null) {
-      return res.status(401).send('Unauthorized')
-    }
-
-    // // Find the user and attach it to the response object
-    return User.findById(_userId)
-      .then(function (user) {
-        // Add the user to the response
-        req.user = (_.get(user, '_doc') || user)
-
-        // If there is no registered user, return a 401 unauthorized
-        if (!_.get(user, '_id')) {
-          return res.status(401).send('Unauthorized')
+        return next()
+      })
+      .catch(err => {
+        if (err.message === 'Unauthorized') {
+          return response.sendError(res, err, 'User unauthorized')
         }
 
-        next()
-      })
-      .catch(function (err) {
-        return utils.handleError(res, err)
+        return response.internalError(res, err)
       })
   })
 }
@@ -122,7 +137,7 @@ function isAuthenticated(req, res, next) {
  * @param {Object} res Express response object
  * @param {Function} next Express next function
  */
-function isInvited(req, res, next) {
+function isInvitedMiddleware(req, res, next) {
   return compose().use(function (req, res, next) {
     const invOpts = {
       token: req.params.token,
@@ -150,6 +165,76 @@ function isInvited(req, res, next) {
       .catch(function (err) {
         response.internalError(res, err)
       })
+  })
+}
+
+/**
+ * Checks whether the user is authorized to perform the current action
+ * by checking its role against *role*.
+ *
+ * @param {Number} role
+ */
+function isAdminEnoughMiddleware(role = 10) {
+  return compose().use((req, res, next) => {
+    return (
+      typeof req.user === 'undefined'
+        ? getUserByToken(findToken(req))
+        : Promise.resolve(req.user)
+    )
+      .then(user => {
+        if (user.role < role) {
+          const err = new Error('Unauthorized')
+          return response.sendError(res, err, 'User is unauthorized to perform this action')
+        }
+
+        if (typeof req.user === 'undefined') {
+          req.user = user._doc
+        }
+
+        next()
+      })
+      .catch(err => {
+        if (err.message === 'Unauthorized') {
+          return response.sendError(res, err, 'User unauthorized')
+        }
+      })
+
+  })
+}
+
+/**
+ * Checks whether the user is authorized to perform the current action
+ * by checking its role against *role*.
+ *
+ * @param {Number} role
+ */
+function isAdminOrMeMiddleware(role = 10) {
+  return compose().use((req, res, next) => {
+    const userId = req.params.id
+
+    return (
+      typeof req.user === 'undefined'
+        ? getUserByToken(findToken(req))
+        : Promise.resolve(req.user)
+    )
+      .then(user => {
+        if (user.role < role && userId != user._id) {
+          const err = new Error('Unauthorized')
+          return response.sendError(res, err, 'User is unauthorized to perform this action')
+        }
+
+        if (typeof req.user !== 'undefined') {
+          req.user = user._doc
+        }
+
+        next()
+      })
+      .catch(err => {
+        if (err.message === 'Unauthorized') {
+          return response.sendError(res, err, 'User unauthorized')
+        }
+      })
+
   })
 }
 
@@ -221,7 +306,7 @@ function signToken(data) {
  * Decodes a token and returns the result.
  *
  * @param {Stirng} token
- * @return {String} token
+ * @return {Object}
  */
 function decodeToken(token) {
   // Return the decoded token.
@@ -250,8 +335,11 @@ function validatePassword(hashedPassword, plainPassword) {
 }
 
 module.exports = {
-  isAuthenticated: isAuthenticated,
-  isInvited: isInvited,
+  roles: roles,
+  isAuthenticatedMiddleware: isAuthenticatedMiddleware,
+  isInvitedMiddleware: isInvitedMiddleware,
+  isAdminEnoughMiddleware: isAdminEnoughMiddleware,
+  isAdminOrMeMiddleware: isAdminOrMeMiddleware,
   validateEmail: validateEmail,
   validateGuidToken: validateGuidToken,
   signToken: signToken,

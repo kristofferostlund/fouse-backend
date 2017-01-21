@@ -1,9 +1,9 @@
 'use strict'
 
-var express = require('express')
-var path = require('path')
+const express = require('express')
+const path = require('path')
 
-var root = path.resolve()
+const root = path.resolve()
 
 module.exports = function (app) {
   // Front end stuff
