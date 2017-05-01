@@ -132,7 +132,7 @@ function update(userId, user) {
         var updated = _.assign(oldUser, _.omit(user, ['_id', '__v', 'password', 'role']))
 
         // Save the updated version
-        updated.save(function (err, _user) {
+        updated.save(function (err, updateUser) {
           if (err) {
             utils.log('Failed to update user.', 'error', _.assign({}, _meta, { error: err.toString() }))
             return reject(err)
@@ -140,7 +140,99 @@ function update(userId, user) {
 
           utils.log('Successfully updated user.', 'info', _meta)
 
-          resolve(_.omit(_user, ['password', '__v']))
+          resolve(_.omit(updateUser._doc, ['password', '__v']))
+        })
+      })
+  })
+}
+
+/**
+ * Updates a user account information and returns a promise the entire updated user.
+ *
+ * This only updates the contact information of the user (email, name, tel)...
+ *
+ * @param {String} userId The _id of the user to update
+ * @param {{ email: String, name: String, tel: String }} user
+ * @return {Promise<{ _id: String, name: String, email: String, tel: String, role: Number, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }>} The new user
+ */
+function updateAccount(userId, userContact = {}) {
+  return new Promise(function (resolve, reject) {
+    if (!userContact || !userId) {
+      return reject(new Error('No user to update'))
+    }
+
+    var _meta = { _id: userId, email: userContact.email }
+    utils.log('Updating user.', 'info', _meta)
+
+    User.findById(userId)
+      .exec(function (err, oldUser) {
+
+        // Merge them together
+        var updated = _.assign(oldUser, _.pick(userContact, ['email', 'tel', 'name']))
+
+        // Save the updated version
+        updated.save(function (err, updatedUser) {
+          if (err) {
+            utils.log('Failed to update user.', 'error', _.assign({}, _meta, { error: err.toString() }))
+            return reject(err)
+          }
+
+          utils.log('Successfully updated user.', 'info', _meta)
+
+          resolve(_.omit(updatedUser._doc, ['password', '__v']))
+        })
+      })
+  })
+}
+
+/**
+ * Updates a user notification settings and returns a promise the entire updated user.
+ *
+ * This only updates the notification settings of the user (user.options and such)...
+ *
+ * @param {String} userId The _id of the user to update
+ * @param {{ email: String, name: String, tel: String }} user
+ * @return {Promise<{ _id: String, name: String, email: String, tel: String, role: Number, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean }>} The new user
+ */
+function updateNotificationSettings(userId, userOptions = {}, req) {
+  return new Promise(function (resolve, reject) {
+    console.log(JSON.stringify(userOptions, null, 4))
+    if (!userOptions || !userId) {
+      return reject(new Error('No user to update'))
+    }
+
+    var _meta = { _id: userId }
+    utils.log('Updating user.', 'info', _meta)
+
+    User.findById(userId)
+      .exec(function (err, oldUser) {
+
+        var options = _.pick(userOptions, ['maxPrice', 'minPrice', 'region'])
+        options.classification = _.pick(userOptions.classification, ['girls', 'commuters', 'shared', 'swap', 'noKitchen'])
+        options.time = {
+          period: _.pick(_.get(userOptions, 'time.period'), ['min', 'max']),
+          isLongTerm: _.get(userOptions, 'time.isLongTerm'),
+        }
+
+        // Merge them together
+        var updated = oldUser
+        updated.options = options
+
+        if (userOptions.notify !== undefined) {
+          updated.notify = _.pick(userOptions.notify, ['email', 'sms'])
+          console.log(updated)
+        }
+
+        // Save the updated version
+        updated.save(function (err, updatedUser) {
+          if (err) {
+            utils.log('Failed to update user.', 'error', _.assign({}, _meta, { error: err.toString() }))
+            return reject(err)
+          }
+
+          utils.log('Successfully updated user.', 'info', _meta)
+
+          resolve(_.omit(updatedUser._doc, ['password', '__v']))
         })
       })
   })
@@ -205,5 +297,7 @@ module.exports = {
   findById: findById,
   create: create,
   update: update,
+  updateAccount: updateAccount,
+  updateNotificationSettings: updateNotificationSettings,
   updatePassword: updatePassword,
 }

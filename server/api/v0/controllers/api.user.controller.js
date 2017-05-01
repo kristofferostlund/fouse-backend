@@ -102,6 +102,36 @@ function updateUser(req, res) {
 }
 
 /**
+ * Route PUT '/api/v0/users/:id/account
+ */
+function updateUserAccount(req, res) {
+  UserController.updateAccount(req.params.id, req.body)
+    .then(user => response.send(res, { data: user }))
+    .catch(err => {
+      if (/is required|already exists/i.test(err.message)) {
+        response.sendError(res, err)
+      } else {
+        response.internalError(res, err)
+      }
+    })
+}
+
+/**
+ * Route PUT '/api/v0/users/:id/account
+ */
+function updateUserNotificationSettings(req, res) {
+  UserController.updateNotificationSettings(req.params.id, req.body)
+    .then(user => response.send(res, { data: user }))
+    .catch(err => {
+      if (/is required|already exists/i.test(err.message)) {
+        response.sendError(res, err)
+      } else {
+        response.internalError(res, err)
+      }
+    })
+}
+
+/**
  * Route PUT '/api/v0/users/:id/password'
  */
 function updateUserPassword(req, res) {
@@ -177,6 +207,8 @@ module.exports = {
   me: me,
   createUser: createUser,
   updateUser: updateUser,
+  updateUserAccount: updateUserAccount,
+  updateUserNotificationSettings: updateUserNotificationSettings,
   updateUserPassword: updateUserPassword,
   login: login,
   resetPassword: resetPassword,

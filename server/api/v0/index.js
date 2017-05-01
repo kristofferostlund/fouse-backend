@@ -19,6 +19,8 @@ router.post('/users/request-password-reset', controller.user.requestPasswordRese
 router.get('/users/me', auth.isAuthenticatedMiddleware(), controller.user.me)
 router.get('/users/:id', auth.isAdminOrMeMiddleware(auth.roles.ADMIN), controller.user.getUser)
 router.put('/users/:id', auth.isAdminOrMeMiddleware(auth.roles.ADMIN), controller.user.updateUser)
+router.put('/users/:id/account', auth.isAdminOrMeMiddleware(auth.roles.ADMIN), controller.user.updateUserAccount)
+router.put('/users/:id/notification-settings', auth.isAdminOrMeMiddleware(auth.roles.ADMIN), controller.user.updateUserNotificationSettings)
 router.put('/users/:id/password', auth.isAuthenticatedMiddleware(), controller.user.updateUserPassword)
 
 router.post('/invitation/invite', auth.isAuthenticatedMiddleware(), controller.invitation.invite)
