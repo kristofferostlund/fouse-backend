@@ -23,17 +23,18 @@ function invite(req, res) {
 
   const { email, name } = req.body
 
-  InvitationController.createInvitation({ email, fromUser, name })
-  .then(function (data) {
-    response.send(res, { data: data, message: 'Invitation sent' })
-  })
-  .catch(function (err) {
-    if (/missing user|invalid email|already exists|invitation already|missing name/i.test(err.message)) {
-      response.sendError(res, err, err.message)
-    } else {
-      response.internalError(res, err)
-    }
-  })
+  InvitationController
+    .createInvitation({ email, fromUser, name })
+    .then(function (data) {
+      response.send(res, { data: data, message: 'Invitation sent' })
+    })
+    .catch(function (err) {
+      if (/missing user|invalid email|already exists|invitation already|missing name/i.test(err.message)) {
+        response.sendError(res, err, err.message)
+      } else {
+        response.internalError(res, err)
+      }
+    })
 }
 
 /**

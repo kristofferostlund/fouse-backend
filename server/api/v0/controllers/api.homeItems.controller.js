@@ -36,7 +36,6 @@ function listHomes(req, res) {
     .skip(skip)
     .limit(limit)
     .select('-__v -notified -rent -body -address -active -owner -images -tel -dateCreated -dateModified')
-    // .select('title rooms size price location thumbnail url')
     .exec()
     .then(homeItems => {
       items = homeItems
@@ -80,7 +79,11 @@ function getHome(req, res) {
  * Route GET '/api/home-items/latest'
  */
 function listLatest(req, res) {
-  HomeItem.find({ isDisabled: { $ne: true }, active: true })
+  const region = !!req.query.region
+    ? req.query.region
+    : undefined
+
+  HomeItem.find({ isDisabled: { $ne: true }, active: true, region: region })
     .select('-__v -notified -rent -body -address -active -owner -images -tel -dateCreated -dateModified')
     .sort({ $natural: -1 })
     .limit(10)
