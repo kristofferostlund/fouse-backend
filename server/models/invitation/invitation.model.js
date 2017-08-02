@@ -40,10 +40,6 @@ const InvitationSchema = new Schema({
     type: String,
     default: guid(),
   },
-  tempPassword: {
-    type: String,
-    default: guid().replace(/-/g, ''),
-  },
   dateAccepted: Date,
   /**
    * If isAnswered is true and toUser is populated

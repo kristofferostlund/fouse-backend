@@ -38,15 +38,22 @@ function invite(req, res) {
 }
 
 /**
- * Note: Must be peceded by the auth.isInvited middleware.
+ * Note: Must be preceded by the auth.isInvited middleware.
  *
- * Route POST 'api/invitation/respond'
+ * Route POST 'api/invitation/respond/:token'
  */
 function respond(req, res) {
-  const { _id, email, tempPassword, name } = req.invitation || {}
+  const { _id, name } = req.invitation || {}
+  const { password } = req.body
+  let { email } = req.body
+
+  // Fall back to invitation email if none is set
+  if (!email) {
+    email = req.invitation.email
+  }
 
   /**
-   * Ensure the email doesn't start with a dot,
+   * Ensure the email is valid
    */
   if (!auth.validateEmail(email)) {
     const err = new Error('Missing or incorrect email address')
@@ -54,9 +61,9 @@ function respond(req, res) {
   }
 
   return InvitationController
-    .completeInvitation({ _id, email, tempPassword, name })
-    .then(user => {
-      return response.send(res, { status: 200, data: user, message: 'User successfully created' })
+    .completeInvitation({ _id, email, password, name })
+    .then(data => {
+      return response.send(res, { status: 200, data: data, message: 'User successfully created' })
     })
     .catch(err => {
       return response.sendError(res, err, 'Failed to create invited user')

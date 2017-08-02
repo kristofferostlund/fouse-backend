@@ -13,18 +13,18 @@ const auth = require('./../../services/auth.service')
 const config = require('./../../config')
 
 /**
- * @param {String} token
+ * @param {{ token: String, email: String }}
  * @param {{ name: String }} user
  * @return {String}
  */
-function getInvitationBody(token, user) {
+function getInvitationBody({ token, email }, user) {
   return `Hi!
 
 You've been invited to use Fouse by ${user.name}.
 
 To get started and create your account, click the link below!
 
-${config.app_url}/api/v0/redirects/invitation-response/'${encodeURIComponent(token)}
+${config.app_url}/api/v0/redirects/invitation-response?_t=${encodeURIComponent(token)}&_e=${encodeURIComponent(email)}
 
 Best wishes,
 
@@ -89,7 +89,7 @@ function createInvitation(context) {
     .then(function (invitation) {
       __invitation = invitation
       utils.log('Invitation created. Sending email.', 'info', _meta)
-      return emailNotifier.plainSend(email, 'Invitation to ue Fouse', getInvitationBody(invitation.token, fromUser))
+      return emailNotifier.plainSend(email, 'Invitation to ue Fouse', getInvitationBody(invitation, fromUser))
     })
     .then(function (data) {
       utils.log('Invitation successfully sent.', 'info', _meta)
@@ -121,8 +121,8 @@ function createInvitation(context) {
  * Creates a new user based on the invitation as long as there's a valid,
  * unused email address stored on the invitation.
  *
- * @param {{ _id: String, email: String, tempPassword: String, name: String }} opts
- * @returns {Promise<{ user: { Name: String, Email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean } >}
+ * @param {{ _id: String, email: String, password: String, name: String }} opts
+ * @returns {Promise<{ token: String, user: { name: String, email: String, tel: String, options: { maxPrice: Number, minPrice: Number, classification: { girls: Boolean, commuters: Boolean, shared: Boolean, swap: Boolean, noKitchen: Boolean }, time: { period: { min: Number, max: Number }, isLongTerm: Boolean }, region: String }, notify: { email: Boolean, sms: Boolean }, dateCreated: Date, dateModified: Date, disabled: Boolean } >}
  */
 function completeInvitation(opts) {
   if (!auth.validateEmail(opts.email)) {
@@ -136,13 +136,15 @@ function completeInvitation(opts) {
   const _user = {
     email: opts.email.toLowerCase(),
     name: opts.name,
-    password: opts.tempPassword,
+    password: opts.password,
   }
 
   // First create the user
   return userController.create(_user)
     .then(newUser => {
-      user = newUser
+      user = newUser._doc !== undefined
+        ? newUser.doc
+        : newUser
 
       // Then find the invitation
       return Invitation.findById(opts._id).exec()
@@ -157,7 +159,20 @@ function completeInvitation(opts) {
       return invitation.save()
     })
     // resolve the values
-    .then(invitation => Promise.resolve({ user: user._doc, invitation: _.omit(invitation._doc, ['tempPassword', '__v']) }))
+    .then(invitation => {
+      const output = {
+        user: user,
+        invitation: _.omit(invitation._doc, ['tempPassword', '__v']),
+        token: auth.createUserToken(user),
+      }
+
+      return Promise.resolve(output)
+    })
+    .catch(err => {
+      utils.log('Cannot create invitation.', 'error', { error: _err.toString() })
+
+      return Promise.reject(err)
+    })
 }
 
 module.exports = {

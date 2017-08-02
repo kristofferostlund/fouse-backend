@@ -13,7 +13,7 @@ var UserSchema = new Schema({
     required: true,
   },
   tel: {
-    unique: true,
+    unique: false,
     type: String
   },
   password: {

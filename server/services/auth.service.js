@@ -141,7 +141,7 @@ function isAuthenticatedMiddleware(req, res, next) {
 function isInvitedMiddleware(req, res, next) {
   return compose().use(function (req, res, next) {
     const invOpts = {
-      token: req.params.token,
+      token: req.query._t,
       // We don't want any answered invitations
       isAnswered: { $ne: true, },
       // nor can they be disabled
@@ -180,7 +180,7 @@ function isInvitedMiddleware(req, res, next) {
 function hasPasswordResetMiddleware(req, res, next) {
   return compose().use((req, res, next) => {
     const opts = {
-      token: req.params.token,
+      token: req.query._t,
       // We don't want any used reset tokens
       isUsed: { $ne: true },
       // nor can they be disabled
@@ -317,7 +317,7 @@ function login(email, password) {
           return reject(err)
         }
 
-        var _token = signToken({ _id: user._id })
+        const _token = createUserToken(user)
 
         utils.log('Sucessfully logged in user', 'info', { email: _email, token: _token })
 
@@ -328,6 +328,17 @@ function login(email, password) {
         reject(err)
       })
   })
+}
+
+/**
+ * @param {{ _id: String }} user
+ * @returns {String}
+ */
+function createUserToken(user) {
+  if (!user || !user._id) {
+    return null
+  }
+  return signToken({ _id: user._id })
 }
 
 /**
@@ -381,6 +392,7 @@ module.exports = {
   isAdminOrMeMiddleware: isAdminOrMeMiddleware,
   validateEmail: validateEmail,
   validateGuidToken: validateGuidToken,
+  createUserToken: createUserToken,
   signToken: signToken,
   decodeToken: decodeToken,
   encryptPassword: encryptPassword,
